@@ -1,0 +1,43 @@
+# Visual Studio build output
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio intermediate files
+*.user
+*.suo
+*.sdf
+*.opensdf
+*.cachefile
+*.VC.db
+*.VC.VC.opendb
+*.ipch
+.vs/
+
+# Object and library files produced by the build
+*.obj
+*.pdb
+*.idb
+*.iobj
+*.ipdb
+*.ilk
+*.lib
+*.exp
+*.dll
+*.exe
+
+# Copied ASM sources (written to OutDir by PreLinkEvent)
+x64/Debug/writeexc.asm
+x64/Debug/spectrecode.asm
+x64/Debug/tables.asm
+x64/Release/writeexc.asm
+x64/Release/spectrecode.asm
+x64/Release/tables.asm
+
+# MSBuild tlog directories
+*.tlog/
