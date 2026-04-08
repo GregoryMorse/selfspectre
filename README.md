@@ -19,8 +19,8 @@ Either technique can support strong white-box cryptography: in binary form, both
 ## Repository Structure
 
 ```
-selfspectre.sln          ← Visual Studio solution (all three projects)
-spectre.c                ← Original Spectre v1 PoC (reference, not built)
+selfspectre.sln          ← Visual Studio solution (all four projects)
+spectre.c                ← Original Spectre v1 PoC (spectrepoc project)
 spectreopt.c             ← Spectre victim/helper functions (shared)
 spectrecode.asm          ← MASM speculative-execution wrappers (x86/x64)
 spectreaes.c             ← AES-128 Spectre attack demo (selfspectre project)
@@ -32,6 +32,7 @@ tables.asm               ← Stub assembly (placeholder)
 selfspectre/             ← VS project: AES Spectre demo
 spectrersa/              ← VS project: RSA Spectre demo
 writeexec/               ← VS project: write-execute framework
+spectrepoc/              ← VS project: original Spectre v1 PoC
 ```
 
 ## Projects
@@ -44,6 +45,11 @@ Demonstrates speculative recovery of RSA modular-exponentiation intermediate val
 
 ### `writeexec` — Write-Execute Arithmetic Framework
 Standalone test harness for `writeexc.asm`. Exercises all write-execute primitives: bitwise operations (SHL, SHR, NOT, XOR, OR, AND), arithmetic (ADD, SUB, INC, DEC, MUL, DIV, MODEXP), and AES-128 table lookups (Te0–Te4, full AES round). Results are verified against standard C implementations and timed for performance comparison.
+
+### `spectrepoc` — Original Spectre v1 Proof-of-Concept
+The unmodified Spectre v1 PoC from the original paper by Kocher et al. Reads an arbitrary secret string from process memory using branch-predictor training and cache-timing side-channels. Useful as a baseline to verify whether your CPU/OS has hardware or software mitigations in place: if it prints `Success` and recovers the secret, Spectre v1 is exploitable on your system; if scores are low or results are `Unclear`, mitigations are active.
+
+Accepts optional command-line arguments: `[cache_hit_threshold] [address] [length]`. The default threshold is 80; lower values may help on CPUs with fast caches, higher values on systems with mitigation overhead.
 
 ## Building
 
@@ -79,7 +85,7 @@ The PreLinkEvent in each project automatically invokes `ml.exe` (x86) or `ml64.e
 > IEEE Symposium on Security & Privacy 2019.  
 > https://spectreattack.com/spectre.pdf
 
-It is included for reference only and is not compiled into any project.
+It is compiled as-is into the `spectrepoc` project with no modifications beyond what was required to fix compilation errors (as noted in the file header).
 
 ## Security Notice
 
