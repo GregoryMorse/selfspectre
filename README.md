@@ -1,10 +1,16 @@
 # Self-Spectre, Write-Execute and the Hidden State
 
+[![DOI](https://img.shields.io/badge/DOI-10.2478%2Ftmmp--2019--0010-blue)](https://doi.org/10.2478/tmmp-2019-0010)
+[![Journal](https://img.shields.io/badge/Journal-Tatra%20Mt.%20Math.%20Publ.%2C%20Vol.%2073-green)](https://doi.org/10.2478/tmmp-2019-0010)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 Code supplement to the peer-reviewed paper published in **Tatra Mountains Mathematical Publications**, Vol. 73 (2019):
 
 > Gregory Morse, *Self-spectre, write-execute and the hidden state*,  
 > Tatra Mountains Mathematical Publications, Vol. 73, 2019.  
-> https://www.mat.savba.sk/ojs/index.php/TATRA/article/view/576
+> https://doi.org/10.2478/tmmp-2019-0010
+
+Presented at the **18th Central European Conference on Cryptology (CECC'18)**, June 6, 2018, Smolenice, Slovakia.
 
 ## Overview
 
@@ -106,7 +112,8 @@ https://github.com/GregoryMorse
   journal = {Tatra Mountains Mathematical Publications},
   volume  = {73},
   year    = {2019},
-  url     = {https://www.mat.savba.sk/ojs/index.php/TATRA/article/view/576}
+  doi     = {10.2478/tmmp-2019-0010},
+  url     = {https://doi.org/10.2478/tmmp-2019-0010}
 }
 ```
 
