@@ -1,0 +1,21 @@
+{
+ "round": "R4",
+ "modules": [
+  "Spec.Arith",
+  "Spec.Spectre",
+  "Arith.Tables",
+  "Arith.Bytes",
+  "Arith.Add",
+  "Arith.Sub",
+  "Arith.Shift",
+  "Arith.Mul",
+  "Arith.Div",
+  "Arith.Reduce",
+  "Arith.ModExp",
+  "Spectre.Mix",
+  "Spectre.Select",
+  "Model.Lookup"
+ ],
+ "axiom_audit": "895 declarations, 0 violations",
+ "notes": "algorithm-level; vectors deferred to R7"
+}

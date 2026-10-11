@@ -11,3 +11,17 @@ public import WriteExecute.Universal.Layout
 public import WriteExecute.Universal.Step
 public import WriteExecute.Universal.Unbounded
 public import WriteExecute.Universal.Bounded
+public import WriteExecute.Model.Lookup
+public import WriteExecute.Spec.Arith
+public import WriteExecute.Arith.Tables
+public import WriteExecute.Arith.Bytes
+public import WriteExecute.Arith.Add
+public import WriteExecute.Arith.Sub
+public import WriteExecute.Arith.Shift
+public import WriteExecute.Arith.Mul
+public import WriteExecute.Arith.Div
+public import WriteExecute.Arith.Reduce
+public import WriteExecute.Arith.ModExp
+public import WriteExecute.Spec.Spectre
+public import WriteExecute.Spectre.Mix
+public import WriteExecute.Spectre.Select

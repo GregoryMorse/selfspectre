@@ -8,7 +8,7 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | R1 | Errata inventory and claim map | DONE |
 | R2 | WE machine, read-freedom, confinement | DONE |
 | R3 | Turing-completeness (TC-U must; TC-B should) DONE (Mathlib composition with `MathlibTM0` deferred to CI, optional) |
-| R4 | Arithmetic, division, modexp, Spectre arithmetic | todo |
+| R4 | Arithmetic, division, modexp, Spectre arithmetic | DONE (vectors deferred to R7) |
 | R5 | AES (should) | todo |
 | R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | todo |
 | R7 | Legacy corrections, native acceptance, errata TeX | todo |
@@ -66,4 +66,20 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
   `MathlibTM0` (CI-only, optional).
 - Hazards for later rounds: `by_contra`, `push_neg`, `ring` are Mathlib-only; use `Classical.byContradiction`, `omega`.
   Build several modules in one `build_modules.py` call; bash heredocs with odd quoting fail, use the Write tool.
+
+### R4 (done)
+
+- Scope (D1): the wide operations are proved at the *algorithm* level, over little-endian base-256 digit lists,
+  with the 8-bit tables transcribed literally from the MASM macros (`Spec/Arith.lean`). The asm control flow
+  (self-modifying jump tables, ADDBYTE/SUBBYTE/SHLBYTE macros) is tied to these algorithms by native vectors
+  (R7), not proved; the byte-level jump-table behaviour is R6.
+- The carry scheme modelled is the one in ADDBYTE: INC on the next first operand, with the second-level
+  carry (`carry&Idx&_2`); the two carries are shown exclusive. SHL/SHR combine the shifted halves with XOR,
+  proved equal to `+` by disjointness of bits (table facts).
+- Proofs are Mathlib-free. Kernel `decide` over thousands of cases needs `List.all` checks in pieces of at most
+  ~4,000 cases (`all1/all2/all3d` in `Arith/Tables.lean`); 65,536-case checks run out of the 768 MB cap.
+- W03/W04/W05 proved: quotient overflow iff high word >= divisor; two-step reduction needs `%` (L03);
+  multiplications = `log2 e + 1 + popcount e`. Legacy `mulmod` shown wrong at `65536*65536 mod 3`.
+- Audit: 895 declarations, 0 violations.
+- Open: test vectors (R7, generated from the specs with python); `could` items (left-to-right modexp) skipped.
 
