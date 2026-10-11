@@ -1,0 +1,19 @@
+{
+  "exact_commit_verified_by_ci": "a18ab134aad84b5474c878d11ea52fc8cb1c9c6c",
+  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38171737998",
+  "verified": {
+    "linux_cold_build": "success",
+    "windows_native_vectors": "success",
+    "axiom_audit": "0 violations (local and CI)",
+    "metadata_validation": "pass",
+    "listing_comparison": "3092 matches / 0 mismatches (evidence, not proof)"
+  },
+  "unverified": [
+    "Palomar full preflight (palomar-full.yml) not dispatched: needs explicit user authorization",
+    "Protected Comparator / NanoDa run records not attached",
+    "Author review of the errata PDF"
+  ],
+  "open_obligations": ["C18 (Fig. 6 XOR copy loop; helper lemmas in X86/Fig6.lean)", "WE-entry edge vectors against assembled procedures"],
+  "submission_performed": false,
+  "registration_performed": false
+}
