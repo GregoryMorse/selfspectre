@@ -27,6 +27,7 @@ def stale(mod):
     t = olean.stat().st_mtime
     return path(mod).stat().st_mtime > t or any((OUT / (i.replace(".", "/") + ".olean")).stat().st_mtime > t for i in imports(mod))
 def main():
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(); ap.add_argument("--force", action="store_true"); ap.add_argument("mods", nargs="+")
     a = ap.parse_args()
     mods = [str(p.relative_to(LEAN).with_suffix("")).replace(os.sep, ".") for p in sorted((LEAN / "WriteExecute").rglob("*.lean"))] + ["WriteExecute"] if a.mods == ["all"] else a.mods

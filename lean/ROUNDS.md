@@ -6,7 +6,7 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | --- | --- | --- |
 | R0 | Bootstrap, vendoring, baselines | DONE (CI check of MathlibTM0 pending, user-run) |
 | R1 | Errata inventory and claim map | DONE |
-| R2 | WE machine, read-freedom, confinement | todo |
+| R2 | WE machine, read-freedom, confinement | DONE |
 | R3 | Turing-completeness (TC-U must; TC-B should) | todo |
 | R4 | Arithmetic, division, modexp, Spectre arithmetic | todo |
 | R5 | AES (should) | todo |
@@ -45,3 +45,11 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
   (asm initialises the result to 1); the C reference `fastmodexp` is fixed.
 - W05 confirmed against the asm loop (square every iteration). W10 mechanically confirmed in R0.
 - pdftotext must use `-enc UTF-8`; run python with `PYTHONIOENCODING=utf-8`.
+
+### R2 (done)
+
+- `Spec/Machine.lean`: `WE.State/Instr/Status/decode/step/run/Halts/Faults/Diverges/effect`
+  (encodings MOV=[1,rel,val], JMP=[2,rel], HLT=[3]; displacements from the next instruction).
+- `Model/Run.lean` (run_add, run_stop, trichotomy, exclusivity), `Model/ReadFree.lean` (C01),
+  `Model/Confinement.lean` (C04, Mathlib-free list form). Audit: 219 declarations, 0 violations.
+- Interfaces for R3: `run_add`, `run_succ_right`, `run_stop`, `trichotomy`; `write` from `Base.Memory`.

@@ -1,0 +1,11 @@
+{
+ "round": "R2",
+ "modules": [
+  "Spec.Machine",
+  "Model.Run",
+  "Model.ReadFree",
+  "Model.Confinement"
+ ],
+ "axiom_audit": "219 declarations, 0 violations",
+ "notes": "Mathlib-free; list-based finiteness"
+}
