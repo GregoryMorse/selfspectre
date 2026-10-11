@@ -17,16 +17,16 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 | C10 | §4 p.139 | 64/32 division and modulo (W03) | F | R4 | proved | `Arith.doDivision_spec` (invariant `DivInv` over the 64 iterations, remainder-overflow bit included) |
 | C11 | §3 p.136 | Division overflow facts and two-step reduction (W04) | F | R4 | proved | `Arith.div_lt_word_iff`, `mulmod_div_lt`, `two_step`, `mulmodFixed_spec`, `mulmodLegacy_wrong` (L03) |
 | C12 | §3 p.136 | Modular exponentiation (mod >= 2) and multiplication count (W05) | F | R4 | proved | `Arith.modexpAsm_spec` (m >= 2), `modexpRef_spec` (m >= 1), `modexp_m1_e0`, `mulCount_log2`, `modexpNaive_spec` |
-| C13 | §3 | AES T-tables equal the algebraic definition and the literal tables | F | R5 | todo | |
-| C14 | §3 | T-table round = FIPS-197 round; final round uses Te4 | F | R5 | todo | |
-| C15 | §4 | WE AES lookup procedure = AES-128 encryption (FIPS-197 C.1) | F | R5 | todo | |
+| C13 | §3 | AES T-tables equal the algebraic definition and the literal tables | F | R5 | proved | `AES.sbox_alg` (S-box = GF inverse + affine, all 256), `te4_lit`, `te0_bytes`..`te3_bytes` (generated exhaustive checks, `AES/Checks.lean`) |
+| C14 | §3 | T-table round = FIPS-197 round; final round uses Te4 | F | R5 | proved | `AES.round_step`, `te_byte`, `sbox_and255` |
+| C15 | §4 | WE AES lookup procedure = AES-128 encryption (FIPS-197 C.1) | F | R5 | proved (algorithm level) | `AES.weCipher_eq` against the FIPS spec; `fips197_c1`, `fips197_b` check the spec itself. Asm bytes: R6/R7 vectors |
 | C16 | Fig. 5 p.140 | `not` through SHL4 and the NOT table, byte level (W10) | F+M | R6 | todo | |
 | C17 | Fig. 7 p.142 | Carry conditional jump, byte level | F+M | R6 | todo | |
 | C18 | Fig. 6 p.141 | XOR double lookup and re-executable copy loop | F+M | R6 | todo | |
 | C19 | Fig. 1 p.134 | Branchless select yields the malicious index iff j mod 6 = 0 | F | R4 | proved | `Spectre.select_32`, `select_64` |
 | C20 | §2 p.134 | `mix_i = (i*167+13) & 255` permutes 0..255 | F | R4 | proved | `Spectre.mix_perm`, `mix_injective`, `mix_surjective` |
-| C21 | Fig. 3 | AES-NI sequence = AES-128 (stretch) | F | R5 | todo | |
-| C22 | asm comments | ShiftRows index formulas = FIPS-197 ShiftRows | F | R5 | todo | |
+| C21 | Fig. 3 | AES-NI sequence = AES-128 (stretch) | F | R5 | open | not attempted (stretch) |
+| C22 | asm comments | ShiftRows index formulas = FIPS-197 ShiftRows | F | R5 | proved | `AES.nvalInv_nval`, `nval_nvalInv`, `pos_src`, `src_pos` |
 
 ## Errata (see `errata/edits.json`)
 
