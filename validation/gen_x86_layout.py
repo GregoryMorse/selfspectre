@@ -26,7 +26,8 @@ for arch in ("x86", "x64"):
     for t in ("notres", "nzres", "shlres4"):
         out.append(f"@[expose] def {arch}_{t}_tab : List Nat :=\n  {T[t]['offsets']}\n")
     for k in ("notarg", "notargshl", "notres", "notret", "shlarg4", "shlres4", "shlret4",
-              "nzarg", "nzargshl", "nzres", "nzret"):
+              "nzarg", "nzargshl", "nzres", "nzret", "shlarg", "shlres", "shlret",
+              "carry1retval", "nocry1", "hascarry1", "carry2retval", "nocry2", "hascarry2"):
         out.append(f"@[expose] def {arch}_{k} : Nat := {L[k]}\n")
     a = arch
     out.append(f"""
@@ -35,6 +36,13 @@ theorem {a}_geometry :
     {a}_notargshl = {a}_notarg + 32 ∧ {a}_notres = {a}_notarg + 37 + 4099 ∧
     {a}_notret = {a}_notres + 7 ∧ {a}_shlres4 + 14 ≤ {a}_notarg ∧
     {a}_nzargshl = {a}_nzarg + 32 ∧ {a}_nzres = {a}_nzarg + 37 + 4099 ∧ {a}_nzret = {a}_nzres + 7 := by
+  decide
+
+/-- Fig. 7: `carryNretval: jmp nocryN+8000h` is followed by the 2-byte `nocryN: jmp copy`, then `hascarryN`. -/
+theorem {a}_carry_geometry :
+    {a}_nocry1 = {a}_carry1retval + 5 ∧ {a}_hascarry1 = {a}_nocry1 + 2 ∧
+    {a}_nocry2 = {a}_carry2retval + 5 ∧ {a}_hascarry2 = {a}_nocry2 + 2 ∧
+    {a}_shlres = {a}_shlarg + 5 + 65536 ∧ {a}_shlret = {a}_shlres + 9 := by
   decide
 
 /-- The published layout: the NOT table entries sit at `base + 16 j`, shifted by 3 from entry 248 on. -/

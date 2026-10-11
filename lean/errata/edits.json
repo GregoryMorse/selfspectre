@@ -39,7 +39,7 @@
    "source": "Lipp et al., Meltdown (2018): probe array of 256 pages of 4096 bytes"},
   {"id": "W10", "page": 140, "location": "Figure 5, DEFINENOT (and the identical DEFINENZ)", "kind": "replace", "class": "mechanical", "status": "confirmed",
    "before": "IF Index GT 0f6h", "after": "IF Index GT 0f7h",
-   "lean_refs": ["R6: X86.Fig5"], "code_refs": ["validation/layout/x86.json", "validation/layout/x64.json"],
+   "lean_refs": ["X86.w10_original_sizes", "X86.w10_corrected_sizes", "X86.fig5_x64", "X86.fig5_corrected"], "code_refs": ["validation/layout/x86.json", "validation/layout/x64.json"],
    "source": "listing: notres_247 and nzres_247 occupy 19 bytes (others 16) on x86 and x64; lookups still land via the preceding NOP tail"}
  ],
  "code": [

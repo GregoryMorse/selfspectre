@@ -20,9 +20,9 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 | C13 | §3 | AES T-tables equal the algebraic definition and the literal tables | F | R5 | proved | `AES.sbox_alg` (S-box = GF inverse + affine, all 256), `te4_lit`, `te0_bytes`..`te3_bytes` (generated exhaustive checks, `AES/Checks.lean`) |
 | C14 | §3 | T-table round = FIPS-197 round; final round uses Te4 | F | R5 | proved | `AES.round_step`, `te_byte`, `sbox_and255` |
 | C15 | §4 | WE AES lookup procedure = AES-128 encryption (FIPS-197 C.1) | F | R5 | proved (algorithm level) | `AES.weCipher_eq` against the FIPS spec; `fips197_c1`, `fips197_b` check the spec itself. Asm bytes: R6/R7 vectors |
-| C16 | Fig. 5 p.140 | `not` through SHL4 and the NOT table, byte level (W10) | F+M | R6 | todo | |
-| C17 | Fig. 7 p.142 | Carry conditional jump, byte level | F+M | R6 | todo | |
-| C18 | Fig. 6 p.141 | XOR double lookup and re-executable copy loop | F+M | R6 | todo | |
+| C16 | Fig. 5 p.140 | `not` through SHL4 and the NOT table, byte level (W10) | F+M | R6 | proved (model); bytes vs COFF in R7 | `X86.fig5_x86`, `fig5_x64` (published layout incl. NOP slide for k >= 248), `fig5_corrected`, `w10_original_sizes` (entry 247 = 19 B), `w10_corrected_sizes`, `x86_notres_offsets` (layout data) |
+| C17 | Fig. 7 p.142 | Carry conditional jump, byte level | F+M | R6 | proved (model) | `X86.carry_branch` (lands on nocry + 2c), `x86_carry_geometry`, `x64_carry_geometry`; SHL1 word store = `shl_lookup` with c = 1 |
+| C18 | Fig. 6 p.141 | XOR double lookup and re-executable copy loop | F+M | R6 | open | not attempted (could); the double lookup uses `shl_lookup` and `table16_lookup`-style steps, the copy loop needs a two-pass argument |
 | C19 | Fig. 1 p.134 | Branchless select yields the malicious index iff j mod 6 = 0 | F | R4 | proved | `Spectre.select_32`, `select_64` |
 | C20 | §2 p.134 | `mix_i = (i*167+13) & 255` permutes 0..255 | F | R4 | proved | `Spectre.mix_perm`, `mix_injective`, `mix_surjective` |
 | C21 | Fig. 3 | AES-NI sequence = AES-128 (stretch) | F | R5 | open | not attempted (stretch) |

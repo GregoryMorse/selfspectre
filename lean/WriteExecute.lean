@@ -30,3 +30,12 @@ public import WriteExecute.AES.Checks
 public import WriteExecute.AES.Basic
 public import WriteExecute.AES.Equiv
 public import WriteExecute.AES.Vectors
+public import WriteExecute.Spec.X86
+public import WriteExecute.X86.Basic
+public import WriteExecute.X86.Patch
+public import WriteExecute.X86.Lookup
+public import WriteExecute.X86.Fig5
+public import WriteExecute.X86.NotTable
+public import WriteExecute.X86.LayoutData
+public import WriteExecute.X86.Fig5Final
+public import WriteExecute.X86.Fig7

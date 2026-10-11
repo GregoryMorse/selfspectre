@@ -1,0 +1,16 @@
+{
+ "round": "R6",
+ "modules": [
+  "Spec.X86",
+  "X86.Basic",
+  "X86.Patch",
+  "X86.Lookup",
+  "X86.Fig5",
+  "X86.NotTable",
+  "X86.LayoutData",
+  "X86.Fig5Final",
+  "X86.Fig7"
+ ],
+ "axiom_audit": "2119 declarations, 0 violations",
+ "notes": "C16, C17 proved (model, both layouts); C18 open; COFF byte comparison deferred to R7"
+}

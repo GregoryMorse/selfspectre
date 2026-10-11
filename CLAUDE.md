@@ -7,7 +7,7 @@ State*, TMMP 73 (2019) 131–144, with errata, legacy-code corrections and a Pal
 (current round and handoff notes: `lean/ROUNDS.md`). Decisions in plan §2 are settled; ask the
 user before deviating. Do not browse `../smcTuring` beyond the paths the plan names.
 
-**Current round: R6** (byte-level model; R0-R5 done, see lean/ROUNDS.md). Update this line at each round close.
+**Current round: R7** (legacy corrections, native acceptance, errata TeX; R0-R6 done, see lean/ROUNDS.md). Update this line at each round close.
 
 ## Hard rules
 
