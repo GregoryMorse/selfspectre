@@ -47,3 +47,9 @@ lean/.lake/
 validation/.build/
 validation/.cache/
 __pycache__/
+
+validation/native/*.exe
+validation/native/*.obj
+validation/native/*.log
+output/pdf/*.aux
+output/pdf/*.log

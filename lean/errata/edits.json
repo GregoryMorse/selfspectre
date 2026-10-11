@@ -2,51 +2,181 @@
  "source": "validation/reference/tmmp-2019-0010.pdf",
  "source_sha256": "8d9b4072ed8e1a9dca8b7a304af917020f9f1f72d7894710dbe2e903056c1940",
  "edits": [
-  {"id": "W01", "page": 141, "location": "Section 4, paragraph after Figure 7", "kind": "replace", "class": "formal", "status": "planned",
+  {
+   "id": "W01",
+   "page": 141,
+   "location": "Section 4, paragraph after Figure 7",
+   "kind": "replace",
+   "class": "formal",
+   "status": "confirmed",
    "before": "A full compiler can be written and Turing-completeness could be readily proven from the model as already presented.",
    "after": "A full compiler can be written. Turing-completeness holds for the idealized machine with unbounded code memory initialized with a repeating blank-cell template, in which each cell encodes its symbol in the displacement of one jump and write-only handlers rewrite it. For a finite image the simulation is exact while the head stays inside the image, and the machine faults when it leaves.",
-   "lean_refs": ["R2/R3: Universal.*"], "source": "D2 in FORMALIZATION_PLAN.md"},
-  {"id": "W02", "page": 139, "location": "Section 4, paragraph beginning 'The practical details'", "kind": "insert_after", "class": "mechanical", "status": "confirmed",
+   "lean_refs": [
+    "Universal.universal_halts_iff",
+    "Universal.never_faults",
+    "Universal.bounded_halts",
+    "Universal.bounded_faults"
+   ],
+   "source": "D2 in FORMALIZATION_PLAN.md"
+  },
+  {
+   "id": "W02",
+   "page": 139,
+   "location": "Section 4, paragraph beginning 'The practical details'",
+   "kind": "insert_after",
+   "class": "mechanical",
+   "status": "confirmed",
    "before": "First of all, no registers are used in the instructions, and only jumps and data movement instructions are used.",
    "after": "No Write-Execute procedure uses the stack: each executed instruction is an immediate store into an instruction field, a direct jump, or a no-operation. Registers and returns occur only in the C-calling-convention entry points, which patch the argument fields and return the result.",
-   "lean_refs": ["R2: Model.ReadFree"], "code_refs": ["validation/layout/purity.json"],
-   "source": "purity scan: 28 core procedures, x86 and x64, 0 violations"},
-  {"id": "W03", "page": 139, "location": "Section 4, primitives list", "kind": "replace", "class": "formal", "status": "confirmed",
+   "lean_refs": [
+    "WE.step_eq_effect",
+    "WE.effect_congr",
+    "WE.store_from_window"
+   ],
+   "code_refs": [
+    "validation/layout/purity.json"
+   ],
+   "source": "purity scan: 28 core procedures, x86 and x64, 0 violations"
+  },
+  {
+   "id": "W03",
+   "page": 139,
+   "location": "Section 4, primitives list",
+   "kind": "replace",
+   "class": "formal",
+   "status": "confirmed",
    "before": "division with a 64-bit divisor, and 32-bit dividend, quotient and remainder",
    "after": "division of a 64-bit dividend by a 32-bit divisor, with a 32-bit remainder and the quotient modulo 2^32",
-   "lean_refs": ["R4: Arith.Div"], "source": "WriteExecDIV32_C(uint64_t, uint32_t)"},
-  {"id": "W04", "page": 136, "location": "Section 3, RSA paragraph", "kind": "replace", "class": "formal", "status": "confirmed",
+   "lean_refs": [
+    "Arith.doDivision_spec"
+   ],
+   "source": "WriteExecDIV32_C(uint64_t, uint32_t)"
+  },
+  {
+   "id": "W04",
+   "page": 136,
+   "location": "Section 3, RSA paragraph",
+   "kind": "replace",
+   "class": "formal",
+   "status": "confirmed",
    "before": "It also requires a 64-bit divisor divided by a 32-bit dividend with a 32-bit remainder. Although the quotient cannot overflow 32-bits of output, the remainder potentially can.",
    "after": "It also requires a 64-bit dividend divided by a 32-bit divisor with a 32-bit remainder. The remainder always fits in 32 bits, but the quotient overflows 32 bits unless the high half of the dividend is less than the divisor, which holds when both factors are first reduced modulo the divisor.",
-   "lean_refs": ["R4: Arith.Reduce"], "source": "x86 DIV semantics (#DE on quotient overflow)"},
-  {"id": "W05", "page": 136, "location": "Section 3, RSA paragraph", "kind": "replace", "class": "formal", "status": "confirmed",
+   "lean_refs": [
+    "Arith.div_lt_word_iff",
+    "Arith.mulmodFixed_spec"
+   ],
+   "source": "x86 DIV semantics (#DE on quotient overflow)"
+  },
+  {
+   "id": "W05",
+   "page": 136,
+   "location": "Section 3, RSA paragraph",
+   "kind": "replace",
+   "class": "formal",
+   "status": "confirmed",
    "before": "an efficient implementation which requires log2 E + count_bits(E) modular multiplications",
    "after": "an efficient implementation which requires floor(log2 E) + 1 + count_bits(E) modular multiplications for E >= 1",
-   "lean_refs": ["R4: Arith.Count"], "source": "fastmodexp and WriteExecMODEXP32 (asm lines 4088-4402): exponent tested, conditional multiply, shift, unconditional square, per exponent bit"},
-  {"id": "W06", "page": 137, "location": "Section 3, discussion of Tables 1-2", "kind": "replace", "class": "editorial", "status": "confirmed",
-   "before": "93+5*44", "after": "93+6*44",
-   "source": "Table 2 pattern 53+2*44, 73+4*44, 83+5*44 for 2, 4, 5 rounds; the 6-round entry is 93+6*44"},
-  {"id": "W07", "page": 131, "location": "Title footnote, Mathematics Subject Classification", "kind": "replace", "class": "editorial", "status": "confirmed",
-   "before": "62K05", "after": "94A60, 68M07",
-   "source": "62K05 is 'optimal statistical designs', a journal-template residue; the paper concerns cryptographic obfuscation and processor architecture"},
-  {"id": "W08", "page": 134, "location": "Section 2, fourth paragraph", "kind": "replace", "class": "editorial", "status": "confirmed",
+   "lean_refs": [
+    "Arith.mulCount_log2"
+   ],
+   "source": "fastmodexp and WriteExecMODEXP32 (asm lines 4088-4402): exponent tested, conditional multiply, shift, unconditional square, per exponent bit"
+  },
+  {
+   "id": "W06",
+   "page": 137,
+   "location": "Section 3, discussion of Tables 1-2",
+   "kind": "replace",
+   "class": "editorial",
+   "status": "confirmed",
+   "before": "93+5*44",
+   "after": "93+6*44",
+   "source": "Table 2 pattern 53+2*44, 73+4*44, 83+5*44 for 2, 4, 5 rounds; the 6-round entry is 93+6*44"
+  },
+  {
+   "id": "W07",
+   "page": 131,
+   "location": "Title footnote, Mathematics Subject Classification",
+   "kind": "replace",
+   "class": "editorial",
+   "status": "confirmed",
+   "before": "62K05",
+   "after": "94A60, 68M07",
+   "source": "62K05 is 'optimal statistical designs', a journal-template residue; the paper concerns cryptographic obfuscation and processor architecture"
+  },
+  {
+   "id": "W08",
+   "page": 134,
+   "location": "Section 2, fourth paragraph",
+   "kind": "replace",
+   "class": "editorial",
+   "status": "confirmed",
    "before": "which flushes the cache 4 bytes at a time",
    "after": "which performs a 16-byte non-temporal store that bypasses the cache and thereby evicts the line",
-   "source": "Intel SDM: MOVNTPS/_mm_stream_ps stores four packed single-precision values (16 bytes)"},
-  {"id": "W09", "page": 133, "location": "Section 2, Meltdown paragraph", "kind": "replace", "class": "editorial", "status": "confirmed",
+   "source": "Intel SDM: MOVNTPS/_mm_stream_ps stores four packed single-precision values (16 bytes)"
+  },
+  {
+   "id": "W09",
+   "page": 133,
+   "location": "Section 2, Meltdown paragraph",
+   "kind": "replace",
+   "class": "editorial",
+   "status": "confirmed",
    "before": "256 local 512-byte pages",
    "after": "256 local 4096-byte pages (the Spectre proof of concept uses a 512-byte stride)",
-   "source": "Lipp et al., Meltdown (2018): probe array of 256 pages of 4096 bytes"},
-  {"id": "W10", "page": 140, "location": "Figure 5, DEFINENOT (and the identical DEFINENZ)", "kind": "replace", "class": "mechanical", "status": "confirmed",
-   "before": "IF Index GT 0f6h", "after": "IF Index GT 0f7h",
-   "lean_refs": ["X86.w10_original_sizes", "X86.w10_corrected_sizes", "X86.fig5_x64", "X86.fig5_corrected"], "code_refs": ["validation/layout/x86.json", "validation/layout/x64.json"],
-   "source": "listing: notres_247 and nzres_247 occupy 19 bytes (others 16) on x86 and x64; lookups still land via the preceding NOP tail"}
+   "source": "Lipp et al., Meltdown (2018): probe array of 256 pages of 4096 bytes"
+  },
+  {
+   "id": "W10",
+   "page": 140,
+   "location": "Figure 5, DEFINENOT (and the identical DEFINENZ)",
+   "kind": "replace",
+   "class": "mechanical",
+   "status": "confirmed",
+   "before": "IF Index GT 0f6h",
+   "after": "IF Index GT 0f7h",
+   "lean_refs": [
+    "X86.w10_original_sizes",
+    "X86.w10_corrected_sizes",
+    "X86.fig5_x64",
+    "X86.fig5_corrected"
+   ],
+   "code_refs": [
+    "validation/layout/x86.json",
+    "validation/layout/x64.json"
+   ],
+   "source": "listing: notres_247 and nzres_247 occupy 19 bytes (others 16) on x86 and x64; lookups still land via the preceding NOP tail"
+  }
  ],
  "code": [
-  {"id": "L01", "file": "writeexec.c", "fix": "diagnostics for Te1-Te4 print the matching table and the actual result", "test": "harness"},
-  {"id": "L02", "file": "spectreopt.c", "fix": "fastmodexp: result = 1 % mod (b^0 mod 1 = 0)", "test": "vectors incl. mod=1"},
-  {"id": "L03", "file": "spectreopt.c", "fix": "mulmod: reduce the high half with % instead of /", "test": "unit vectors"},
-  {"id": "L04", "file": "writeexc.asm", "fix": "DEFINENOT and DEFINENZ threshold 0f6h -> 0f7h", "test": "re-extract layout: stride 16 for all 256 entries; harness"},
-  {"id": "L05", "file": "writeexc.asm", "fix": "WriteExecMODEXP32: documented precondition mod >= 2 (RSA moduli); harness excludes mod = 1 for the WE call", "test": "vectors"}
+  {
+   "id": "L01",
+   "file": "writeexec.c",
+   "fix": "diagnostics for Te1-Te4 print the matching table and the actual result",
+   "test": "harness"
+  },
+  {
+   "id": "L02",
+   "file": "spectreopt.c",
+   "fix": "fastmodexp: result = 1 % mod (b^0 mod 1 = 0)",
+   "test": "vectors incl. mod=1"
+  },
+  {
+   "id": "L03",
+   "file": "spectreopt.c",
+   "fix": "mulmod: reduce the high half with % instead of /",
+   "test": "unit vectors"
+  },
+  {
+   "id": "L04",
+   "file": "writeexc.asm",
+   "fix": "DEFINENOT and DEFINENZ threshold 0f6h -> 0f7h",
+   "test": "re-extract layout: stride 16 for all 256 entries; harness"
+  },
+  {
+   "id": "L05",
+   "file": "writeexc.asm",
+   "fix": "WriteExecMODEXP32: documented precondition mod >= 2 (RSA moduli); harness excludes mod = 1 for the WE call",
+   "test": "vectors"
+  }
  ]
 }

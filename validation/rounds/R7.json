@@ -1,0 +1,17 @@
+{
+ "round": "R7",
+ "commit": "fd49944",
+ "native": {
+  "Debug|Win32": "pass",
+  "Release|Win32": "pass",
+  "Debug|x64": "pass",
+  "Release|x64": "pass"
+ },
+ "vectors": {
+  "mulmod": 4029,
+  "modexp": 1332,
+  "result": "pass"
+ },
+ "errata_pdf_pages": 1,
+ "notes": "author review pending; layout JSON not re-extracted after L04"
+}

@@ -1,0 +1,90 @@
+diff --git a/spectreopt.c b/spectreopt.c
+index 67e9e6d..5528954 100644
+--- a/spectreopt.c
++++ b/spectreopt.c
+@@ -25,12 +25,12 @@ uint32_t fastmulmod(uint32_t a, uint32_t b, uint32_t m)
+ uint32_t mulmod(uint32_t a, uint32_t b, uint32_t m)
+ {
+ 	unsigned long long c = a * (unsigned long long)b;
+-	return ((((c >> 32) / m) << 32) | (c & 0xFFFFFFFF)) % m;
++	return ((((c >> 32) % m) << 32) | (c & 0xFFFFFFFF)) % m;
+ }
+ 
+ uint32_t fastmodexp(uint32_t base, uint32_t exp, uint32_t mod)
+ {
+-	uint32_t result = 1;
++	uint32_t result = 1 % mod;
+ 	if (base >= mod) base %= mod;
+ 	while (exp != 0) {
+ 		if (exp & 1) result = fastmulmod(result, base, mod);
+diff --git a/writeexc.asm b/writeexc.asm
+index 1ee7891..15ad01b 100644
+--- a/writeexc.asm
++++ b/writeexc.asm
+@@ -93,7 +93,7 @@ WriteExecSHL7 ENDP
+ DEFINENOT macro Index, Lbl
+ 	&Lbl&_&Index&: mov byte ptr [Lbl+6], not Index
+ 	jmp [Lbl] ;; preprocessor wrongly assumes 10 bytes for jump unfortunately not 2 or 5 bytes
+-IF Index GT 0f6h ;; preprocessor also cannot look at distance to future labels
++IF Index GT 0f7h ;; preprocessor also cannot look at distance to future labels
+ 	db 7 dup (090h)
+ ELSE
+ 	db 4 dup (090h)
+@@ -142,7 +142,7 @@ WriteExecNOT_C ENDP
+ DEFINENZ macro Index, Lbl
+ 	&Lbl&_&Index&: mov byte ptr [Lbl+6], (Index NE 0) and 1
+ 	jmp [Lbl] ;; preprocessor wrongly assumes 10 bytes for jump unfortunately not 2 or 5 bytes
+-IF Index GT 0f6h ;; preprocessor also cannot look at distance to future labels
++IF Index GT 0f7h ;; preprocessor also cannot look at distance to future labels
+ 	db 7 dup (090h)
+ ELSE
+ 	db 4 dup (090h)
+@@ -4410,6 +4410,8 @@ modexpres4:: mov byte ptr [modexpres4+6], 0
+ modexp32ret:: jmp $+80000000h
+ WriteExecMODEXP32 ENDP
+ 
++; Precondition: modulus >= 2 (the result register is initialised to 1 and never reduced,
++; so a modulus of 1 yields 1 instead of 0). RSA moduli satisfy this.
+ ifndef X64
+ WriteExecMODEXP32_C PROC modexp32_1arg: DWORD, modexp32_2arg: DWORD, modexp32_3arg: DWORD
+ mov ecx, dword ptr [modexp32_1arg]
+diff --git a/writeexec.c b/writeexec.c
+index 1b928d3..f2de7cc 100644
+--- a/writeexec.c
++++ b/writeexec.c
+@@ -688,22 +688,22 @@ int main(int argc,
+ 	for (int i = 0; i < 256; i++) {
+ 		result32 = WriteExecTe1_C(i);
+ 		if (result32 != Te1[i])
+-			printf("%08X[%08X]", result32, Te0[i]);
++			printf("%08X[%08X]", result32, Te1[i]);
+ 	}
+ 	for (int i = 0; i < 256; i++) {
+ 		result32 = WriteExecTe2_C(i);
+ 		if (result32 != Te2[i])
+-			printf("%08X[%08X]", result32, Te0[i]);
++			printf("%08X[%08X]", result32, Te2[i]);
+ 	}
+ 	for (int i = 0; i < 256; i++) {
+ 		result32 = WriteExecTe3_C(i);
+ 		if (result32 != Te3[i])
+-			printf("%08X[%08X]", result32, Te0[i]);
++			printf("%08X[%08X]", result32, Te3[i]);
+ 	}
+ 	for (int i = 0; i < 256; i++) {
+ 		result = WriteExecTe4_C(i);
+ 		if ((result | (result << 8) | (result << 16) | (result << 24)) != Te4[i])
+-			printf("%08X[%08X]", result32, Te0[i]);
++			printf("%08X[%08X]", result | (result << 8) | (result << 16) | (result << 24), Te4[i]);
+ 	}
+ 	for (int i = 0; i < 100; i++) {
+ 		char in[16];
+@@ -836,7 +836,7 @@ int main(int argc,
+ 		uint32_t num1, num2, num3;
+ 		rand_s(&num1); rand_s(&num2);
+ 		rand_s(&num3);
+-		if (num3 != 0) {
++		if (num3 >= 2) { // WriteExecMODEXP32_C requires mod >= 2 (erratum L05)
+ 			result32 = WriteExecMODEXP32_C(num1, num2, num3);
+ 			if (result32 != fastmodexp(num1, num2, num3))
+ 				printf("%08X[%08X]", result32, fastmodexp(num1, num2, num3));
