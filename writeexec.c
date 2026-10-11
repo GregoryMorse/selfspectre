@@ -688,22 +688,22 @@ int main(int argc,
 	for (int i = 0; i < 256; i++) {
 		result32 = WriteExecTe1_C(i);
 		if (result32 != Te1[i])
-			printf("%08X[%08X]", result32, Te0[i]);
+			printf("%08X[%08X]", result32, Te1[i]);
 	}
 	for (int i = 0; i < 256; i++) {
 		result32 = WriteExecTe2_C(i);
 		if (result32 != Te2[i])
-			printf("%08X[%08X]", result32, Te0[i]);
+			printf("%08X[%08X]", result32, Te2[i]);
 	}
 	for (int i = 0; i < 256; i++) {
 		result32 = WriteExecTe3_C(i);
 		if (result32 != Te3[i])
-			printf("%08X[%08X]", result32, Te0[i]);
+			printf("%08X[%08X]", result32, Te3[i]);
 	}
 	for (int i = 0; i < 256; i++) {
 		result = WriteExecTe4_C(i);
 		if ((result | (result << 8) | (result << 16) | (result << 24)) != Te4[i])
-			printf("%08X[%08X]", result32, Te0[i]);
+			printf("%08X[%08X]", result | (result << 8) | (result << 16) | (result << 24), Te4[i]);
 	}
 	for (int i = 0; i < 100; i++) {
 		char in[16];
@@ -836,7 +836,7 @@ int main(int argc,
 		uint32_t num1, num2, num3;
 		rand_s(&num1); rand_s(&num2);
 		rand_s(&num3);
-		if (num3 != 0) {
+		if (num3 >= 2) { // WriteExecMODEXP32_C requires mod >= 2 (erratum L05)
 			result32 = WriteExecMODEXP32_C(num1, num2, num3);
 			if (result32 != fastmodexp(num1, num2, num3))
 				printf("%08X[%08X]", result32, fastmodexp(num1, num2, num3));

@@ -93,7 +93,7 @@ WriteExecSHL7 ENDP
 DEFINENOT macro Index, Lbl
 	&Lbl&_&Index&: mov byte ptr [Lbl+6], not Index
 	jmp [Lbl] ;; preprocessor wrongly assumes 10 bytes for jump unfortunately not 2 or 5 bytes
-IF Index GT 0f6h ;; preprocessor also cannot look at distance to future labels
+IF Index GT 0f7h ;; preprocessor also cannot look at distance to future labels
 	db 7 dup (090h)
 ELSE
 	db 4 dup (090h)
@@ -142,7 +142,7 @@ WriteExecNOT_C ENDP
 DEFINENZ macro Index, Lbl
 	&Lbl&_&Index&: mov byte ptr [Lbl+6], (Index NE 0) and 1
 	jmp [Lbl] ;; preprocessor wrongly assumes 10 bytes for jump unfortunately not 2 or 5 bytes
-IF Index GT 0f6h ;; preprocessor also cannot look at distance to future labels
+IF Index GT 0f7h ;; preprocessor also cannot look at distance to future labels
 	db 7 dup (090h)
 ELSE
 	db 4 dup (090h)
@@ -4410,6 +4410,8 @@ modexpres4:: mov byte ptr [modexpres4+6], 0
 modexp32ret:: jmp $+80000000h
 WriteExecMODEXP32 ENDP
 
+; Precondition: modulus >= 2 (the result register is initialised to 1 and never reduced,
+; so a modulus of 1 yields 1 instead of 0). RSA moduli satisfy this.
 ifndef X64
 WriteExecMODEXP32_C PROC modexp32_1arg: DWORD, modexp32_2arg: DWORD, modexp32_3arg: DWORD
 mov ecx, dword ptr [modexp32_1arg]

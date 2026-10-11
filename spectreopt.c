@@ -25,12 +25,12 @@ uint32_t fastmulmod(uint32_t a, uint32_t b, uint32_t m)
 uint32_t mulmod(uint32_t a, uint32_t b, uint32_t m)
 {
 	unsigned long long c = a * (unsigned long long)b;
-	return ((((c >> 32) / m) << 32) | (c & 0xFFFFFFFF)) % m;
+	return ((((c >> 32) % m) << 32) | (c & 0xFFFFFFFF)) % m;
 }
 
 uint32_t fastmodexp(uint32_t base, uint32_t exp, uint32_t mod)
 {
-	uint32_t result = 1;
+	uint32_t result = 1 % mod;
 	if (base >= mod) base %= mod;
 	while (exp != 0) {
 		if (exp & 1) result = fastmulmod(result, base, mod);
