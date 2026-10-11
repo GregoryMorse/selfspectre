@@ -10,7 +10,7 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | R3 | Turing-completeness (TC-U must; TC-B should) DONE (Mathlib composition with `MathlibTM0` deferred to CI, optional) |
 | R4 | Arithmetic, division, modexp, Spectre arithmetic | DONE (vectors deferred to R7) |
 | R5 | AES (should) | DONE (C21 AES-NI closed in R8) |
-| R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | DONE (C18 open; NZ, corrected layout, COFF comparison closed in R8) |
+| R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | DONE (C18, NZ, corrected layout and COFF comparison closed in R8) |
 | R7 | Legacy corrections, native acceptance, errata TeX | DONE (author review pending) |
 | R8 | Palomar package, CI, handoff | package done; CI and Palomar full preflight pending (push authorized, preflight dispatch not) |
 
@@ -135,8 +135,13 @@ Gap closing before the package:
 - L04 confirmed on the assembled objects: `run_listings.py lstc` + `extract_layout.py lstc` give `validation/layout/{x86,x64}c.json`;
   `LayoutData` now has the `x86c`/`x64c` layouts (`*c_geometry`, `*c_notres_offsets`), `Fig5Final` has `fig5c_*` (14 steps for every `k`).
 - `compare_listings.py`: 3092 Lean-encoded byte strings equal the relocated COFF `.text` (published and corrected, x86 and x64).
-- Still open: C18 (Fig. 6, `WriteExecXOR` copy loop; the arithmetic is C08), WE-entry edge vectors against the assembled procedures,
-  author review of the errata PDF.
+- Closed after the first package: C18 (Fig. 6): `X86/Fig6.lean` (`ArgImg`, `arg_stage`, `xor_loop`, `xor_tail_x64/x86`,
+  `xor_exec_x64` 35 steps, `xor_exec_x86` 38 steps, writes confined to `XorW64`/`XorW86`, stale field values allowed) and
+  `Fig6Final.lean` (`fig6_x86/x64/x86c/x64c` at the assembled section offsets); `compare_dump`/`compare_listings` now compare
+  7,778 Lean-encoded byte strings (the XOR image incl. all 65,536 entries and the SHL5 table) with the COFF `.text`: 0 mismatches.
+  WE-entry edge vectors: `validation/native_edge.py` + `native/edge_vectors.c` assemble `writeexc.asm` (x86, x64) and check
+  232,081 deterministic boundary vectors (all 8-bit pairs, every shift count, carry/borrow edges, MUL32/DIV32/MOD32/MODEXP32, FIPS-197 C.1): pass.
+- Still open: author review of the errata PDF (the user).
 
 Package:
 - `Spec/Paper.lean` (eight results) and `Paper.lean` (proofs); `Spec/Confinement.lean` holds the C04 vocabulary moved out of `Model/Confinement`.

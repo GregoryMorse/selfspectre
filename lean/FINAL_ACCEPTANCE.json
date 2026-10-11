@@ -13,7 +13,11 @@
     "Protected Comparator / NanoDa run records not attached",
     "Author review of the errata PDF"
   ],
-  "open_obligations": ["C18 (Fig. 6 XOR copy loop; helper lemmas in X86/Fig6.lean)", "WE-entry edge vectors against assembled procedures"],
+  "open_obligations": [],
   "submission_performed": false,
-  "registration_performed": false
+  "registration_performed": false,
+  "closed_after_first_ci": [
+    "C18 (Fig. 6 XOR copy loop): X86/Fig6.lean, Fig6Final.lean",
+    "WE-entry edge vectors against assembled procedures: validation/native_edge.py (232,081 checks, x86 and x64)"
+  ]
 }

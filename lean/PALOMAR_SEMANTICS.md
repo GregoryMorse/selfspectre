@@ -39,7 +39,7 @@ each result definition from the development's individual theorems. All proofs us
 * `AESResult` takes the expanded key `w` as given (the key schedule `keyWords` is specified and checked
   against FIPS-197 C.1 but the WE procedure does not expand keys).
 * **Not selected** (proved or checked in the development, listed in `PAPER_MAP.md`): the byte-level x86/x64
-  model of Figs. 5 and 7 (`X86/`), the layout geometry of the assembled objects, the AES-NI sequence (C21),
-  the native harnesses. **Open**: the XOR copy loop of Fig. 6 (C18).
+  model of Figs. 5, 6 and 7 (`X86/`), the layout geometry of the assembled objects, the AES-NI sequence (C21),
+  the native harnesses (including the edge vectors against the assembled entry points).
 * No claim about caches, speculation, a real CPU or operating system is made. The Spectre half of the paper
   is not formalized except the index arithmetic of its figures.

@@ -11,4 +11,5 @@
 | First submission / existing id | first submission; id blank |
 
 Notes: AI assistance (Claude) is disclosed in formalization.yaml. The model is ideal (unbounded). Warning: Challenge.lean is 706 lines / ~50 KB (hard limit 1000 / 100 KiB; preferred 300 / 32 KiB).
-Unverified: official full preflight, Comparator/NanoDa run records, C18, author errata review.
+Closed since the first sheet: C18 (Fig. 6 byte-level proof, `X86/Fig6.lean`) and the WE-entry edge vectors (`validation/native_edge.py`).
+Unverified: official full preflight, Comparator/NanoDa run records, author errata review.

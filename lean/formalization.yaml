@@ -84,11 +84,11 @@ status:
     division, modular reduction and exponentiation, AES-128 (S-box, Te tables, FIPS-197 equality of
     the Write-Execute procedure, Appendix C.1) and the Spectre index arithmetic. The machine
     model is ideal: unbounded integer addresses and values, no registers or stack. The paper's
-    x86/x64 figures, the carry branch and the NOT table layout are proved only in a small byte-level
-    model (X86/ directory) and the assembled MASM and C are checked by native test vectors; both are
-    supporting material, not selected registered claims. PAPER_MAP.md lists every claim with its
-    status, including the open obligations: the XOR copy loop of Fig. 6, the AES-NI sequence of
-    Fig. 3, and a byte-for-byte comparison of the assembler output with the Lean encodings.
+    x86/x64 figures (Fig. 5 NOT/NZ, Fig. 6 XOR copy loop, Fig. 7 carry branch), the NOT table layout and
+    the AES-NI sequence of Fig. 3 are proved only in a small byte-level model (X86/ directory) or against the
+    given round keys, and the assembled MASM and C are checked by native test vectors and a byte comparison of
+    the assembler output with the Lean encodings; all of this is supporting material, not selected registered
+    claims. PAPER_MAP.md lists every claim with its status.
     No physical processor, operating-system or cache behavior is formalized.
   sorry_count: 0
   sorry_in_definitions: 0
@@ -122,7 +122,7 @@ fidelity:
     modular exponentiation of one, the mulmod high-half reduction, the NOT/NZ table index bound and the
     modular exponentiation precondition. Each has source excerpts and Lean references in errata/edits.json
     and is validated by validation/audit_errata.py. The machine is ideal and unbounded; finite hardware is
-    not claimed to be unbounded. Fig. 6 and the AES-NI sequence are not proved. No further mismatch is
+    not claimed to be unbounded. The AES-NI key expansion (aeskeygenassist) is not modeled. No further mismatch is
     claimed absent after an unspecified universal review.
 review:
   status: "agent-reviewed"
