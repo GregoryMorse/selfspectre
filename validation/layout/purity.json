@@ -1,0 +1,30 @@
+{
+ "x86": {
+  "core_procs": 28,
+  "wrapper_procs": 25,
+  "instructions": {
+   "jmp32": 336977,
+   "mov16": 1299,
+   "nop": 10366162,
+   "mov8": 469336,
+   "mov32": 2274,
+   "jmp8": 237
+  },
+  "violations": [],
+  "n_violations": 0
+ },
+ "x64": {
+  "core_procs": 28,
+  "wrapper_procs": 25,
+  "instructions": {
+   "jmp32": 335694,
+   "mov16": 1299,
+   "nop": 10327174,
+   "mov8": 469336,
+   "mov32": 978,
+   "jmp8": 217
+  },
+  "violations": [],
+  "n_violations": 0
+ }
+}
