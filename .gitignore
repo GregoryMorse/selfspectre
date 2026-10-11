@@ -1,8 +1,13 @@
 # Visual Studio build output
-[Dd]ebug/
-[Rr]elease/
-x64/
-x86/
+# (anchored: the Lean directory lean/WriteExecute/X86 must not match)
+/[Dd]ebug/
+/[Rr]elease/
+/x64/
+/x86/
+/*/[Dd]ebug/
+/*/[Rr]elease/
+/*/x64/
+/*/x86/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
@@ -53,3 +58,4 @@ validation/native/*.obj
 validation/native/*.log
 output/pdf/*.aux
 output/pdf/*.log
+/writeexec/writeexec/
