@@ -103,26 +103,31 @@ theorem lay {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c x : Int) (j 
     layout M tape x = cellWord M (tape c).val j := by
   subst hx; exact layout_at M tape c j hj
 
-theorem patched_word {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+theorem layG {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j) (x : Int) (j : Nat)
+    (hj : j < cellSize A Q) (hx : x = c * (cellSize A Q : Int) + (j : Int)) :
+    L x = cellWord M (tape c).val j := by
+  subst hx; exact hL j hj
+
+theorem patched_word {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j)
     (q sym a' : Nat) (hq : q < Q) (hs : sym < A) (htape : (tape c).val = sym)
     (i : Nat) (hi : i ≤ Q) (k : Nat) (hk : k < handlerSize Q) (x : Int)
     (hx : x = c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + (k : Int)) :
-    patch A Q (c * (cellSize A Q : Int)) a' i (layout M tape) x = handlerWord M q sym k := by
+    patch A Q (c * (cellSize A Q : Int)) a' i L x = handlerWord M q sym k := by
   have hh : 2 * Q ≤ handlerAt A Q q sym := by unfold handlerAt; omega
   have hend := handler_end_le (A := A) q sym k hq hs hk
-  rw [patch_miss A Q _ a' (layout M tape) i x (fun j hj => by omega)]
-  rw [lay M tape c x (handlerAt A Q q sym + k) hend (by push_cast; omega), htape]
+  rw [patch_miss A Q _ a' L i x (fun j hj => by omega)]
+  rw [layG M tape c L hL x (handlerAt A Q q sym + k) hend (by push_cast; omega), htape]
   exact cellWord_handler M sym q sym k hq hs hk
 
 /-- Entry: the jump at `2q` lands on the handler for the cell's symbol. -/
-theorem entry_step {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (q : Nat)
+theorem entry_step {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j) (q : Nat)
     (hq : q < Q) :
-    WE.step ⟨c * (cellSize A Q : Int) + 2 * (q : Int), layout M tape⟩ =
-      (.running, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q (tape c).val : Int), layout M tape⟩) := by
+    WE.step ⟨c * (cellSize A Q : Int) + 2 * (q : Int), L⟩ =
+      (.running, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q (tape c).val : Int), L⟩) := by
   have hS : 2 * q + 1 < cellSize A Q := by unfold cellSize; omega
-  have h0 := lay M tape c (c * (cellSize A Q : Int) + 2 * (q : Int)) (2 * q) (by omega)
+  have h0 := layG M tape c L hL (c * (cellSize A Q : Int) + 2 * (q : Int)) (2 * q) (by omega)
     (by push_cast; omega)
-  have h1 := lay M tape c (c * (cellSize A Q : Int) + 2 * (q : Int) + 1) (2 * q + 1) hS
+  have h1 := layG M tape c L hL (c * (cellSize A Q : Int) + 2 * (q : Int) + 1) (2 * q + 1) hS
     (by push_cast; omega)
   rw [cellWord_entry_op M _ q hq] at h0
   rw [cellWord_entry_disp M _ q hq] at h1
@@ -134,21 +139,21 @@ theorem entry_step {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int
 
 
 /-- One of the `Q` stores of a handler: it rewrites the displacement of entry `i`. -/
-theorem mov_step {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+theorem mov_step {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j)
     (q sym : Nat) (hq : q < Q) (hs : sym < A) (htape : (tape c).val = sym)
     (nx : Fin A) (right : Bool) (q' : Fin Q) (ht : trans M q sym = some (nx, right, q'))
     (i : Nat) (hi : i < Q) :
     WE.step ⟨c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + 3 * (i : Int),
-        patch A Q (c * (cellSize A Q : Int)) nx.val i (layout M tape)⟩ =
+        patch A Q (c * (cellSize A Q : Int)) nx.val i L⟩ =
       (.running, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + 3 * ((i + 1 : Nat) : Int),
-        patch A Q (c * (cellSize A Q : Int)) nx.val (i + 1) (layout M tape)⟩) := by
-  have w0 := patched_word M tape c q sym nx.val hq hs htape i (by omega) (3 * i)
+        patch A Q (c * (cellSize A Q : Int)) nx.val (i + 1) L⟩) := by
+  have w0 := patched_word M tape c L hL q sym nx.val hq hs htape i (by omega) (3 * i)
     (by unfold handlerSize; omega)
     (c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + 3 * (i : Int)) (by push_cast; omega)
-  have w1 := patched_word M tape c q sym nx.val hq hs htape i (by omega) (3 * i + 1)
+  have w1 := patched_word M tape c L hL q sym nx.val hq hs htape i (by omega) (3 * i + 1)
     (by unfold handlerSize; omega)
     (c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + 3 * (i : Int) + 1) (by push_cast; omega)
-  have w2 := patched_word M tape c q sym nx.val hq hs htape i (by omega) (3 * i + 2)
+  have w2 := patched_word M tape c L hL q sym nx.val hq hs htape i (by omega) (3 * i + 2)
     (by unfold handlerSize; omega)
     (c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + 3 * (i : Int) + 2) (by push_cast; omega)
   rw [hw_op M i hi ht] at w0
@@ -164,20 +169,20 @@ theorem mov_step {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
   rw [e, e2]
   rfl
 
-theorem mov_loop {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+theorem mov_loop {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j)
     (q sym : Nat) (hq : q < Q) (hs : sym < A) (htape : (tape c).val = sym)
     (nx : Fin A) (right : Bool) (q' : Fin Q) (ht : trans M q sym = some (nx, right, q')) :
     ∀ i, i ≤ Q →
-      WE.run i ⟨c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int), layout M tape⟩ =
+      WE.run i ⟨c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int), L⟩ =
         (.running, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q sym : Int) + 3 * (i : Int),
-          patch A Q (c * (cellSize A Q : Int)) nx.val i (layout M tape)⟩) := by
+          patch A Q (c * (cellSize A Q : Int)) nx.val i L⟩) := by
   intro i
   induction i with
   | zero => intro _; simp [WE.run, patch]
   | succ i ih =>
     intro hi
     rw [WE.run_succ_right, ih (by omega)]
-    exact mov_step M tape c q sym hq hs htape nx right q' ht i (by omega)
+    exact mov_step M tape c L hL q sym hq hs htape nx right q' ht i (by omega)
 
 /-- After all `Q` stores the patched image is the image of the rewritten tape. -/
 theorem patch_eq_layout_write {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
@@ -211,24 +216,24 @@ theorem patch_eq_layout_write {A Q : Nat} (M : Machine A Q) (tape : Int → Fin 
     · simp [write, hd]
 
 /-- C02 core: a state with a transition takes exactly `Q + 2` steps to realise it. -/
-theorem cell_step_some {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+theorem cell_step_some_gen {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j)
     (q : Fin Q) (nx : Fin A) (right : Bool) (q' : Fin Q)
     (ht : M.transition q (tape c) = some (nx, right, q')) :
-    WE.run (Q + 2) ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), layout M tape⟩ =
+    WE.run (Q + 2) ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), L⟩ =
       (.running, ⟨(if right then c + 1 else c - 1) * (cellSize A Q : Int) + 2 * (q'.val : Int),
-        layout M (write tape c nx)⟩) := by
+        patch A Q (c * (cellSize A Q : Int)) nx.val Q L⟩) := by
   have ht' : trans M q.val (tape c).val = some (nx, right, q') := by
     simp [trans, q.2, (tape c).2, ht]
-  have r1 : WE.run (1 + Q) ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), layout M tape⟩ =
+  have r1 : WE.run (1 + Q) ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), L⟩ =
       (.running, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int)
-        + 3 * (Q : Int), patch A Q (c * (cellSize A Q : Int)) nx.val Q (layout M tape)⟩) := by
-    rw [WE.run_add, WE.run_one, entry_step M tape c q.val q.2]
-    exact mov_loop M tape c q.val (tape c).val q.2 (tape c).2 rfl nx right q' ht' Q (Nat.le_refl _)
-  have w0 := patched_word M tape c q.val (tape c).val nx.val q.2 (tape c).2 rfl Q (Nat.le_refl _) (3 * Q)
+        + 3 * (Q : Int), patch A Q (c * (cellSize A Q : Int)) nx.val Q L⟩) := by
+    rw [WE.run_add, WE.run_one, entry_step M tape c L hL q.val q.2]
+    exact mov_loop M tape c L hL q.val (tape c).val q.2 (tape c).2 rfl nx right q' ht' Q (Nat.le_refl _)
+  have w0 := patched_word M tape c L hL q.val (tape c).val nx.val q.2 (tape c).2 rfl Q (Nat.le_refl _) (3 * Q)
     (by unfold handlerSize; omega)
     (c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int) + 3 * (Q : Int))
     (by push_cast; omega)
-  have w1 := patched_word M tape c q.val (tape c).val nx.val q.2 (tape c).2 rfl Q (Nat.le_refl _) (3 * Q + 1)
+  have w1 := patched_word M tape c L hL q.val (tape c).val nx.val q.2 (tape c).2 rfl Q (Nat.le_refl _) (3 * Q + 1)
     (by unfold handlerSize; omega)
     (c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int) + 3 * (Q : Int) + 1)
     (by push_cast; omega)
@@ -237,7 +242,7 @@ theorem cell_step_some {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c :
   have e : Q + 2 = 1 + Q + 1 := by omega
   rw [e, WE.run_succ_right, r1]
   show WE.step _ = _
-  rw [step_jmp' _ _ w0, w1, patch_eq_layout_write]
+  rw [step_jmp' _ _ w0, w1]
   have hmul : (if right then c + 1 else c - 1) * (cellSize A Q : Int) =
       c * (cellSize A Q : Int) + (if right then (cellSize A Q : Int) else -(cellSize A Q : Int)) := by
     cases right <;> simp [Int.add_mul, Int.sub_mul]
@@ -251,26 +256,43 @@ theorem cell_step_some {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c :
   rw [e2]
 
 /-- A missing transition: the entry jump and the halt, two steps. -/
-theorem cell_step_none {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+theorem cell_step_none_gen {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int) (L : Int → Int) (hL : ∀ j : Nat, j < cellSize A Q → L (c * (cellSize A Q : Int) + (j : Int)) = cellWord M (tape c).val j)
     (q : Fin Q) (ht : M.transition q (tape c) = none) :
-    WE.run 2 ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), layout M tape⟩ =
+    WE.run 2 ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), L⟩ =
       (.halted, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int),
-        layout M tape⟩) := by
+        L⟩) := by
   have ht' : trans M q.val (tape c).val = none := by
     simp [trans, q.2, (tape c).2, ht]
   have hh : 2 * Q ≤ handlerAt A Q q.val (tape c).val := by unfold handlerAt; omega
   have hend := handler_end_le (A := A) q.val (tape c).val 0 q.2 (tape c).2
     (by unfold handlerSize; omega)
-  have w0 := lay M tape c (c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int))
+  have w0 := layG M tape c L hL (c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int))
     (handlerAt A Q q.val (tape c).val + 0) hend (by push_cast; omega)
   rw [cellWord_handler M _ q.val (tape c).val 0 q.2 (tape c).2 (by unfold handlerSize; omega),
     hw_hlt M ht'] at w0
-  have r1 : WE.run 1 ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), layout M tape⟩ =
+  have r1 : WE.run 1 ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), L⟩ =
       (.running, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int),
-        layout M tape⟩) := by
-    rw [WE.run_one]; exact entry_step M tape c q.val q.2
+        L⟩) := by
+    rw [WE.run_one]; exact entry_step M tape c L hL q.val q.2
   rw [WE.run_succ_right, r1]
   show WE.step _ = _
   exact step_hlt' _ _ w0
+
+
+theorem cell_step_some {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+    (q : Fin Q) (nx : Fin A) (right : Bool) (q' : Fin Q)
+    (ht : M.transition q (tape c) = some (nx, right, q')) :
+    WE.run (Q + 2) ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), layout M tape⟩ =
+      (.running, ⟨(if right then c + 1 else c - 1) * (cellSize A Q : Int) + 2 * (q'.val : Int),
+        layout M (write tape c nx)⟩) := by
+  rw [cell_step_some_gen M tape c (layout M tape) (fun j hj => layout_at M tape c j hj) q nx right q' ht,
+    patch_eq_layout_write]
+
+theorem cell_step_none {A Q : Nat} (M : Machine A Q) (tape : Int → Fin A) (c : Int)
+    (q : Fin Q) (ht : M.transition q (tape c) = none) :
+    WE.run 2 ⟨c * (cellSize A Q : Int) + 2 * (q.val : Int), layout M tape⟩ =
+      (.halted, ⟨c * (cellSize A Q : Int) + (handlerAt A Q q.val (tape c).val : Int),
+        layout M tape⟩) :=
+  cell_step_none_gen M tape c (layout M tape) (fun j hj => layout_at M tape c j hj) q ht
 
 end WriteExecute.Universal

@@ -7,7 +7,7 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | R0 | Bootstrap, vendoring, baselines | DONE (CI check of MathlibTM0 pending, user-run) |
 | R1 | Errata inventory and claim map | DONE |
 | R2 | WE machine, read-freedom, confinement | DONE |
-| R3 | Turing-completeness (TC-U must; TC-B should) | TC-U DONE; TC-B and Mathlib composition todo |
+| R3 | Turing-completeness (TC-U must; TC-B should) DONE (Mathlib composition with `MathlibTM0` deferred to CI, optional) |
 | R4 | Arithmetic, division, modexp, Spectre arithmetic | todo |
 | R5 | AES (should) | todo |
 | R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | todo |
@@ -53,3 +53,17 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 - `Model/Run.lean` (run_add, run_stop, trichotomy, exclusivity), `Model/ReadFree.lean` (C01),
   `Model/Confinement.lean` (C04, Mathlib-free list form). Audit: 219 declarations, 0 violations.
 - Interfaces for R3: `run_add`, `run_succ_right`, `run_stop`, `trichotomy`; `write` from `Base.Memory`.
+
+### R3 (done)
+
+- `Spec/Universal.lean`: cell layout (`handlerSize`, `cellSize`, `handlerAt`, `entryDisp`, `cellWord`, `layout`),
+  `encode`/`initial`, and the finite image `bounded`/`encodeB`. Handlers are never written; only the Q entry
+  displacements of the current cell are (so every store targets a jump-displacement field).
+- `Universal/Layout.lean`, `Step.lean` (generic over the base memory `L`; `cell_step_some_gen`: Q+2 steps),
+  `Unbounded.lean` (C02: `simulate`, `halts_iff`, `diverges_iff`, `never_faults`),
+  `Bounded.lean` (C03: `bounded_simulate`, `bounded_halts`, `bounded_faults` at the guard).
+- Audit: 382 declarations, 0 violations. Not attempted: growth from a finite image; composition with
+  `MathlibTM0` (CI-only, optional).
+- Hazards for later rounds: `by_contra`, `push_neg`, `ring` are Mathlib-only; use `Classical.byContradiction`, `omega`.
+  Build several modules in one `build_modules.py` call; bash heredocs with odd quoting fail, use the Write tool.
+

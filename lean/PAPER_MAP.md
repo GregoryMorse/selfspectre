@@ -7,7 +7,7 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 |---|---|---|---|---|---|---|
 | C01 | §4 p.139 | Write-Execute reads nothing but its fetch window; every instruction is a store or a transfer (W02) | F+M | R2 | proved | `WE.step_eq_effect`, `WE.effect_congr`, `WE.store_from_window`; purity scan |
 | C02 | §4 p.141 | Turing-completeness, unbounded blank-cell template (W01) | F | R3 | proved | `Universal.halts_iff`, `diverges_iff`, `never_faults`, `simulate` (Q+2 WE steps per TM step); construction in `Spec/Universal.lean` |
-| C03 | §4 p.141 | Finite image: exact while in range, faults at the guard (W01) | F | R3 | todo | |
+| C03 | §4 p.141 | Finite image: exact while in range, faults at the guard (W01) | F | R3 | proved | `Universal.bounded_simulate`, `bounded_halts`, `bounded_faults` |
 | C04 | §4 | A run confined to finitely many fetch addresses has finitely many reachable states | F | R2 | proved (invariant form) | `WE.confinement`: pc in A, memory off the target list unchanged, all values in finite lists. A `Set.Finite` wrapper (Mathlib) is optional and not done |
 | C05 | §4 p.139-140 | Generic jump-table lookup computes the table function | F | R4 | todo | |
 | C06 | §4 | 8-bit tables NOT, NZ, SHL1/4/5/6/7, INC, DEC, AND, OR, XOR, ADD, SUB, SHL, SHR | F | R4 | todo | |
@@ -32,7 +32,7 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 
 | ID | Page | Class | Status | Evidence |
 |---|---|---|---|---|
-| W01 | 141 | F | confirmed (statement); proof R3 | C02, C03 |
+| W01 | 141 | F | confirmed; proved (R3) | C02, C03 |
 | W02 | 139 | M | confirmed | `validation/layout/purity.json` (28 core procs, 0 violations) |
 | W03 | 139 | F | confirmed; proof R4 | C10 |
 | W04 | 136 | F | confirmed; proof R4 | C11 |

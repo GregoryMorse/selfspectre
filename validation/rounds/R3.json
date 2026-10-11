@@ -1,0 +1,12 @@
+{
+ "round": "R3",
+ "modules": [
+  "Spec.Universal",
+  "Universal.Layout",
+  "Universal.Step",
+  "Universal.Unbounded",
+  "Universal.Bounded"
+ ],
+ "axiom_audit": "382 declarations, 0 violations",
+ "notes": "TC-U and TC-B proved; MathlibTM0 composition deferred"
+}

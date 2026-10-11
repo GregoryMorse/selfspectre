@@ -10,3 +10,4 @@ public import WriteExecute.Spec.Universal
 public import WriteExecute.Universal.Layout
 public import WriteExecute.Universal.Step
 public import WriteExecute.Universal.Unbounded
+public import WriteExecute.Universal.Bounded

@@ -60,4 +60,13 @@ current cell. -/
 @[expose] def initial {A Q : Nat} (M : Machine A Q) (input : List (Fin A)) : WE.State :=
   encode M (initialConfiguration M input)
 
+/-- A finite image of `N` cells (indices `0 .. N-1`): the layout inside, the opcode `0` everywhere else. -/
+@[expose] def bounded {A Q : Nat} (M : Machine A Q) (N : Nat) (tape : Int → Fin A) : Int → Int :=
+  fun a => if 0 ≤ a / (cellSize A Q : Int) ∧ a / (cellSize A Q : Int) < (N : Int)
+    then layout M tape a else 0
+
+/-- Machine state for the finite image. -/
+@[expose] def encodeB {A Q : Nat} (M : Machine A Q) (N : Nat) (cfg : Configuration A Q) : WE.State :=
+  ⟨cfg.head * (cellSize A Q : Int) + 2 * (cfg.state.val : Int), bounded M N cfg.tape⟩
+
 end WriteExecute.Universal
