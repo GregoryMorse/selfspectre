@@ -1,8 +1,11 @@
+module
+
 import WriteExecute.Base.Memory
 import WriteExecute.Base.Turing
 import WriteExecute.Spec.Machine
 import WriteExecute.Model.Run
 import WriteExecute.Model.ReadFree
+import WriteExecute.Spec.Confinement
 import WriteExecute.Model.Confinement
 import WriteExecute.Spec.Universal
 import WriteExecute.Universal.Layout
@@ -28,6 +31,7 @@ import WriteExecute.AES.Checks
 import WriteExecute.AES.Basic
 import WriteExecute.AES.Equiv
 import WriteExecute.AES.Vectors
+import WriteExecute.AES.AesNi
 import WriteExecute.Spec.X86
 import WriteExecute.X86.Basic
 import WriteExecute.X86.Patch
@@ -36,7 +40,11 @@ import WriteExecute.X86.Fig5
 import WriteExecute.X86.NotTable
 import WriteExecute.X86.LayoutData
 import WriteExecute.X86.Fig5Final
+import WriteExecute.X86.Fig6
+import WriteExecute.X86.Fig6Final
 import WriteExecute.X86.Fig7
+import WriteExecute.Spec.Paper
+import WriteExecute.Paper
 
 #check @WriteExecute.Universal.universal_halts_iff
 #check @WriteExecute.Universal.never_faults

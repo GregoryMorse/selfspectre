@@ -1,4 +1,9 @@
+module
 import WriteExecute.X86.Fig6Final
+import WriteExecute.X86.NotTable
+import WriteExecute.Spec.X86
+import WriteExecute.X86.LayoutData
+meta import WriteExecute.X86.LayoutData
 open WriteExecute.X86
 
 /-! Prints the bytes the Lean byte model (`enc`) assigns to table entries and fixed procedure

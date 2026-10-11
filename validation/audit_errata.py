@@ -19,7 +19,7 @@ def refs():
     names = [r for e in data["edits"] for r in e.get("lean_refs", [])]
     root_imports = (ROOT / "lean/WriteExecute.lean").read_text(encoding="utf-8").splitlines()
     mods = [l.split()[-1] for l in root_imports if l.startswith("public import") and "MathlibTM0" not in l]
-    lines = ["import " + m for m in mods] + [""] + ["#check @WriteExecute.%s" % n for n in names]
+    lines = ["module", ""] + ["import " + m for m in mods] + [""] + ["#check @WriteExecute.%s" % n for n in names]
     out = ROOT / "lean/ErrataRefs.lean"
     out.write_text(chr(10).join(lines) + chr(10), encoding="utf-8")
     print("wrote", out, len(names), "references")
