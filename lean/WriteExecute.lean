@@ -40,6 +40,8 @@ public import WriteExecute.X86.Fig5
 public import WriteExecute.X86.NotTable
 public import WriteExecute.X86.LayoutData
 public import WriteExecute.X86.Fig5Final
+public import WriteExecute.X86.Fig6
+public import WriteExecute.X86.Fig6Final
 public import WriteExecute.X86.Fig7
 public import WriteExecute.Spec.Paper
 public import WriteExecute.Paper

@@ -25,11 +25,13 @@ for arch in ("x86", "x64", "x86c", "x64c"):   # `c`: layout of the corrected sou
     D = 4096 if corr else 4099
     d = json.load(open(root / "validation/layout" / f"{arch}.json"))
     L, T = d["labels"], d["tables"]
-    for t in ("notres", "nzres", "shlres4"):
+    for t in ("notres", "nzres", "shlres4", "shlres5", "xorarg1"):
         out.append(f"@[expose] def {arch}_{t}_tab : List Nat :=\n  {T[t]['offsets']}\n")
     for k in ("notarg", "notargshl", "notres", "notret", "shlarg4", "shlres4", "shlret4",
               "nzarg", "nzargshl", "nzres", "nzret", "shlarg", "shlres", "shlret",
-              "carry1retval", "nocry1", "hascarry1", "carry2retval", "nocry2", "hascarry2"):
+              "carry1retval", "nocry1", "hascarry1", "carry2retval", "nocry2", "hascarry2",
+              "shlarg5", "shlres5", "shlret5", "xorarg1", "xorarg2", "xorhead", "xorargshl1", "xorloop",
+              "xorargshl2", "xorj", "xorres", "xorret") + (("xorargshl2jmp",) if arch.startswith("x86") else ()):
         out.append(f"@[expose] def {arch}_{k} : Nat := {L[k]}\n")
     a = arch
     EO = "" if corr else "Eo "
@@ -59,6 +61,26 @@ theorem {a}_nzres_offsets : ∀ j, j < 256 → {a}_nzres_tab.getD j 0 = {EO}({a}
 
 theorem {a}_shlres4_offsets : ∀ j, j < 256 → {a}_shlres4_tab.getD j 0 = {a}_shlarg4 + 5 + 256 * j :=
   all1 (p := fun j => {a}_shlres4_tab.getD j 0 = {a}_shlarg4 + 5 + 256 * j) (by decide +kernel)
+""")
+    x86 = arch.startswith("x86")
+    H2, XJ, G0 = (8308, 8317, 8322) if x86 else (111, 120, 125)
+    jmp = f" ∧ {a}_xorargshl2jmp = {a}_xorarg1 + 111" if x86 else ""
+    out.append(f"""
+/-- Fig. 6: the layout of `WriteExecXOR` relative to `xorarg1`, and its position behind the `SHL5`/`SHL4` tables. -/
+theorem {a}_xor_geometry :
+    {a}_shlres5 = {a}_shlarg5 + 5 + 65536 ∧ {a}_shlret5 = {a}_shlres5 + 9 ∧ {a}_shlres4 + 14 ≤ {a}_shlarg5 ∧
+    {a}_shlres5 + 14 ≤ {a}_xorarg1 ∧ {a}_xorarg2 = {a}_xorarg1 + 32 ∧ {a}_xorhead = {a}_xorarg1 + 83 ∧
+    {a}_xorargshl1 = {a}_xorarg1 + 90 ∧ {a}_xorloop = {a}_xorarg1 + 109 ∧
+    {a}_xorargshl2 = {a}_xorarg1 + {H2} ∧ {a}_xorj = {a}_xorarg1 + {XJ}{jmp} ∧
+    {a}_xorres = {a}_xorarg1 + {G0} + 2 ^ 21 ∧ {a}_xorret = {a}_xorres + 7 := by
+  decide
+
+/-- The 256 groups `xorarg1_i` sit `8192` bytes apart, the first one right behind `xorj`. -/
+theorem {a}_xorarg1_offsets : ∀ i, i < 256 → {a}_xorarg1_tab.getD i 0 = {a}_xorarg1 + {G0} + 8192 * i :=
+  all1 (p := fun i => {a}_xorarg1_tab.getD i 0 = {a}_xorarg1 + {G0} + 8192 * i) (by decide +kernel)
+
+theorem {a}_shlres5_offsets : ∀ j, j < 256 → {a}_shlres5_tab.getD j 0 = {a}_shlarg5 + 5 + 256 * j :=
+  all1 (p := fun j => {a}_shlres5_tab.getD j 0 = {a}_shlarg5 + 5 + 256 * j) (by decide +kernel)
 """)
 out.append("end WriteExecute.X86\n")
 (root / "lean/WriteExecute/X86/LayoutData.lean").write_text("\n".join(out), encoding="utf-8")

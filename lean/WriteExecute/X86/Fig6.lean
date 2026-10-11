@@ -287,6 +287,27 @@ theorem ArgImg.ext {mode : Mode} {m m' : Mem} {A S R D k c d0 w0 r0 : Nat}
   iR := Code_ext m m' _ _ h.iR (fun x h1 h2 => hag x (by simp only [enc_len, Ins.len] at h2; omega))
   iS := Code_ext m m' _ _ h.iS (fun x h1 h2 => hag x (by simp only [enc_len, Ins.len] at h2; omega))
 
+/-- The bytes `WriteExecXOR` (x64) may change: the argument stage fields of the `SHL5`/`SHL4` tables, the displacement
+and rel8 patches of the copy loop, the `rel32` of `xorj`, the group jump, `xorres`'s operand and the result. -/
+@[expose] def XorW64 (A S5 S4 N Dd k1 x : Nat) : Prop :=
+  x = S5 + 2 ∨ (S5 + 5 + 65536 + 3 ≤ x ∧ x < S5 + 5 + 65536 + 9) ∨
+  (S5 + 5 + 65536 + 10 ≤ x ∧ x < S5 + 5 + 65536 + 14) ∨ x = S4 + 2 ∨
+  (S4 + 5 + 65536 + 3 ≤ x ∧ x < S4 + 5 + 65536 + 9) ∨
+  (S4 + 5 + 65536 + 10 ≤ x ∧ x < S4 + 5 + 65536 + 14) ∨
+  (A + 93 ≤ x ∧ x < A + 99) ∨ x = A + 110 ∨ (A + 115 ≤ x ∧ x < A + 117) ∨ (A + 118 ≤ x ∧ x < A + 120) ∨
+  (A + 122 ≤ x ∧ x < A + 124) ∨ (A + 126 + 8192 * k1 ≤ x ∧ x < A + 128 + 8192 * k1) ∨
+  x = N + 6 ∨ x = Dd
+
+/-- The bytes `WriteExecXOR` (x86) may change; see `XorW64`. -/
+@[expose] def XorW86 (A S5 S4 N Dd k1 x : Nat) : Prop :=
+  x = S5 + 2 ∨ (S5 + 5 + 65536 + 3 ≤ x ∧ x < S5 + 5 + 65536 + 9) ∨
+  (S5 + 5 + 65536 + 10 ≤ x ∧ x < S5 + 5 + 65536 + 14) ∨ x = S4 + 2 ∨
+  (S4 + 5 + 65536 + 3 ≤ x ∧ x < S4 + 5 + 65536 + 9) ∨
+  (S4 + 5 + 65536 + 10 ≤ x ∧ x < S4 + 5 + 65536 + 14) ∨
+  (A + 93 ≤ x ∧ x < A + 99) ∨ x = A + 110 ∨ (A + 112 ≤ x ∧ x < A + 114) ∨
+  (A + 8311 ≤ x ∧ x < A + 8317) ∨ (A + 8319 ≤ x ∧ x < A + 8321) ∨
+  (A + 8323 + 8192 * k1 ≤ x ∧ x < A + 8325 + 8192 * k1) ∨ x = N + 6 ∨ x = Dd
+
 /-- The image of `WriteExecXOR` (x64 build) at the entry `xorarg1 = A` with the wrapper-patched arguments `k1`, `k2`.
 Every instruction field that the procedure overwrites may hold any stale value (`d01 .. b0`, `v`), so the procedure is
 re-executable; `S5`/`S4` are the `WriteExecSHL5`/`WriteExecSHL4` tables, `N = xorres`, `Dd` the result byte. -/
@@ -321,13 +342,7 @@ theorem xor_exec_x64 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
     (hrL : rL < 256)
     (img : XorImg64 m A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1 rL c2s wH wJ b0 v) :
     ∃ mEnd, runN Mode.x64 35 (A, m) = some (Dd - 1, mEnd) ∧ mEnd Dd = k1 ^^^ k2 ∧
-      ∀ x, ¬(x = S5 + 2 ∨ (S5 + 5 + 65536 + 3 ≤ x ∧ x < S5 + 5 + 65536 + 9) ∨
-        (S5 + 5 + 65536 + 10 ≤ x ∧ x < S5 + 5 + 65536 + 14) ∨ x = S4 + 2 ∨
-        (S4 + 5 + 65536 + 3 ≤ x ∧ x < S4 + 5 + 65536 + 9) ∨
-        (S4 + 5 + 65536 + 10 ≤ x ∧ x < S4 + 5 + 65536 + 14) ∨
-        (A + 93 ≤ x ∧ x < A + 99) ∨ x = A + 110 ∨ (A + 115 ≤ x ∧ x < A + 117) ∨ (A + 118 ≤ x ∧ x < A + 120) ∨
-        (A + 122 ≤ x ∧ x < A + 124) ∨ (A + 126 + 8192 * k1 ≤ x ∧ x < A + 128 + 8192 * k1) ∨
-        x = N + 6 ∨ x = Dd) → mEnd x = m x := by
+      ∀ x, ¬XorW64 A S5 S4 N Dd k1 x → mEnd x = m x := by
   have hx : k1 ^^^ k2 < 256 := by
     have := Nat.xor_lt_two_pow (n := 8) (x := k1) (y := k2) (by omega) (by omega)
     simpa using this
@@ -446,6 +461,7 @@ theorem xor_exec_x64 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
   · have : mEnd Dd = (k1 ^^^ k2) / 256 ^ (Dd - Dd) % 256 := wr_apply_in _ _ _ _ _ ⟨Nat.le_refl _, by omega⟩
     rw [this]; simp; omega
   · intro x hx
+    unfold XorW64 at hx
     simp +zetaDelta (disch := omega) only [wr_apply_out']
 
 /-- The tail of `WriteExecXOR` (x86), ten steps from `xorargshl2jmp` (`A + 111`): the patched jump selects entry `k1`
@@ -568,13 +584,7 @@ theorem xor_exec_x86 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
     (hrL : rL < 256)
     (img : XorImg86 m A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1 rL vJ d2 c2s wJ b0 v) :
     ∃ mEnd, runN Mode.x86 38 (A, m) = some (Dd - 1, mEnd) ∧ mEnd Dd = k1 ^^^ k2 ∧
-      ∀ x, ¬(x = S5 + 2 ∨ (S5 + 5 + 65536 + 3 ≤ x ∧ x < S5 + 5 + 65536 + 9) ∨
-        (S5 + 5 + 65536 + 10 ≤ x ∧ x < S5 + 5 + 65536 + 14) ∨ x = S4 + 2 ∨
-        (S4 + 5 + 65536 + 3 ≤ x ∧ x < S4 + 5 + 65536 + 9) ∨
-        (S4 + 5 + 65536 + 10 ≤ x ∧ x < S4 + 5 + 65536 + 14) ∨
-        (A + 93 ≤ x ∧ x < A + 99) ∨ x = A + 110 ∨ (A + 112 ≤ x ∧ x < A + 114) ∨
-        (A + 8311 ≤ x ∧ x < A + 8317) ∨ (A + 8319 ≤ x ∧ x < A + 8321) ∨
-        (A + 8323 + 8192 * k1 ≤ x ∧ x < A + 8325 + 8192 * k1) ∨ x = N + 6 ∨ x = Dd) → mEnd x = m x := by
+      ∀ x, ¬XorW86 A S5 S4 N Dd k1 x → mEnd x = m x := by
   have hx : k1 ^^^ k2 < 256 := by
     have := Nat.xor_lt_two_pow (n := 8) (x := k1) (y := k2) (by omega) (by omega)
     simpa using this
@@ -696,6 +706,7 @@ theorem xor_exec_x86 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
   · have : mEnd Dd = (k1 ^^^ k2) / 256 ^ (Dd - Dd) % 256 := wr_apply_in _ _ _ _ _ ⟨Nat.le_refl _, by omega⟩
     rw [this]; simp; omega
   · intro x hx
+    unfold XorW86 at hx
     simp +zetaDelta (disch := omega) only [wr_apply_out']
 
 end WriteExecute.X86
