@@ -27,17 +27,14 @@ theorem enc_movW_dispmid (c w i : Nat) (hc : c < 256) (hw : w < 65536) :
   simp only [List.cons.injEq, List.cons_append, List.nil_append, true_and, and_true]
   refine ⟨by omega, by omega, by omega, by omega⟩
 
-/-- Writing word `w` at `+4` of a `mov word ptr [disp32], imm16` whose displacement is `c < 256` (the middle
-bytes of `disp32`) gives displacement `c + 256 w`. -/
-theorem patch_movW_dispmid (m : Mem) (a c w i : Nat) (hc : c < 256) (hw : w < 65536)
-    (h : Code m a (enc (.movW c i))) :
+/-- Writing word `w` at `+4` of a `mov word ptr [disp32], imm16` whose displacement is `c + 256 w0`, `c < 256`
+(replacing the middle bytes of `disp32`) gives displacement `c + 256 w`. -/
+theorem patch_movW_dispmid (m : Mem) (a c w0 w i : Nat) (hc : c < 256) (hw0 : w0 < 65536) (hw : w < 65536)
+    (h : Code m a (enc (.movW (c + 256 * w0) i))) :
     Code (wr m (a + 4) 2 w) a (enc (.movW (c + 256 * w) i)) := by
-  have h0 : Code m a (enc (.movW (c + 256 * 0) i)) := by simpa using h
-  rw [enc_movW_dispmid c 0 i hc (by omega)] at h0
-  have := Code_patch m [0x66, 0xC7, 0x05, c] ([0] ++ le 2 i) 2 0 w a (a + 4) (by simp) h0
+  rw [enc_movW_dispmid c w0 i hc hw0] at h
+  have := Code_patch m [0x66, 0xC7, 0x05, c] ([0] ++ le 2 i) 2 w0 w a (a + 4) (by simp) h
   rw [enc_movW_dispmid c w i hc hw]; exact this
-
-
 
 theorem Code_wr_out {m : Mem} {e n v a : Nat} {bs : List Nat} (hd : a + bs.length ≤ e ∨ e + n ≤ a)
     (h : Code m a bs) : Code (wr m e n v) a bs := Code_frame m e n v bs a h hd
@@ -124,5 +121,60 @@ theorem arg_stage (mode : Mode) (m : Mem) (A S R D k c d0 w0 r0 : Nat)
   have e : 9 = 4 + 5 := rfl
   rw [e, runN_add, A4]
   simpa using B5
+
+/-- The copy loop of `WriteExecXOR` (x64), seven steps from `xorargshl1` (`H1 = A + 90`): the first pass stores
+`32 k1` into the `rel32` of `xorj`, retargets the store at `xorargshl2`, and loops back through `xorhead`, which
+disables the loop; the second pass stores `32 k1` into the middle of the displacement of `xorargshl2`. -/
+theorem xor_loop_x64 (m : Mem) (A k1 : Nat) (hk : k1 < 256) (hbig : A + 200 < 2 ^ 30)
+    (c1 : Code m (A + 90) (enc (.movW (fld Mode.x64 (A + 90) 9 (A + 122)) (k1 * 32))))
+    (c2 : Code m (A + 99) (enc (.movD (fld Mode.x64 (A + 99) 10 (A + 93)) (fld Mode.x64 (A + 90) 9 (A + 115)))))
+    (c3 : Code m (A + 109) (enc (.jmp8 228)))
+    (c4 : Code m (A + 83) (enc (.movB (fld Mode.x64 (A + 83) 7 (A + 110)) 0))) :
+    runN Mode.x64 7 (A + 90, m) = some (A + 111,
+      wr (wr (wr (wr (wr m (A + 122) 2 (k1 * 32)) (A + 93) 4 (fld Mode.x64 (A + 90) 9 (A + 115)))
+        (A + 110) 1 0) (A + 115) 2 (k1 * 32)) (A + 93) 4 (fld Mode.x64 (A + 90) 9 (A + 115))) := by
+  have hv : k1 * 32 < 65536 := by omega
+  let V2 := fld Mode.x64 (A + 90) 9 (A + 115)
+  have hV2 : V2 < 2 ^ 32 := fld_lt _ _ _ _ (by omega)
+  let ma := wr m (A + 122) 2 (k1 * 32)
+  let mb := wr ma (A + 93) 4 V2
+  let mc := wr mb (A + 110) 1 0
+  let md := wr mc (A + 115) 2 (k1 * 32)
+  let me := wr md (A + 93) 4 V2
+  have s1 : step Mode.x64 (A + 90, m) = some (A + 99, ma) :=
+    step_movW Mode.x64 m (A + 90) (A + 122) _ (by omega) (by omega) hv c1
+  have ca2 : Code ma (A + 99) (enc (.movD (fld Mode.x64 (A + 99) 10 (A + 93)) V2)) :=
+    Code_frame' c2 (by fz)
+  have s2 : step Mode.x64 (A + 99, ma) = some (A + 109, mb) :=
+    step_movD Mode.x64 ma (A + 99) (A + 93) _ (by omega) (by omega) hV2 ca2
+  have cb3 : Code mb (A + 109) (enc (.jmp8 228)) := Code_frame' (Code_frame' c3 (by fz)) (by fz)
+  have s3 : step Mode.x64 (A + 109, mb) = some (A + 83, mb) := by
+    have := step_jmp8_neg Mode.x64 mb (A + 109) 228 (by omega) (by omega) (by omega) cb3
+    rw [this, show A + 109 + 2 + 228 - 256 = A + 83 by omega]
+  have cb4 : Code mb (A + 83) (enc (.movB (fld Mode.x64 (A + 83) 7 (A + 110)) 0)) :=
+    Code_frame' (Code_frame' c4 (by fz)) (by fz)
+  have s4 : step Mode.x64 (A + 83, mb) = some (A + 90, mc) :=
+    step_movB Mode.x64 mb (A + 83) (A + 110) 0 (by omega) (by omega) (by omega) cb4
+  have cb1 : Code mb (A + 90) (enc (.movW V2 (k1 * 32))) := by
+    have := patch_movW_disp ma (A + 90) _ V2 (k1 * 32) (Code_frame' c1 (by fz))
+    rw [show A + 90 + 3 = A + 93 by omega] at this
+    exact this
+  have cc1 : Code mc (A + 90) (enc (.movW (fld Mode.x64 (A + 90) 9 (A + 115)) (k1 * 32))) :=
+    Code_frame' cb1 (by fz)
+  have s5 : step Mode.x64 (A + 90, mc) = some (A + 99, md) :=
+    step_movW Mode.x64 mc (A + 90) (A + 115) _ (by omega) (by omega) hv cc1
+  have cd2 : Code md (A + 99) (enc (.movD (fld Mode.x64 (A + 99) 10 (A + 93)) V2)) :=
+    Code_frame' (Code_frame' (Code_frame' ca2 (by fz)) (by fz)) (by fz)
+  have s6 : step Mode.x64 (A + 99, md) = some (A + 109, me) :=
+    step_movD Mode.x64 md (A + 99) (A + 93) _ (by omega) (by omega) hV2 cd2
+  have ce3 : Code me (A + 109) (enc (.jmp8 0)) := by
+    have := patch_jmp8 mb (A + 109) 228 0 (by omega) (by omega) cb3
+    rw [show A + 109 + 1 = A + 110 by omega] at this
+    exact Code_frame' (Code_frame' this (by fz)) (by fz)
+  have s7 : step Mode.x64 (A + 109, me) = some (A + 111, me) := by
+    have := step_jmp8 Mode.x64 me (A + 109) 0 (by omega) ce3
+    rw [this, show A + 109 + 2 + 0 = A + 111 by omega]
+  simp only [runN, s1, s2, s3, s4, s5, s6, s7, Option.bind_some]
+  rfl
 
 end WriteExecute.X86
