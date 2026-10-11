@@ -7,7 +7,7 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | R0 | Bootstrap, vendoring, baselines | DONE (CI check of MathlibTM0 pending, user-run) |
 | R1 | Errata inventory and claim map | DONE |
 | R2 | WE machine, read-freedom, confinement | DONE |
-| R3 | Turing-completeness (TC-U must; TC-B should) | todo |
+| R3 | Turing-completeness (TC-U must; TC-B should) | TC-U DONE; TC-B and Mathlib composition todo |
 | R4 | Arithmetic, division, modexp, Spectre arithmetic | todo |
 | R5 | AES (should) | todo |
 | R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | todo |

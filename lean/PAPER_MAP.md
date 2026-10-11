@@ -6,7 +6,7 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 | ID | Paper location | Claim | Class | Round | Status | Declaration / evidence |
 |---|---|---|---|---|---|---|
 | C01 | §4 p.139 | Write-Execute reads nothing but its fetch window; every instruction is a store or a transfer (W02) | F+M | R2 | proved | `WE.step_eq_effect`, `WE.effect_congr`, `WE.store_from_window`; purity scan |
-| C02 | §4 p.141 | Turing-completeness, unbounded blank-cell template (W01) | F | R3 | todo | |
+| C02 | §4 p.141 | Turing-completeness, unbounded blank-cell template (W01) | F | R3 | proved | `Universal.halts_iff`, `diverges_iff`, `never_faults`, `simulate` (Q+2 WE steps per TM step); construction in `Spec/Universal.lean` |
 | C03 | §4 p.141 | Finite image: exact while in range, faults at the guard (W01) | F | R3 | todo | |
 | C04 | §4 | A run confined to finitely many fetch addresses has finitely many reachable states | F | R2 | proved (invariant form) | `WE.confinement`: pc in A, memory off the target list unchanged, all values in finite lists. A `Set.Finite` wrapper (Mathlib) is optional and not done |
 | C05 | §4 p.139-140 | Generic jump-table lookup computes the table function | F | R4 | todo | |

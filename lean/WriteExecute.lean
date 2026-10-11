@@ -6,3 +6,7 @@ public import WriteExecute.Spec.Machine
 public import WriteExecute.Model.Run
 public import WriteExecute.Model.ReadFree
 public import WriteExecute.Model.Confinement
+public import WriteExecute.Spec.Universal
+public import WriteExecute.Universal.Layout
+public import WriteExecute.Universal.Step
+public import WriteExecute.Universal.Unbounded
