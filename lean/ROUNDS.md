@@ -5,7 +5,7 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | Round | Deliverable | State |
 | --- | --- | --- |
 | R0 | Bootstrap, vendoring, baselines | DONE (CI check of MathlibTM0 pending, user-run) |
-| R1 | Errata inventory and claim map | todo |
+| R1 | Errata inventory and claim map | DONE |
 | R2 | WE machine, read-freedom, confinement | todo |
 | R3 | Turing-completeness (TC-U must; TC-B should) | todo |
 | R4 | Arithmetic, division, modexp, Spectre arithmetic | todo |
@@ -36,3 +36,12 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
   `ml /c /Fl /Sa` and `ml64 /c /DX64 /Fl /Sa`; see `asm.bat` recipe in `validation/README.md`). MASM's
   `Length=` wraps at 64 K, so use PROC/ENDP offsets from the listing body.
 - Native baseline: see `validation/rounds/R0.json`.
+
+### R1 (done, 2026-10-11)
+
+- Author unavailable; per the user, items were adjudicated on code, period architecture and published text.
+  `lean/errata/edits.json` has W01-W10 (all excerpts verified on their pages by `validation/audit_errata.py --inventory`)
+  and L01-L05. `lean/PAPER_MAP.md` is the ledger (C01-C22). MODEXP32 gets the documented precondition mod >= 2
+  (asm initialises the result to 1); the C reference `fastmodexp` is fixed.
+- W05 confirmed against the asm loop (square every iteration). W10 mechanically confirmed in R0.
+- pdftotext must use `-enc UTF-8`; run python with `PYTHONIOENCODING=utf-8`.

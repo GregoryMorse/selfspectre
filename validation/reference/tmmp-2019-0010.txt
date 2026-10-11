@@ -1,22 +1,22 @@
-       ��
+       ÑØ
 
-                                        � � � � � �� � � ���
+                                        Å Ø Ñ Ø Ð ÈÙ Ð Ø ÓÒ×
 
                                                                                                            DOI: 10.2478/tmmp-2019-0010
-                                                                                          Tatra Mt. Math. Publ. 73 (2019), 131�144
+                                                                                          Tatra Mt. Math. Publ. 73 (2019), 131–144
 
                               SELF-SPECTRE,
      WRITE-EXECUTE AND THE HIDDEN STATE
 
                                         Gregory Morse
 
-                     Eo�tvo�s Lora�nd Tudom�any Egyetem University, Budapest, HUNGARY
+                     Eo¨tvo¨s Lora´nd Tudom´any Egyetem University, Budapest, HUNGARY
 
          ABSTRACT. The recent Meltdown and Spectre vulnerabilities have highlighted
          a very present and real threat in the on-chip memory cache units which can ulti-
          mately provide a hidden state, albeit only readable via memory timing instruc-
-         tions [Kocher, P.--Genkin, D.-- Gruss, D.-- Haas, W.--Hamburg, M.--Lipp, M.�
-         �Mangard, S.--Prescher, T.--Schwarz, M.--Yarom, Y.: Spectre attacks: Exploit-
+         tions [Kocher, P.—Genkin, D.— Gruss, D.— Haas, W.—Hamburg, M.—Lipp, M.–
+         –Mangard, S.—Prescher, T.—Schwarz, M.—Yarom, Y.: Spectre attacks: Exploit-
          ing speculative execution, CoRR, abs/1801.01203, 2018]. Yet the exploits, al-
          though having some complexity and slowness, are demonstrably reliable on nearly
          all processors produced for the last two decades.
@@ -38,9 +38,9 @@
          tively with a result store via indirect reads and available through the memory
          cache. A multi-threaded approach can allow a multi-stage computation pipeline
          where each computation is passed to a read-out thread and then to the next
-         computation thread [Swanson, S.--McDowell, L. K.--Swift, M. M.--Eggers, S. J.�
-         �Levy H. M.: An evaluation of speculative instruction execution on simultane-
-         ous multithreaded processors, ACM Trans. Comput. Syst. 21 (2003), 314�340].
+         computation thread [Swanson, S.—McDowell, L. K.—Swift, M. M.—Eggers, S. J.–
+         –Levy H. M.: An evaluation of speculative instruction execution on simultane-
+         ous multithreaded processors, ACM Trans. Comput. Syst. 21 (2003), 314–340].
 
 c 2019 Mathematical Institute, Slovak Academy of Sciences.
 2010 M a t h e m a t i c s S u b j e c t C l a s s i f i c a t i o n: 62K05.
@@ -56,19 +56,19 @@ Licensed under the Creative Commons Attribution-NC-ND 4.0 International Public L
          calculations, or even leak data without any standard tracing tools being capable of
          monitoring the subtle changes. Like a variation of the famous physics Heisenberg
          uncertainty principle, even a tool capable of reading the cache states would not
-         only be incredibly inefficient, but thereby tamper with and modify the state.
+         only be incredibly ineﬃcient, but thereby tamper with and modify the state.
          Tools like in-circuit emulators, or specially designed cache emulators would be
-         needed to unmask the speculative reads, and it is further difficult to visualize
+         needed to unmask the speculative reads, and it is further diﬃcult to visualize
          with a linear time-line.
 
-             Specifically, the AES and RSA algorithms will be studied with respect to these
+             Speciﬁcally, the AES and RSA algorithms will be studied with respect to these
          ideas, looking at success rates for various calculation batches with speculative
          execution, while having a summary view to see the rather severe performance
          penalties for using such methods.
 
              Either approaches could provide for strong white-box cryptography when con-
          sidering a binary, non-source code form. In terms of white-box methods, both
-         could be significantly challenging to locate or deduce the inner workings of the
+         could be signiﬁcantly challenging to locate or deduce the inner workings of the
          code. Further, both methods can easily surreptitiously leak or hide data within
          shared memory in a seemingly innocuous manner.
 
@@ -76,15 +76,15 @@ Licensed under the Creative Commons Attribution-NC-ND 4.0 International Public L
 
    Study of various computational modes which execute with various layers of in-
 direction is one of the primary obfuscation methods used in modern software.
-Two new techniques in this regard are proposed and their difficulty in imple-
+Two new techniques in this regard are proposed and their diﬃculty in imple-
 mentation and quantitative performance are evaluated. Part of the motivation
-behind the techniques is based on findings from studying white box cryptogra-
-phy which has placed a demand on finding mathematically or practically sound
+behind the techniques is based on ﬁndings from studying white box cryptogra-
+phy which has placed a demand on ﬁnding mathematically or practically sound
 obfuscation methods. The sophistication of tracing tools and the capabilities
-of those using them has made white box schemes flimsy and highly vulnerable
+of those using them has made white box schemes ﬂimsy and highly vulnerable
 to key extraction.
 
-   The first is motivated by recent processor vulnerability disclosures. Specu-
+   The ﬁrst is motivated by recent processor vulnerability disclosures. Specu-
 lative execution has become a trending topic in 2018 due to researchers pub-
 licly disclosing large modern processor bugs which have existed for nearly two
 decades. These vulnerabilities known as Spectre and Meltdown show not only
@@ -92,9 +92,9 @@ the dangers and pitfalls of speculative execution but also the utility and poten
 capabilities that perhaps were previously ignored.
 
    The second builds upon a model previously introduced for what was denoted
-as pure and infinitely self-modifying code [4]. Using a less limiting definition
+as pure and inﬁnitely self-modifying code [4]. Using a less limiting deﬁnition
 which allows any code which does not read data but always merely writes mem-
-ory or executes control flow transfer instructions, an alternative and perhaps
+ory or executes control ﬂow transfer instructions, an alternative and perhaps
 more practical Turing-complete model is established.
 
 132
@@ -106,17 +106,17 @@ more practical Turing-complete model is established.
 though there is no reason that the techniques and tactics discussed cannot be
 seen in generality and adapted to other process architectures where applicable.
 The models are thus presented in a general manner, while the inner-workings,
-details and explanations of some design decisions can be derived from the specific
+details and explanations of some design decisions can be derived from the speciﬁc
 platforms. The process used and the type of low-level thinking is thus important
 to keep in mind if trying to translate this work across architectures.
 
    The Meltdown vulnerability, which is also known as Spectre-V3: Rogue Data
-Cache Load (RDCL), primarily effects Intel processors. It exploits the way out-
+Cache Load (RDCL), primarily eﬀects Intel processors. It exploits the way out-
 of-order execution works on the processor. A memory space of 256 local 512-byte
-pages is flushed from the cache representing every possible value of a byte.
+pages is ﬂushed from the cache representing every possible value of a byte.
 To read a single byte of protected memory, it executes a pair of instructions
 which reads the byte of protected memory followed by an indirect read based
-on this previously read byte as an indexing value into the prepared flushed pages.
+on this previously read byte as an indexing value into the prepared ﬂushed pages.
 This protected read will ultimately not execute as it only speculatively executed
 for out-of-order processing. It will silently fail the privilege check and be skipped
 or conceivably fail with an interrupt exception. Yet the cache of one of the 256
@@ -126,7 +126,7 @@ timing side channel to determine the value.
    Spectre is a term referring to the whole class of speculative execution vul-
 nerabilities and the fact that the problem will be troubling the chip-makers for
 some years to come. Beyond out-of-order execution, an important strategy called
-branch-prediction is implemented which can significantly speed execution by cor-
+branch-prediction is implemented which can signiﬁcantly speed execution by cor-
 rectly speculatively executing a branch in code which the processors complicated
 internal state shows will be more likely to execute. The vulnerability thus lies
 in mis-prediction down a branch. The vulnerability comes in 3 categories includ-
@@ -135,7 +135,7 @@ vulnerability disclosure are Spectre-V1: Bounds Check Bypass (BCB), Spectre-
 -V2: Branch Target Injection (BTI). There are also 2 more newly discovered ones
 which are Variant 3a: Rogue System Register Read (RSRE) and Variant 4: Spec-
 ulative Store Bypass (SSB). The focus in this paper is only on Spectre-V1 which
-is one the hardware vendors are largely choosing not to try to fix, but rather
+is one the hardware vendors are largely choosing not to try to ﬁx, but rather
 to all software implementations to mitigate this vulnerability usually through
 compiler strategies.
 
@@ -148,15 +148,15 @@ intrinsic instructions need to be used. It should also be noted that malware
                                                                                                     133
                                                     GREGORY MORSE
 
-scanners are currently flagging the code pattern of the PoC due to the potential
+scanners are currently ﬂagging the code pattern of the PoC due to the potential
 malicious capability.
 
-   These processor instructions all revolve around flushing pages from the cache
+   These processor instructions all revolve around ﬂushing pages from the cache
 and measuring precise timing information. The modern CLFLUSH instruction will
-flush cache memory, marking it to be fetched from memory on the next read.
+ﬂush cache memory, marking it to be fetched from memory on the next read.
 On older processors this would be implemented by the long Streaming Single In-
 struction, Multiple Data (SIMD) Extensions (SSE) instruction _mm_stream_ps
-which flushes the cache 4 bytes at a time. For precision timing, RDTSCP, if avail-
+which ﬂushes the cache 4 bytes at a time. For precision timing, RDTSCP, if avail-
 able, provides the current processor ticks when serialized. If the serialized timing
 instruction is not available, then using a memory fence instruction MFENCE with
 the older RDTSC processor tick retrieval instruction will avoid instruction reorder-
@@ -181,22 +181,22 @@ x = training_x ^ (x & (malicious_x ^ training_x));
 
                                 3. Self-Spectre
 
-   A so-called "Self-Spectre" implementation thus begins with determination of
+   A so-called “Self-Spectre” implementation thus begins with determination of
 the required properties for the actual speculative function where the precise code
-will execute. This code must be maximally efficient in net clock cycles required
+will execute. This code must be maximally eﬃcient in net clock cycles required
 to execute on a CPU at least on average. This is an unusual methodology as gen-
 erally code optimization does not focus on squeezing performance into a precise
 code location. By minimizing both the number of assembler instructions, and
 minimizing the clock cycles of each instruction, a near optimum can be achieved.
 Further this code would need to be pre-compiled or built in-memory and emitted
-on the fly before its invocation. Compiler optimizations are sophisticated and
+on the ﬂy before its invocation. Compiler optimizations are sophisticated and
 well tested enough to rely on for generation of such optimal code, or at least
 
 134
                     SELF-SPECTRE, WRITE-EXECUTE AND THE HIDDEN STATE
 
 a skeletal basis which can be converted both manually or at runtime by code into
-a final code slice. Further inside this critical section, the maximal performance is
+a ﬁnal code slice. Further inside this critical section, the maximal performance is
 needed, while outside the region, more complex and slow code can run without
 harming the technique.
 
@@ -210,9 +210,9 @@ processor, 32-bit operations are often faster than 64-bit operations, and 64-bit
 addressing is typically faster than 32-bit addressing.
 
    A key question that must be determined is: How deep is the speculative
-branching pipeline? This is a difficult to answer question with any simple for-
+branching pipeline? This is a diﬃcult to answer question with any simple for-
 mulas, as the modern processors have become complex state machines whose
-behavior is so influenced by parallel and prior execution factors, not to mention
+behavior is so inﬂuenced by parallel and prior execution factors, not to mention
 hardware algorithms hidden behind trade secrets and so forth. Parallelism and
 task switching are particularly unpredictable. The types of cache on the pro-
 cessor are reasonable well-known including the last-level (often L2 or in newer
@@ -222,14 +222,14 @@ of potential interference in the cache. Instruction clock cycles can be used to
 determine the expected maximal execution time, but it is not capable of giving
 the minimal or average time. Empirical analysis is the easiest way to determine
 the average time, while very technical and detailed knowledge of processor in-
-ternals are the only way to find the minimal. It is however known and assumed
+ternals are the only way to ﬁnd the minimal. It is however known and assumed
 that later models of processors and later processors in a given model, are getting
 the same or further execution depth. The measurement of speculative branching
 depth, is the net time taken from the time the speculative processing starts until
 the actual branch is reached.
 
    The actual function to use for hidden computation which is speculatively
-executed resides in the PoC C code (in file spectre.c). It has a function that is
+executed resides in the PoC C code (in ﬁle spectre.c). It has a function that is
 treated in the original security vulnerability context as a victim function and
 named thereby. The memory cache pages are cleared, where each page represents
 one possible byte value that will be determined by which cache page was loaded.
@@ -249,7 +249,7 @@ char * secret =
 
 uint8_t temp = 0; /* Used so compiler
 
-   won't optimize out victim_function() */
+   won’t optimize out victim_function() */
 
 void victim_function(size_t x) {
 
@@ -263,32 +263,32 @@ void victim_function(size_t x) {
 
    Whatever operations will be used, it is at least a weak requirement that the
 computation is divisible into roughly equal chunks of work. And the smallest
-such chunk of work should be sufficiently one-way. For a practical application of
+such chunk of work should be suﬃciently one-way. For a practical application of
 the technique, a couple of common cryptographic one-way operations were cho-
 sen. Namely the Advanced Encryption Standard (AES) in Electronic Codebook
 (ECB) mode and Rivest-Shamir-Adleman (RSA) encryption primitives. AES with
 an unknown key can be implemented solely using table lookups and logical xor
-operations. More specifically AES-128 has 10 rounds where the first and last
-round are slightly incongruent. The first round only used logical xor operations,
+operations. More speciﬁcally AES-128 has 10 rounds where the ﬁrst and last
+round are slightly incongruent. The ﬁrst round only used logical xor operations,
 while the last is just a single byte table lookup and recombination. RSA on the
 other hand is merely modular exponentiation. Realistically RSA must use big
 integer libraries to achieve good encryption strengths starting least at RSA-1024
 or RSA-2048. However for a PoC, 32-bit RSA would of course only require a
 32-bit multiplication with a 64-bit output. This is quite natural to implement
-in efficient assembly code. It also requires a 64-bit divisor divided by a 32-bit
-dividend with a 32-bit remainder. Although the quotient cannot overflow 32-bits
+in eﬃcient assembly code. It also requires a 64-bit divisor divided by a 32-bit
+dividend with a 32-bit remainder. Although the quotient cannot overﬂow 32-bits
 of output, the remainder potentially can. These math primitives mention comes
 from the fact that modular exponentiation is simply some rounds of modular
-multiplication. In a naive and inefficient implementation, it requires E modular
+multiplication. In a naive and ineﬃcient implementation, it requires E modular
 multiplications where E is the exponent of modular exponentiation. Contrast this
-to an efficient implementation which requires log2 E + count_bits(E) modular
+to an eﬃcient implementation which requires log2 E + count_bits(E) modular
 multiplications.
 
    To further assist with AES are processor intrinsics, which x86 fully supports
-from both Intel and AMD. S �e b a s t i e n R i o u (3rd place for Strawberries
+from both Intel and AMD. S ´e b a s t i e n R i o u (3rd place for Strawberries
 in 2017 WhiBox contest) has provided code for this [6] in an AES brute force
 toolkit with a reference AES-128 implementation. The key data is in a slightly
-different form than typical reference C implementations. A snippet of this code
+diﬀerent form than typical reference C implementations. A snippet of this code
 doing the encryption is shown in Fig. 3.
 
    The collected results for the depth of modern processors showed a remark-
@@ -327,53 +327,53 @@ tions can execute in RSA than with AES. As AES will use table lookups and
 logical xor operations, about three times as many instructions can potentially
 execute more than with the expensive arithmetic instructions. Since the quotient
 of the division instruction is not needed when computing remainder, hand writ-
-ten assembly can use two division calls to avoid overflow which is much faster
+ten assembly can use two division calls to avoid overﬂow which is much faster
 
-                  Table 1. AES-128 Speculative (10 rounds).
+                 Table 1. AES-128 Speculative (10 rounds).
 
-                  Intrinsics C Ref. 1 round Instrinsics 1 round C Ref.
+                 Intrinsics C Ref. 1 round Instrinsics 1 round C Ref.
 
-32-bit Correct    0%   0%    100%                                                 0%
+32-bit Correct   0%   0%    100%                                                  0%
 
-32-bit Confident  -    -     100%                                                 -
+32-bit Conﬁdent  -    -     100%                                                  -
 
-32-bit instrs.:   201  1030  145                                                  313
+32-bit instrs.:  201  1030  145                                                   313
 
-64-bit Correct    100% 0%    100%                                                 0%
+64-bit Correct   100% 0%    100%                                                  0%
 
-64-bit Confident 100%  -     100%                                                 -
+64-bit Conﬁdent 100%  -     100%                                                  -
 
-64-bit instrs.:   133  737   115                                                  195
+64-bit instrs.:  133  737   115                                                   195
 
                                                                                        137
-                  GREGORY MORSE
+                 GREGORY MORSE
 
 Table 2. RSA Speculative (number of modular multiplications
 (a * (uint64_t)b) % c).
 
-                  2 round C 4 .asm 4 round C 5 .asm 5 round C
+                 2 round C 4 .asm 4 round C 5 .asm 5 round C
 
-32-bit Correct      100%   100%     0%    100%                  0%
-32-bit Confident    100%   100%       -   100%                    -
-32-bit instrs.:   53+2*44                                    83+5*44
-64-bit Correct      100%     54  73+4*44    62                  0%
-64-bit Confident    100%   100%    100%    0%                     -
-64-bit instrs.:            100%    100%                          43
-                      31             39      -
-                             38             42
+32-bit Correct     100%   100%     0%    100%                   0%
+32-bit Conﬁdent    100%   100%       -   100%                     -
+32-bit instrs.:  53+2*44                                     83+5*44
+64-bit Correct     100%     54  73+4*44    62                   0%
+64-bit Conﬁdent    100%   100%    100%    0%                      -
+64-bit instrs.:           100%    100%                           43
+                     31             39      -
+                            38             42
 
 than using library instructions, hence why 32-bit C compiled code is very lim-
 ited with multiplication and division involving 64-bit operands. This is largely
 a compiler issue as the type system in C has historically had input and out-
 put of arithmetic instructions as the same bit size despite that the assembly
-language instructions never have followed such an inefficient paradigm. 64-bit
+language instructions never have followed such an ineﬃcient paradigm. 64-bit
 code can sometimes execute slower due to instruction size increase and larger
 arithmetic units. But ultimately 64-bit code typically executes faster because far
 less instructions are needed. Due to out-of-order execution, and the complex na-
 ture of modern processors, it is impractical to even calculate precise clock cycles
 by hand, though precise information is available through the processor based
 on the actual clock counter. Basically empirical analysis such as those tabu-
-lated, are required to determine the depth of specific operations before finalizing
+lated, are required to determine the depth of speciﬁc operations before ﬁnalizing
 a solution.
 
 Correct AES Intrinsic = 0xF487F82611599E2562D2555AF60E9642 . . . Time: 0.003426 seconds
@@ -392,10 +392,10 @@ Unclear: Incorrect 0xF487F82611599E2562D2555AF6BEFFBE score=743 793 787 780 659 
 Unclear: Incorrect 0xF487F82611599E2562D2555AEBF6B922 score=701 741 729 722 613 486
 716 647 238 162 81 2 1 1 1 1 (second best: 0x41BECACBF9FFFF867BF6BE0186BE66FF score=1
 1 1 1 1 0 0 1 1 1 1 1 1 1 1 0) Time: 0.528884 seconds
-���
-Total Successes: 0 Confidence Success: 0 Time: 5.117587
+···
+Total Successes: 0 Conﬁdence Success: 0 Time: 5.117587
 
-             Figure 4. Depth Statistical Results � Sample Output: 32-bit AES using
+             Figure 4. Depth Statistical Results – Sample Output: 32-bit AES using
              intrinsics with 12 bytes correct.
 
 138
@@ -406,29 +406,29 @@ Total Successes: 0 Confidence Success: 0 Time: 5.117587
    The next proposed model termed based on its memory access properties is
 Write-Execute. This is somewhat of an assembly language programming chal-
 lenge due to the awkward constraint of not using direct memory read instructions
-which is the norm. The three basic memory access flags have been read, write
-and execute. In some contexts, "execute" is also sometimes considered to be
+which is the norm. The three basic memory access ﬂags have been read, write
+and execute. In some contexts, “execute” is also sometimes considered to be
 a form of read, as implicitly instructions must be read to be executed. But from
 the strict point of view of the processor, reading is explicitly done by the code,
 and the implicit memory fetch read for instruction execution is only requiring
-the execute flag. So there can be no reads from memory besides the read re-
+the execute ﬂag. So there can be no reads from memory besides the read re-
 quired to fetch a current instruction. This is exactly what the technique refers to.
 From the point of view of a tracing tool, it will see a linear fetch-write sequence
 but no patterns unless the execution loops. Just as had occurred with pure,
-infinitely self-modifying code, a novel machine code pattern emerges.
+inﬁnitely self-modifying code, a novel machine code pattern emerges.
 
    The model is further inspired from the traditional von Neumann view of com-
-puter architecture where data and code are effectively synonymous. However,
+puter architecture where data and code are eﬀectively synonymous. However,
 in practical modern computers, the traditional view is that all memory is data,
 some of which just so happens to be code. So an alternative view would be that
-all memory is code, some of which just so happens to be data flowing through it.
-This alternative view continues expanding knowledge for obfuscation, efficiency
+all memory is code, some of which just so happens to be data ﬂowing through it.
+This alternative view continues expanding knowledge for obfuscation, eﬃciency
 and complexity problem issues. The processor view, it should be noted, is merely
 to fetch, decode and execute the contents of the instruction pointer.
 
    The model requires some primitives that will require table lookups or in
 the case of binary operations, double table lookups. These operations include
-firstly unary bitwise left shifts by a constant amount between 1 and 7 from
+ﬁrstly unary bitwise left shifts by a constant amount between 1 and 7 from
 8-bits to 16-bits for relative jumps. The unary not primitive is required, and
 negation via neg is optional. Pure 8-bit binary operations required are and,
 or and xor. Finally 8-bit binary operations with an extra single shift or carry
@@ -437,11 +437,11 @@ By building up from these primitives, next higher level primitives can be con-
 structed including: copying data and conditional jump via unconditional jumps.
 Finally higher bit sizes can be constructed including 32-bit addition and subtrac-
 tion, 32-bit multiplication with 64-bit output and division with a 64-bit divisor,
-and 32-bit dividend, quotient and remainder. This effectively allows simulation
+and 32-bit dividend, quotient and remainder. This eﬀectively allows simulation
 of 32-bit processor instructions which only operate with read addressing memory
 modes.
 
-   The practical details are also very assembly language involved and specific.
+   The practical details are also very assembly language involved and speciﬁc.
 First of all, no registers are used in the instructions, and only jumps and data
 movement instructions are used. The stack could be made as an exception to this
 by allowing the call, push and pop instructions thus avoiding a rather tedious
@@ -456,13 +456,13 @@ mented at this point. Because 64-bit addressing mode uses RIP-relative in-
 struction addressing, a simple macro introduced here as ONLY64 will evaluate
 to its value on 64-bit machines and simple to 0 on 32-bit platforms. 32-bit abso-
 lute addressing is generally disadvantageous and slower in this context, causing
-more complicated code for double table lookups specifically and that opera-
-tion being the worst performance difference area between the two addressing
+more complicated code for double table lookups speciﬁcally and that opera-
+tion being the worst performance diﬀerence area between the two addressing
 modes.
 
    To appreciate the implementation of the model, some code snippets will be
-introduced to demonstrate the specific assembler techniques. The first technique
-of using jump tables is seen in Fig. 5. A macro is used to define a table of ev-
+introduced to demonstrate the speciﬁc assembler techniques. The ﬁrst technique
+of using jump tables is seen in Fig. 5. A macro is used to deﬁne a table of ev-
 ery possible byte value of the unary logical negation primitive, and shift left
 by a constant from 8-bits to 16-bits is used to scale the jump.
 
@@ -506,7 +506,7 @@ WriteExecNOT ENDP
 140
                     SELF-SPECTRE, WRITE-EXECUTE AND THE HIDDEN STATE
 
-argument must modify its jump. This is due to there being 256 different sec-
+argument must modify its jump. This is due to there being 256 diﬀerent sec-
 ond table lookups, and that jump must be put at the right indexed place.
 Otherwise the code is relatively straight forward compared to a unary operation.
 Fig. 6 gives the relevant assembly code to understand what is involved in code
@@ -532,7 +532,7 @@ xorargshl2 : mov word ptr [xorarg1_0 +1], 8000 h
 xorj : jmp xorarg1_0 +0800000 h ;; E9 00 00 80 00
 
              Figure 6. Example snippet from the xor binary operation which copies
-             the first argument to modify its jump, and modify the location where the
+             the ﬁrst argument to modify its jump, and modify the location where the
              second argument should modify its jump.
 
    The last important operation is that of an explicit conditional jump, which
@@ -549,7 +549,7 @@ implications, then to undo Write-Execute, this would at least require a custom
 coded tool. This tool would need to identify math primitives including boolean
 operations, bit shifts, addition, subtraction, multiplication, division and modulo
 operations. It would need to unwind the data copying and conditional jump con-
-structs. Then it would need to determine data which was encoded as effectively
+structs. Then it would need to determine data which was encoded as eﬀectively
 no-operation instructions. At this point it could construct a semantic equivalent
 with simple assembly instructions. As for tracing tools, they would see execution
 paths and memory writes. This model would certainly not be strong enough for
@@ -602,20 +602,20 @@ in 32-bit mode on the processor.
                     SELF-SPECTRE, WRITE-EXECUTE AND THE HIDDEN STATE
 
    Note that Write-Execute implements fast modular exponentiation and hence
-its C implementation is termed "Fast C". Yet the simple naive C implementation
+its C implementation is termed “Fast C”. Yet the simple naive C implementation
 used for the speculative execution to make dividing it into chunks easier, shows
-a better performance with "Simple C". This is explained by the fact that the
-Simple C and speculative execution used small fixed exponents while the other
+a better performance with “Simple C”. This is explained by the fact that the
+Simple C and speculative execution used small ﬁxed exponents while the other
 model allowed random 32-bit exponents.
 
                                  6. Conclusion
 
-   For the first hidden state model, unlike with the Spectre and Meltdown se-
+   For the ﬁrst hidden state model, unlike with the Spectre and Meltdown se-
 curity vulnerabilities, there is no software mitigation here as it is by hardware
 design, and at the discretion of the software designer to use or not use mitiga-
 tions. Compiler authors have released versions of libraries, and compiler options
 to enable such mitigations with the cost of performance. One way this can be
-detected by an adversary is through looking for low-level memory flushing and
+detected by an adversary is through looking for low-level memory ﬂushing and
 precision clock reading assembly instructions. Hardware mitigation is theoreti-
 cally possible but at a great cost for such a marginal issue easily mitigated by
 software. The state machine complexity would increase dramatically and this
@@ -634,14 +634,14 @@ obfuscation method for custom code where such performance penalty can be
 tolerated.
 
    The two techniques provide new perspective and insight into ways future
-protection schemes can be built. Although quite different, they both provide
-software designers further paradigms based on the hardware that effectively
+protection schemes can be built. Although quite diﬀerent, they both provide
+software designers further paradigms based on the hardware that eﬀectively
 obfuscate and hide or alter computation, including exploiting the complex state
 machine the processor is built on top of, or using assembly language in very
 limited ways to achieve generality. Future work in this area could hopefully
-even have an effect on processor architecture itself as making it more easy for
+even have an eﬀect on processor architecture itself as making it more easy for
 those legitimately protecting commercial software, while simultaneously making
-it more difficult for malicious software to be written would positively effect the
+it more diﬃcult for malicious software to be written would positively eﬀect the
 bottom line of the whole IT software industry.
 
                                                                                                     143
@@ -649,21 +649,21 @@ bottom line of the whole IT software industry.
 
                                                      REFERENCES
 
-[1] KOCHER, P.--GENKIN, D.--GRUSS, D.--HAAS, W.--HAMBURG, M.--LIPP, M.�
-    �MANGARD, S.--PRESCHER, T.--SCHWARZ, M.--YAROM, Y.: Spectre attacks:
+[1] KOCHER, P.—GENKIN, D.—GRUSS, D.—HAAS, W.—HAMBURG, M.—LIPP, M.–
+    –MANGARD, S.—PRESCHER, T.—SCHWARZ, M.—YAROM, Y.: Spectre attacks:
     Exploiting speculative execution, CoRR, abs/1801.01203, 2018.
 
-[2] SWANSON, S.--MCDOWELL, L. K.--SWIFT, M. M.--EGGERS, S. J.--LEVY H. M.:
+[2] SWANSON, S.—MCDOWELL, L. K.—SWIFT, M. M.—EGGERS, S. J.—LEVY H. M.:
     An evaluation of speculative instruction execution on simultaneous multithreaded
-    processors, ACM Trans. Comput. Syst. 21 (2003), 314�340.
+    processors, ACM Trans. Comput. Syst. 21 (2003), 314–340.
 
-[3] NORDIN, P.--BANZHAF, W.: Evolving turing-complete programs for a register machine
+[3] NORDIN, P.—BANZHAF, W.: Evolving turing-complete programs for a register machine
     with self-modifying code. In: Proc. of the 6th Internat. Conf. on Genetic Algorithms,
     Pittsburgh, PA, USA, 1995, Morgan Kaufmann Publ., San Francisco, CA, 1995,
-    pp. 318�327.
+    pp. 318–327.
 
-[4] MORSE, G.: Pure infinitely self-modifying code is realizable and turing-complete, Inter-
-    nat. J. Electron. Telecomm. 64 (2018), 123�129.
+[4] MORSE, G.: Pure inﬁnitely self-modifying code is realizable and turing-complete, Inter-
+    nat. J. Electron. Telecomm. 64 (2018), 123–129.
 
 [5] AUGUST, E.: Spectre attacks: exploiting speculative execution,
     https://github.com/crozone/SpectrePoC. [Accessed: 2018.03.30].
@@ -672,10 +672,10 @@ bottom line of the whole IT software industry.
     https://github.com/sebastien-riou/aes-brute-force. [Accessed: 2018.06.01].
 
 Received August 23, 2018  Faculty of Informatics
-                          E�otv�os Lor�and Tudom�anyegyetem/University
+                          E¨otv¨os Lor´and Tudom´anyegyetem/University
                           (ELTE)
-                          Pa�zm�any P�eter s�et�any 1/C
-                          H�1117-Budapest
+                          Pa´zm´any P´eter s´et´any 1/C
+                          H–1117-Budapest
                           HUNGARY
 
                           E-mail : gregory.morse@live.com
