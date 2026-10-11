@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * 512 * 16]; uint8_t tmp;
 extern uint16_t WriteExecSHL1_C(uint8_t);
 extern uint16_t WriteExecSHL_C(uint8_t, uint8_t);
@@ -49,7 +50,24 @@ static uint32_t modexp_ref(uint32_t b, uint32_t e, uint32_t m) {
 	return (uint32_t)r;
 }
 
-int main(void) {
+static uint64_t rs = 88172645463325252ull;
+static uint32_t rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return (uint32_t)(rs >> 16); }
+
+int main(int argc, char **argv) {
+	if (argc > 1) { /* stress: random vectors, `edge_vectors N seed` */
+		long n = atol(argv[1]); long every = argc > 3 ? atol(argv[3]) : 20; if (argc > 2) rs ^= (uint64_t)atol(argv[2]) * 0x9E3779B97F4A7C15ull;
+		for (long i = 0; i < n; i++) {
+			uint32_t a = rnd(), b = rnd(), c = rnd(), d = rnd(); uint64_t x = ((uint64_t)a << 32) | b;
+			CHECK("ADD32", WriteExecADD32_C(a, b), a + b, a b); CHECK("SUB32", WriteExecSUB32_C(a, b), a - b, a b);
+			CHECK("XOR32", WriteExecXOR32_C(a, b), a ^ b, a b); CHECK("MUL32", WriteExecMUL32_C(a, b), (uint64_t)a * b, a b);
+			CHECK("ADD64", WriteExecADD64_C(x, ((uint64_t)c << 32) | d), x + (((uint64_t)c << 32) | d), a b c d);
+			CHECK("SUB64", WriteExecSUB64_C(x, ((uint64_t)c << 32) | d), x - (((uint64_t)c << 32) | d), a b c d);
+			if (c) { CHECK("DIV32", WriteExecDIV32_C(x, c), (uint32_t)(x / c), a b c); CHECK("MOD32", WriteExecMOD32_C(x, c), (uint32_t)(x % c), a b c); }
+			if (c >= 2 && i % every == 0) CHECK("MODEXP32", WriteExecMODEXP32_C(a, b, c), modexp_ref(a, b, c), a b c);
+		}
+		printf(bad ? "stress FAILED %d of %d\n" : "stress ok %d checks\n", bad ? bad : total, total);
+		return bad != 0;
+	}
 	for (size_t i = 0; i < N32; i++) {
 		E64[N64++] = E32[i];
 		E64[N64++] = (uint64_t)E32[i] << 32;
