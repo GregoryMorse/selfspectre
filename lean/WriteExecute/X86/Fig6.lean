@@ -177,4 +177,65 @@ theorem xor_loop_x64 (m : Mem) (A k1 : Nat) (hk : k1 < 256) (hbig : A + 200 < 2 
   simp only [runN, s1, s2, s3, s4, s5, s6, s7, Option.bind_some]
   rfl
 
+/-- The tail of `WriteExecXOR` (x64), seven steps from `xorargshl2` (`H2 = A + 111`): the store patches the `rel32` of
+the group jump `xorarg1_{k1}` with `16 k2`, `xorj` jumps to that group (stride `8192`), the group jumps to
+entry `k2`, which stores `k1 xor k2` into `xorres`, which stores it at `Dd` and returns to `Dd - 1`. -/
+theorem xor_tail_x64 (m : Mem) (A k1 k2 N Dd v0 b0 : Nat) (hk1 : k1 < 256) (hk2 : k2 < 256)
+    (hbig : A + 2 ^ 22 < 2 ^ 30) (hN : N = A + 125 + 2 ^ 21) (hDd : N + 12 ≤ Dd) (hDb : Dd + 1 < 2 ^ 30)
+    (hv0 : v0 < 65536) (hb0 : b0 < 256)
+    (t1 : Code m (A + 111) (enc (.movW (fld Mode.x64 (A + 111) 9 (A + 126 + 8192 * k1)) (k2 * 16))))
+    (t2 : Code m (A + 120) (enc (.jmp32 (jrel (A + 120) (A + 125 + 8192 * k1)))))
+    (t3 : Code m (A + 125 + 8192 * k1) (enc (.jmp32 v0)))
+    (t4 : Code m (A + 125 + 8192 * k1 + 5 + 16 * k2)
+      (enc (.movB (fld Mode.x64 (A + 125 + 8192 * k1 + 5 + 16 * k2) 7 (N + 6)) (k1 ^^^ k2)) ++
+        enc (.jmp32 (jrel (A + 125 + 8192 * k1 + 5 + 16 * k2 + 7) N))))
+    (tN : Code m N (enc (.movB (fld Mode.x64 N 7 Dd) b0)))
+    (tR : Code m (N + 7) (enc (.jmp32 (jrel (N + 7) (Dd - 1))))) :
+    runN Mode.x64 7 (A + 111, m) = some (Dd - 1,
+      wr (wr (wr m (A + 126 + 8192 * k1) 2 (k2 * 16)) (N + 6) 1 (k1 ^^^ k2)) Dd 1 (k1 ^^^ k2)) := by
+  have hx : k1 ^^^ k2 < 256 := by
+    have := Nat.xor_lt_two_pow (n := 8) (x := k1) (y := k2) (by omega) (by omega)
+    simpa using this
+  have hw : k2 * 16 < 65536 := by omega
+  let ma := wr m (A + 126 + 8192 * k1) 2 (k2 * 16)
+  let mc := wr ma (N + 6) 1 (k1 ^^^ k2)
+  let md := wr mc Dd 1 (k1 ^^^ k2)
+  have s1 : step Mode.x64 (A + 111, m) = some (A + 120, ma) :=
+    step_movW Mode.x64 m (A + 111) (A + 126 + 8192 * k1) _ (by omega) (by omega) hw t1
+  have ca2 : Code ma (A + 120) (enc (.jmp32 (jrel (A + 120) (A + 125 + 8192 * k1)))) :=
+    Code_frame' t2 (by fz)
+  have s2 : step Mode.x64 (A + 120, ma) = some (A + 125 + 8192 * k1, ma) :=
+    step_jmp32_to Mode.x64 ma (A + 120) _ (by omega) (by omega) ca2
+  have ca3 : Code ma (A + 125 + 8192 * k1) (enc (.jmp32 (k2 * 16))) := by
+    have := patch_jmp32_word m (A + 125 + 8192 * k1) v0 (k2 * 16) hv0 hw t3
+    rw [show A + 125 + 8192 * k1 + 1 = A + 126 + 8192 * k1 by omega] at this
+    exact this
+  have s3 : step Mode.x64 (A + 125 + 8192 * k1, ma) = some (A + 125 + 8192 * k1 + 5 + 16 * k2, ma) := by
+    have := step_jmp32 Mode.x64 ma (A + 125 + 8192 * k1) (k2 * 16) (by omega) ca3
+    rw [this, show A + 125 + 8192 * k1 + 5 + k2 * 16 = A + 125 + 8192 * k1 + 5 + 16 * k2 by omega]
+  obtain ⟨e1, e2⟩ := (Code_append m _ _ _).1 t4
+  rw [enc_len] at e2
+  simp only [Ins.len] at e2
+  have ca4 : Code ma (A + 125 + 8192 * k1 + 5 + 16 * k2)
+      (enc (.movB (fld Mode.x64 (A + 125 + 8192 * k1 + 5 + 16 * k2) 7 (N + 6)) (k1 ^^^ k2))) :=
+    Code_frame' e1 (by fz)
+  have s4 : step Mode.x64 (A + 125 + 8192 * k1 + 5 + 16 * k2, ma) =
+      some (A + 125 + 8192 * k1 + 5 + 16 * k2 + 7, mc) :=
+    step_movB Mode.x64 ma _ (N + 6) _ (by omega) (by omega) hx ca4
+  have cc5 : Code mc (A + 125 + 8192 * k1 + 5 + 16 * k2 + 7)
+      (enc (.jmp32 (jrel (A + 125 + 8192 * k1 + 5 + 16 * k2 + 7) N))) :=
+    Code_frame' (Code_frame' e2 (by fz)) (by fz)
+  have s5 : step Mode.x64 (A + 125 + 8192 * k1 + 5 + 16 * k2 + 7, mc) = some (N, mc) :=
+    step_jmp32_to Mode.x64 mc _ N (by omega) (by omega) cc5
+  have cc6 : Code mc N (enc (.movB (fld Mode.x64 N 7 Dd) (k1 ^^^ k2))) :=
+    patch_movB_imm ma N _ b0 _ hb0 hx (Code_frame' tN (by fz))
+  have s6 : step Mode.x64 (N, mc) = some (N + 7, md) :=
+    step_movB Mode.x64 mc N Dd _ (by omega) (by omega) hx cc6
+  have cd7 : Code md (N + 7) (enc (.jmp32 (jrel (N + 7) (Dd - 1)))) :=
+    Code_frame' (Code_frame' (Code_frame' tR (by fz)) (by fz)) (by fz)
+  have s7 : step Mode.x64 (N + 7, md) = some (Dd - 1, md) :=
+    step_jmp32_to Mode.x64 md (N + 7) (Dd - 1) (by omega) (by omega) cd7
+  simp only [runN, s1, s2, s3, s4, s5, s6, s7, Option.bind_some]
+  rfl
+
 end WriteExecute.X86
