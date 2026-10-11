@@ -122,57 +122,58 @@ theorem arg_stage (mode : Mode) (m : Mem) (A S R D k c d0 w0 r0 : Nat)
   rw [e, runN_add, A4]
   simpa using B5
 
-/-- The copy loop of `WriteExecXOR` (x64), seven steps from `xorargshl1` (`H1 = A + 90`): the first pass stores
+/-- The copy loop of `WriteExecXOR` (both builds), seven steps from `xorargshl1` (`H1 = A + 90`): the first pass stores
 `32 k1` into the `rel32` of `xorj`, retargets the store at `xorargshl2`, and loops back through `xorhead`, which
-disables the loop; the second pass stores `32 k1` into the middle of the displacement of `xorargshl2`. -/
-theorem xor_loop_x64 (m : Mem) (A k1 : Nat) (hk : k1 < 256) (hbig : A + 200 < 2 ^ 30)
-    (c1 : Code m (A + 90) (enc (.movW (fld Mode.x64 (A + 90) 9 (A + 122)) (k1 * 32))))
-    (c2 : Code m (A + 99) (enc (.movD (fld Mode.x64 (A + 99) 10 (A + 93)) (fld Mode.x64 (A + 90) 9 (A + 115)))))
+disables the loop; the second pass stores `32 k1` at `T2` (x64: the middle of the displacement of `xorargshl2`; x86: the `rel32` of `xorargshl2jmp`). -/
+theorem xor_loop (mode : Mode) (m : Mem) (A J T2 k1 : Nat) (hk : k1 < 256) (hbig : A + 200 < 2 ^ 30)
+    (hJ : J < 2 ^ 30) (hJd : J + 2 ≤ A + 83 ∨ A + 111 ≤ J) (hT : T2 < 2 ^ 30) (hTd : T2 + 2 ≤ A + 83 ∨ A + 111 ≤ T2)
+    (c1 : Code m (A + 90) (enc (.movW (fld mode (A + 90) 9 J) (k1 * 32))))
+    (c2 : Code m (A + 99) (enc (.movD (fld mode (A + 99) 10 (A + 93)) (fld mode (A + 90) 9 T2))))
     (c3 : Code m (A + 109) (enc (.jmp8 228)))
-    (c4 : Code m (A + 83) (enc (.movB (fld Mode.x64 (A + 83) 7 (A + 110)) 0))) :
-    runN Mode.x64 7 (A + 90, m) = some (A + 111,
-      wr (wr (wr (wr (wr m (A + 122) 2 (k1 * 32)) (A + 93) 4 (fld Mode.x64 (A + 90) 9 (A + 115)))
-        (A + 110) 1 0) (A + 115) 2 (k1 * 32)) (A + 93) 4 (fld Mode.x64 (A + 90) 9 (A + 115))) := by
+    (c4 : Code m (A + 83) (enc (.movB (fld mode (A + 83) 7 (A + 110)) 0))) :
+    runN mode 7 (A + 90, m) = some (A + 111,
+      wr (wr (wr (wr (wr m J 2 (k1 * 32)) (A + 93) 4 (fld mode (A + 90) 9 T2))
+        (A + 110) 1 0) T2 2 (k1 * 32)) (A + 93) 4 (fld mode (A + 90) 9 T2)) := by
   have hv : k1 * 32 < 65536 := by omega
-  let V2 := fld Mode.x64 (A + 90) 9 (A + 115)
+  let V2 := fld mode (A + 90) 9 T2
   have hV2 : V2 < 2 ^ 32 := fld_lt _ _ _ _ (by omega)
-  let ma := wr m (A + 122) 2 (k1 * 32)
+  let ma := wr m J 2 (k1 * 32)
   let mb := wr ma (A + 93) 4 V2
   let mc := wr mb (A + 110) 1 0
-  let md := wr mc (A + 115) 2 (k1 * 32)
+  let md := wr mc T2 2 (k1 * 32)
   let me := wr md (A + 93) 4 V2
-  have s1 : step Mode.x64 (A + 90, m) = some (A + 99, ma) :=
-    step_movW Mode.x64 m (A + 90) (A + 122) _ (by omega) (by omega) hv c1
-  have ca2 : Code ma (A + 99) (enc (.movD (fld Mode.x64 (A + 99) 10 (A + 93)) V2)) :=
+  have s1 : step mode (A + 90, m) = some (A + 99, ma) :=
+    step_movW mode m (A + 90) J _ (by omega) (by omega) hv c1
+  have ca2 : Code ma (A + 99) (enc (.movD (fld mode (A + 99) 10 (A + 93)) V2)) :=
     Code_frame' c2 (by fz)
-  have s2 : step Mode.x64 (A + 99, ma) = some (A + 109, mb) :=
-    step_movD Mode.x64 ma (A + 99) (A + 93) _ (by omega) (by omega) hV2 ca2
+  have s2 : step mode (A + 99, ma) = some (A + 109, mb) :=
+    step_movD mode ma (A + 99) (A + 93) _ (by omega) (by omega) hV2 ca2
   have cb3 : Code mb (A + 109) (enc (.jmp8 228)) := Code_frame' (Code_frame' c3 (by fz)) (by fz)
-  have s3 : step Mode.x64 (A + 109, mb) = some (A + 83, mb) := by
-    have := step_jmp8_neg Mode.x64 mb (A + 109) 228 (by omega) (by omega) (by omega) cb3
+  have s3 : step mode (A + 109, mb) = some (A + 83, mb) := by
+    have := step_jmp8_neg mode mb (A + 109) 228 (by omega) (by omega) (by omega) cb3
     rw [this, show A + 109 + 2 + 228 - 256 = A + 83 by omega]
-  have cb4 : Code mb (A + 83) (enc (.movB (fld Mode.x64 (A + 83) 7 (A + 110)) 0)) :=
+  have cb4 : Code mb (A + 83) (enc (.movB (fld mode (A + 83) 7 (A + 110)) 0)) :=
     Code_frame' (Code_frame' c4 (by fz)) (by fz)
-  have s4 : step Mode.x64 (A + 83, mb) = some (A + 90, mc) :=
-    step_movB Mode.x64 mb (A + 83) (A + 110) 0 (by omega) (by omega) (by omega) cb4
+  have s4 : step mode (A + 83, mb) = some (A + 90, mc) :=
+    step_movB mode mb (A + 83) (A + 110) 0 (by omega) (by omega) (by omega) cb4
   have cb1 : Code mb (A + 90) (enc (.movW V2 (k1 * 32))) := by
     have := patch_movW_disp ma (A + 90) _ V2 (k1 * 32) (Code_frame' c1 (by fz))
     rw [show A + 90 + 3 = A + 93 by omega] at this
     exact this
-  have cc1 : Code mc (A + 90) (enc (.movW (fld Mode.x64 (A + 90) 9 (A + 115)) (k1 * 32))) :=
+  have cc1 : Code mc (A + 90) (enc (.movW (fld mode (A + 90) 9 T2) (k1 * 32))) :=
     Code_frame' cb1 (by fz)
-  have s5 : step Mode.x64 (A + 90, mc) = some (A + 99, md) :=
-    step_movW Mode.x64 mc (A + 90) (A + 115) _ (by omega) (by omega) hv cc1
-  have cd2 : Code md (A + 99) (enc (.movD (fld Mode.x64 (A + 99) 10 (A + 93)) V2)) :=
+  have s5 : step mode (A + 90, mc) = some (A + 99, md) :=
+    step_movW mode mc (A + 90) T2 _ (by omega) (by omega) hv cc1
+  have cd2 : Code md (A + 99) (enc (.movD (fld mode (A + 99) 10 (A + 93)) V2)) :=
     Code_frame' (Code_frame' (Code_frame' ca2 (by fz)) (by fz)) (by fz)
-  have s6 : step Mode.x64 (A + 99, md) = some (A + 109, me) :=
-    step_movD Mode.x64 md (A + 99) (A + 93) _ (by omega) (by omega) hV2 cd2
+  have s6 : step mode (A + 99, md) = some (A + 109, me) :=
+    step_movD mode md (A + 99) (A + 93) _ (by omega) (by omega) hV2 cd2
   have ce3 : Code me (A + 109) (enc (.jmp8 0)) := by
     have := patch_jmp8 mb (A + 109) 228 0 (by omega) (by omega) cb3
     rw [show A + 109 + 1 = A + 110 by omega] at this
     exact Code_frame' (Code_frame' this (by fz)) (by fz)
-  have s7 : step Mode.x64 (A + 109, me) = some (A + 111, me) := by
-    have := step_jmp8 Mode.x64 me (A + 109) 0 (by omega) ce3
+  have s7 : step mode (A + 109, me) = some (A + 111, me) := by
+    have := step_jmp8 mode me (A + 109) 0 (by omega) ce3
     rw [this, show A + 109 + 2 + 0 = A + 111 by omega]
   simp only [runN, s1, s2, s3, s4, s5, s6, s7, Option.bind_some]
   rfl
@@ -256,7 +257,8 @@ macro "cext " h:term : tactic => `(tactic| (
   refine Code_ext _ _ _ _ $h ?_
   intro x hx1 hx2
   try simp only [enc_len, Ins.len, List.length_append, List.length_replicate, jmpTo_length] at hx2
-  try simp +zetaDelta (disch := omega) only [wr_apply_out']))
+  try split at hx2
+  all_goals (try simp +zetaDelta (disch := omega) only [wr_apply_out'])))
 
 /-- The image of one `xorarg`/`notarg`-style argument stage (see `arg_stage`). -/
 structure ArgImg (mode : Mode) (m : Mem) (A S R D k c d0 w0 r0 : Nat) : Prop where
@@ -316,7 +318,7 @@ theorem xor_exec_x64 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
     (hord4 : S4 + 5 + 65536 + 14 ≤ S5) (hord5 : S5 + 5 + 65536 + 14 ≤ A)
     (hbig : A + 2 ^ 22 < 2 ^ 30) (hN : N = A + 125 + 2 ^ 21) (hDd : N + 12 ≤ Dd) (hDb : Dd + 1 < 2 ^ 30)
     (hv : ∀ i, i < 256 → v i < 65536) (hwH : wH < 65536) (hwJ : wJ < 65536) (hb0 : b0 < 256)
-    (hrL : rL < 256) (hc1 : c1 < 65536) (hc2s : c2s < 65536)
+    (hrL : rL < 256)
     (img : XorImg64 m A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1 rL c2s wH wJ b0 v) :
     ∃ mEnd, runN Mode.x64 35 (A, m) = some (Dd - 1, mEnd) ∧ mEnd Dd = k1 ^^^ k2 ∧
       ∀ x, ¬(x = S5 + 2 ∨ (S5 + 5 + 65536 + 3 ≤ x ∧ x < S5 + 5 + 65536 + 9) ∨
@@ -392,7 +394,7 @@ theorem xor_exec_x64 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
     exact this
   have cL4 : Code mF (A + 83) (enc (.movB (fld Mode.x64 (A + 83) 7 (A + 110)) 0)) := by
     cext img.xh
-  have RL := xor_loop_x64 mF A k1 hk1 (by omega) cL1 cL2 cL3 cL4
+  have RL := xor_loop Mode.x64 mF A (A + 122) (A + 115) k1 hk1 (by omega) (by omega) (by omega) (by omega) (by omega) cL1 cL2 cL3 cL4
   let V2 := fld Mode.x64 (A + 90) 9 (A + 115)
   let ML1 := wr mF (A + 122) 2 (k1 * 32)
   let ML2 := wr ML1 (A + 93) 4 V2
@@ -440,6 +442,256 @@ theorem xor_exec_x64 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1
     runN_trans Mode.x64 R1 (runN_trans Mode.x64 R2 (runN_trans Mode.x64 (runN_one _ _ _ P1)
       (runN_trans Mode.x64 (runN_one _ _ _ P2) (runN_trans Mode.x64 (runN_one _ _ _ P3)
         (runN_trans Mode.x64 RL RT)))))
+  refine ⟨mEnd, RA, ?_, ?_⟩
+  · have : mEnd Dd = (k1 ^^^ k2) / 256 ^ (Dd - Dd) % 256 := wr_apply_in _ _ _ _ _ ⟨Nat.le_refl _, by omega⟩
+    rw [this]; simp; omega
+  · intro x hx
+    simp +zetaDelta (disch := omega) only [wr_apply_out']
+
+/-- The tail of `WriteExecXOR` (x86), ten steps from `xorargshl2jmp` (`A + 111`): the patched jump selects entry `k1`
+of the `DEFINEXORJMP` table, which patches the store operand of `xorargshl2` to the group jump `xorarg1_{k1}`; the store
+patches that jump with `16 k2`; `xorj` jumps to the group, which jumps to entry `k2`, which stores `k1 xor k2` into
+`xorres`, which stores it at `Dd` and returns to `Dd - 1`. -/
+theorem xor_tail_x86 (m : Mem) (A k1 k2 N Dd v0 d2 b0 : Nat) (hk1 : k1 < 256) (hk2 : k2 < 256)
+    (hbig : A + 2 ^ 22 < 2 ^ 30) (hN : N = A + 8322 + 2 ^ 21) (hDd : N + 12 ≤ Dd) (hDb : Dd + 1 < 2 ^ 30)
+    (hv0 : v0 < 65536) (hb0 : b0 < 256)
+    (u1 : Code m (A + 111) (enc (.jmp32 (k1 * 32))))
+    (u2 : Code m (A + 116 + 32 * k1)
+      (enc (.movD (fld Mode.x86 (A + 116 + 32 * k1) 10 (A + 8311)) (A + 8323 + 8192 * k1)) ++
+        jmpTo (decide (k1 < 252)) (A + 116 + 32 * k1 + 10) (A + 8308)))
+    (u3 : Code m (A + 8308) (enc (.movW d2 (k2 * 16))))
+    (u4 : Code m (A + 8317) (enc (.jmp32 (jrel (A + 8317) (A + 8322 + 8192 * k1)))))
+    (u5 : Code m (A + 8322 + 8192 * k1) (enc (.jmp32 v0)))
+    (u6 : Code m (A + 8322 + 8192 * k1 + 5 + 16 * k2)
+      (enc (.movB (fld Mode.x86 (A + 8322 + 8192 * k1 + 5 + 16 * k2) 7 (N + 6)) (k1 ^^^ k2)) ++
+        enc (.jmp32 (jrel (A + 8322 + 8192 * k1 + 5 + 16 * k2 + 7) N))))
+    (uN : Code m N (enc (.movB (fld Mode.x86 N 7 Dd) b0)))
+    (uR : Code m (N + 7) (enc (.jmp32 (jrel (N + 7) (Dd - 1))))) :
+    runN Mode.x86 10 (A + 111, m) = some (Dd - 1,
+      wr (wr (wr (wr m (A + 8311) 4 (A + 8323 + 8192 * k1)) (A + 8323 + 8192 * k1) 2 (k2 * 16))
+        (N + 6) 1 (k1 ^^^ k2)) Dd 1 (k1 ^^^ k2)) := by
+  have hx : k1 ^^^ k2 < 256 := by
+    have := Nat.xor_lt_two_pow (n := 8) (x := k1) (y := k2) (by omega) (by omega)
+    simpa using this
+  have hw : k2 * 16 < 65536 := by omega
+  let ma := wr m (A + 8311) 4 (A + 8323 + 8192 * k1)
+  let mb := wr ma (A + 8323 + 8192 * k1) 2 (k2 * 16)
+  let mc := wr mb (N + 6) 1 (k1 ^^^ k2)
+  let md := wr mc Dd 1 (k1 ^^^ k2)
+  have s1 : step Mode.x86 (A + 111, m) = some (A + 116 + 32 * k1, m) := by
+    have := step_jmp32 Mode.x86 m (A + 111) (k1 * 32) (by omega) u1
+    rw [this, show A + 111 + 5 + k1 * 32 = A + 116 + 32 * k1 by omega]
+  obtain ⟨e1, e2⟩ := (Code_append m _ _ _).1 u2
+  rw [enc_len] at e2
+  simp only [Ins.len] at e2
+  have s2 : step Mode.x86 (A + 116 + 32 * k1, m) = some (A + 116 + 32 * k1 + 10, ma) :=
+    step_movD Mode.x86 m _ (A + 8311) _ (by omega) (by omega) (by omega) e1
+  have ca3 : Code ma (A + 116 + 32 * k1 + 10) (jmpTo (decide (k1 < 252)) (A + 116 + 32 * k1 + 10) (A + 8308)) := by
+    cext e2
+  have s3 : step Mode.x86 (A + 116 + 32 * k1 + 10, ma) = some (A + 8308, ma) :=
+    step_jmpTo Mode.x86 ma _ _ _ (by omega) (by omega) (fun hn => by
+      have : ¬ k1 < 252 := by simpa using hn
+      omega) ca3
+  have ca4 : Code ma (A + 8308) (enc (.movW (A + 8323 + 8192 * k1) (k2 * 16))) := by
+    have := patch_movW_disp m (A + 8308) d2 (A + 8323 + 8192 * k1) (k2 * 16) u3
+    rw [show A + 8308 + 3 = A + 8311 by omega] at this
+    exact this
+  have s4 : step Mode.x86 (A + 8308, ma) = some (A + 8317, mb) :=
+    step_movW Mode.x86 ma (A + 8308) (A + 8323 + 8192 * k1) _ (by omega) (by omega) hw ca4
+  have cb5 : Code mb (A + 8317) (enc (.jmp32 (jrel (A + 8317) (A + 8322 + 8192 * k1)))) := by cext u4
+  have s5 : step Mode.x86 (A + 8317, mb) = some (A + 8322 + 8192 * k1, mb) :=
+    step_jmp32_to Mode.x86 mb (A + 8317) _ (by omega) (by omega) cb5
+  have cb6 : Code mb (A + 8322 + 8192 * k1) (enc (.jmp32 (k2 * 16))) := by
+    have := patch_jmp32_word ma (A + 8322 + 8192 * k1) v0 (k2 * 16) hv0 hw (by cext u5)
+    rw [show A + 8322 + 8192 * k1 + 1 = A + 8323 + 8192 * k1 by omega] at this
+    exact this
+  have s6 : step Mode.x86 (A + 8322 + 8192 * k1, mb) = some (A + 8322 + 8192 * k1 + 5 + 16 * k2, mb) := by
+    have := step_jmp32 Mode.x86 mb (A + 8322 + 8192 * k1) (k2 * 16) (by omega) cb6
+    rw [this, show A + 8322 + 8192 * k1 + 5 + k2 * 16 = A + 8322 + 8192 * k1 + 5 + 16 * k2 by omega]
+  obtain ⟨f1, f2⟩ := (Code_append m _ _ _).1 u6
+  rw [enc_len] at f2
+  simp only [Ins.len] at f2
+  have cb7 : Code mb (A + 8322 + 8192 * k1 + 5 + 16 * k2)
+      (enc (.movB (fld Mode.x86 (A + 8322 + 8192 * k1 + 5 + 16 * k2) 7 (N + 6)) (k1 ^^^ k2))) := by cext f1
+  have s7 : step Mode.x86 (A + 8322 + 8192 * k1 + 5 + 16 * k2, mb) =
+      some (A + 8322 + 8192 * k1 + 5 + 16 * k2 + 7, mc) :=
+    step_movB Mode.x86 mb _ (N + 6) _ (by omega) (by omega) hx cb7
+  have cc8 : Code mc (A + 8322 + 8192 * k1 + 5 + 16 * k2 + 7)
+      (enc (.jmp32 (jrel (A + 8322 + 8192 * k1 + 5 + 16 * k2 + 7) N))) := by cext f2
+  have s8 : step Mode.x86 (A + 8322 + 8192 * k1 + 5 + 16 * k2 + 7, mc) = some (N, mc) :=
+    step_jmp32_to Mode.x86 mc _ N (by omega) (by omega) cc8
+  have cc9 : Code mc N (enc (.movB (fld Mode.x86 N 7 Dd) (k1 ^^^ k2))) := by
+    have := patch_movB_imm mb N _ b0 _ hb0 hx (by cext uN)
+    exact this
+  have s9 : step Mode.x86 (N, mc) = some (N + 7, md) :=
+    step_movB Mode.x86 mc N Dd _ (by omega) (by omega) hx cc9
+  have cd10 : Code md (N + 7) (enc (.jmp32 (jrel (N + 7) (Dd - 1)))) := by cext uR
+  have s10 : step Mode.x86 (N + 7, md) = some (Dd - 1, md) :=
+    step_jmp32_to Mode.x86 md (N + 7) (Dd - 1) (by omega) (by omega) cd10
+  simp only [runN, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, Option.bind_some]
+  rfl
+
+/-- The image of `WriteExecXOR` (x86 build) at the entry `xorarg1 = A` (absolute addresses); see `XorImg64`.
+`ej` is the `DEFINEXORJMP` table (32-byte entries, near jumps below index `0fch`, short jumps from there on). -/
+structure XorImg86 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1 rL vJ d2 c2s wJ b0 : Nat)
+    (v : Nat → Nat) : Prop where
+  a1 : ArgImg Mode.x86 m A S5 (S5 + 5 + 65536) (A + 97) k1 5 d01 w01 r01
+  a2 : ArgImg Mode.x86 m (A + 32) S4 (S4 + 5 + 65536) (A + 8315) k2 4 d02 w02 r02
+  p1 : Code m (A + 64) (enc (.movD (fld Mode.x86 (A + 64) 10 (A + 93)) (fld Mode.x86 (A + 90) 9 (A + 8319))))
+  p2 : Code m (A + 74) (enc (.movB (fld Mode.x86 (A + 74) 7 (A + 110)) 228))
+  p3 : Code m (A + 81) (enc (.jmp8 7))
+  xh : Code m (A + 83) (enc (.movB (fld Mode.x86 (A + 83) 7 (A + 110)) 0))
+  h1 : Code m (A + 90) (enc (.movW d1 c1))
+  h1b : Code m (A + 99) (enc (.movD (fld Mode.x86 (A + 99) 10 (A + 93)) (fld Mode.x86 (A + 90) 9 (A + 112))))
+  xl : Code m (A + 109) (enc (.jmp8 rL))
+  jj : Code m (A + 111) (enc (.jmp32 vJ))
+  ej : ∀ i, i < 256 → Code m (A + 116 + 32 * i)
+    (enc (.movD (fld Mode.x86 (A + 116 + 32 * i) 10 (A + 8311)) (A + 8323 + 8192 * i)) ++
+      jmpTo (decide (i < 252)) (A + 116 + 32 * i + 10) (A + 8308))
+  h2 : Code m (A + 8308) (enc (.movW d2 c2s))
+  xj : Code m (A + 8317) (enc (.jmp32 (256 * wJ)))
+  gj : ∀ i, i < 256 → Code m (A + 8322 + 8192 * i) (enc (.jmp32 (v i)))
+  ent : ∀ i j, i < 256 → j < 256 → Code m (A + 8322 + 8192 * i + 5 + 16 * j)
+    (enc (.movB (fld Mode.x86 (A + 8322 + 8192 * i + 5 + 16 * j) 7 (N + 6)) (i ^^^ j)) ++
+      enc (.jmp32 (jrel (A + 8322 + 8192 * i + 5 + 16 * j + 7) N)))
+  iN : Code m N (enc (.movB (fld Mode.x86 N 7 Dd) b0))
+  iRet : Code m (N + 7) (enc (.jmp32 (jrel (N + 7) (Dd - 1))))
+
+/-- C18 (Fig. 6), x86 build of the published `writeexc.asm`: for every pair of argument bytes `k1`, `k2`, execution from
+`xorarg1` reaches the return jump target `Dd - 1` after `38` steps, having stored `k1 xor k2` at `Dd`; every write is
+to an instruction field. -/
+theorem xor_exec_x86 (m : Mem) (A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1 rL vJ d2 c2s wJ b0 : Nat)
+    (v : Nat → Nat) (hk1 : k1 < 256) (hk2 : k2 < 256)
+    (hord4 : S4 + 5 + 65536 + 14 ≤ S5) (hord5 : S5 + 5 + 65536 + 14 ≤ A)
+    (hbig : A + 2 ^ 22 < 2 ^ 30) (hN : N = A + 8322 + 2 ^ 21) (hDd : N + 12 ≤ Dd) (hDb : Dd + 1 < 2 ^ 30)
+    (hv : ∀ i, i < 256 → v i < 65536) (hvJ : vJ < 65536) (hwJ : wJ < 65536) (hb0 : b0 < 256)
+    (hrL : rL < 256)
+    (img : XorImg86 m A S5 S4 N Dd k1 k2 d01 w01 r01 d02 w02 r02 d1 c1 rL vJ d2 c2s wJ b0 v) :
+    ∃ mEnd, runN Mode.x86 38 (A, m) = some (Dd - 1, mEnd) ∧ mEnd Dd = k1 ^^^ k2 ∧
+      ∀ x, ¬(x = S5 + 2 ∨ (S5 + 5 + 65536 + 3 ≤ x ∧ x < S5 + 5 + 65536 + 9) ∨
+        (S5 + 5 + 65536 + 10 ≤ x ∧ x < S5 + 5 + 65536 + 14) ∨ x = S4 + 2 ∨
+        (S4 + 5 + 65536 + 3 ≤ x ∧ x < S4 + 5 + 65536 + 9) ∨
+        (S4 + 5 + 65536 + 10 ≤ x ∧ x < S4 + 5 + 65536 + 14) ∨
+        (A + 93 ≤ x ∧ x < A + 99) ∨ x = A + 110 ∨ (A + 112 ≤ x ∧ x < A + 114) ∨
+        (A + 8311 ≤ x ∧ x < A + 8317) ∨ (A + 8319 ≤ x ∧ x < A + 8321) ∨
+        (A + 8323 + 8192 * k1 ≤ x ∧ x < A + 8325 + 8192 * k1) ∨ x = N + 6 ∨ x = Dd) → mEnd x = m x := by
+  have hx : k1 ^^^ k2 < 256 := by
+    have := Nat.xor_lt_two_pow (n := 8) (x := k1) (y := k2) (by omega) (by omega)
+    simpa using this
+  -- stage 1
+  let m1a := wr m (S5 + 2) 1 k1
+  let m1b := wr m1a (S5 + 5 + 65536 + 3) 4 (fld Mode.x86 (S5 + 5 + 65536) 9 (A + 97))
+  let m1c := wr m1b (S5 + 5 + 65536 + 9 + 1) 4 (jrel (S5 + 5 + 65536 + 9) (A + 32))
+  let m1d := wr m1c (S5 + 5 + 65536 + 7) 2 (k1 * 2 ^ 5)
+  let m1 := wr m1d (A + 97) 2 (k1 * 2 ^ 5)
+  have R1 : runN Mode.x86 9 (A, m) = some (A + 32, m1) :=
+    arg_stage Mode.x86 m A S5 (S5 + 5 + 65536) (A + 97) k1 5 d01 w01 r01 hk1 (by omega) rfl (by omega)
+      (by omega) (by omega) (by omega) img.a1.i0 img.a1.i1 img.a1.i2 img.a1.i3 img.a1.iX img.a1.iT
+      img.a1.iR img.a1.iS
+  -- stage 2
+  have a2' : ArgImg Mode.x86 m1 (A + 32) S4 (S4 + 5 + 65536) (A + 8315) k2 4 d02 w02 r02 :=
+    img.a2.ext rfl (fun x hx => by simp (disch := omega) only [m1, m1d, m1c, m1b, m1a, wr_apply_out'])
+  let m2a := wr m1 (S4 + 2) 1 k2
+  let m2b := wr m2a (S4 + 5 + 65536 + 3) 4 (fld Mode.x86 (S4 + 5 + 65536) 9 (A + 8315))
+  let m2c := wr m2b (S4 + 5 + 65536 + 9 + 1) 4 (jrel (S4 + 5 + 65536 + 9) (A + 32 + 32))
+  let m2d := wr m2c (S4 + 5 + 65536 + 7) 2 (k2 * 2 ^ 4)
+  let m2 := wr m2d (A + 8315) 2 (k2 * 2 ^ 4)
+  have R2 : runN Mode.x86 9 (A + 32, m1) = some (A + 32 + 32, m2) :=
+    arg_stage Mode.x86 m1 (A + 32) S4 (S4 + 5 + 65536) (A + 8315) k2 4 d02 w02 r02 hk2 (by omega) rfl (by omega)
+      (by omega) (by omega) (by omega) a2'.i0 a2'.i1 a2'.i2 a2'.i3 a2'.iX a2'.iT a2'.iR a2'.iS
+  have hA32 : A + 32 + 32 = A + 64 := by omega
+  rw [hA32] at R2
+  -- the three patches
+  let V1 := fld Mode.x86 (A + 90) 9 (A + 8319)
+  have hV1 : V1 < 2 ^ 32 := fld_lt _ _ _ _ (by omega)
+  let mp1 := wr m2 (A + 93) 4 V1
+  let mF := wr mp1 (A + 110) 1 228
+  have cp1 : Code m2 (A + 64) (enc (.movD (fld Mode.x86 (A + 64) 10 (A + 93)) V1)) := by
+    cext img.p1
+  have P1 : step Mode.x86 (A + 64, m2) = some (A + 74, mp1) :=
+    step_movD Mode.x86 m2 (A + 64) (A + 93) V1 (by omega) (by omega) hV1 cp1
+  have cp2 : Code mp1 (A + 74) (enc (.movB (fld Mode.x86 (A + 74) 7 (A + 110)) 228)) := by
+    cext img.p2
+  have P2 : step Mode.x86 (A + 74, mp1) = some (A + 81, mF) :=
+    step_movB Mode.x86 mp1 (A + 74) (A + 110) 228 (by omega) (by omega) (by omega) cp2
+  have cp3 : Code mF (A + 81) (enc (.jmp8 7)) := by
+    cext img.p3
+  have P3 : step Mode.x86 (A + 81, mF) = some (A + 90, mF) := by
+    have := step_jmp8 Mode.x86 mF (A + 81) 7 (by omega) cp3
+    rw [this]
+  -- the loop
+  have cL1 : Code mF (A + 90) (enc (.movW (fld Mode.x86 (A + 90) 9 (A + 8319)) (k1 * 32))) := by
+    have X1 : Code m1d (A + 90) (enc (.movW d1 c1)) := by cext img.h1
+    have X2 : Code m1 (A + 90) (enc (.movW d1 (k1 * 2 ^ 5))) := by
+      have := patch_movW_imm m1d (A + 90) d1 c1 (k1 * 2 ^ 5) X1
+      rw [show A + 90 + 7 = A + 97 by omega] at this
+      exact this
+    have X3 : Code m2 (A + 90) (enc (.movW d1 (k1 * 2 ^ 5))) := by cext X2
+    have X4 : Code mp1 (A + 90) (enc (.movW V1 (k1 * 2 ^ 5))) := by
+      have := patch_movW_disp m2 (A + 90) d1 V1 (k1 * 2 ^ 5) X3
+      rw [show A + 90 + 3 = A + 93 by omega] at this
+      exact this
+    have X5 : Code mF (A + 90) (enc (.movW V1 (k1 * 2 ^ 5))) := by cext X4
+    exact X5
+  have cL2 : Code mF (A + 99) (enc (.movD (fld Mode.x86 (A + 99) 10 (A + 93)) (fld Mode.x86 (A + 90) 9 (A + 112)))) := by
+    cext img.h1b
+  have cL3 : Code mF (A + 109) (enc (.jmp8 228)) := by
+    have := patch_jmp8 mp1 (A + 109) rL 228 hrL (by omega) (by cext img.xl)
+    rw [show A + 109 + 1 = A + 110 by omega] at this
+    exact this
+  have cL4 : Code mF (A + 83) (enc (.movB (fld Mode.x86 (A + 83) 7 (A + 110)) 0)) := by
+    cext img.xh
+  have RL := xor_loop Mode.x86 mF A (A + 8319) (A + 112) k1 hk1 (by omega) (by omega) (by omega) (by omega) (by omega) cL1 cL2 cL3 cL4
+  let V2 := fld Mode.x86 (A + 90) 9 (A + 112)
+  let ML1 := wr mF (A + 8319) 2 (k1 * 32)
+  let ML2 := wr ML1 (A + 93) 4 V2
+  let ML3 := wr ML2 (A + 110) 1 0
+  let ML4 := wr ML3 (A + 112) 2 (k1 * 32)
+  let ML5 := wr ML4 (A + 93) 4 V2
+  -- the tail
+  have u1 : Code ML5 (A + 111) (enc (.jmp32 (k1 * 32))) := by
+    have Y1 : Code ML3 (A + 111) (enc (.jmp32 vJ)) := by cext img.jj
+    have Y2 : Code ML4 (A + 111) (enc (.jmp32 (k1 * 32))) := by
+      have := patch_jmp32_word ML3 (A + 111) vJ (k1 * 32) hvJ (by omega) Y1
+      rw [show A + 111 + 1 = A + 112 by omega] at this
+      exact this
+    cext Y2
+  have u2 : Code ML5 (A + 116 + 32 * k1)
+      (enc (.movD (fld Mode.x86 (A + 116 + 32 * k1) 10 (A + 8311)) (A + 8323 + 8192 * k1)) ++
+        jmpTo (decide (k1 < 252)) (A + 116 + 32 * k1 + 10) (A + 8308)) := by
+    cext img.ej k1 hk1
+  have u3 : Code ML5 (A + 8308) (enc (.movW d2 (k2 * 16))) := by
+    have Y1 : Code m2d (A + 8308) (enc (.movW d2 c2s)) := by cext img.h2
+    have Y2 : Code m2 (A + 8308) (enc (.movW d2 (k2 * 2 ^ 4))) := by
+      have := patch_movW_imm m2d (A + 8308) d2 c2s (k2 * 2 ^ 4) Y1
+      rw [show A + 8308 + 7 = A + 8315 by omega] at this
+      exact this
+    cext Y2
+  have u4 : Code ML5 (A + 8317) (enc (.jmp32 (jrel (A + 8317) (A + 8322 + 8192 * k1)))) := by
+    have Z1 : Code mF (A + 8317) (enc (.jmp32 (256 * wJ))) := by cext img.xj
+    have Z2 : Code ML1 (A + 8317) (enc (.jmp32 (256 * (k1 * 32)))) := by
+      have := patch_jmp32_mid mF (A + 8317) wJ (k1 * 32) hwJ (by omega) Z1
+      rw [show A + 8317 + 2 = A + 8319 by omega] at this
+      exact this
+    have Z3 : Code ML5 (A + 8317) (enc (.jmp32 (256 * (k1 * 32)))) := by cext Z2
+    have e2 : jrel (A + 8317) (A + 8322 + 8192 * k1) = 256 * (k1 * 32) := by
+      simp only [jrel]; omega
+    rw [e2]
+    exact Z3
+  have u5 : Code ML5 (A + 8322 + 8192 * k1) (enc (.jmp32 (v k1))) := by cext img.gj k1 hk1
+  have u6 : Code ML5 (A + 8322 + 8192 * k1 + 5 + 16 * k2)
+      (enc (.movB (fld Mode.x86 (A + 8322 + 8192 * k1 + 5 + 16 * k2) 7 (N + 6)) (k1 ^^^ k2)) ++
+        enc (.jmp32 (jrel (A + 8322 + 8192 * k1 + 5 + 16 * k2 + 7) N))) := by
+    cext img.ent k1 k2 hk1 hk2
+  have uN : Code ML5 N (enc (.movB (fld Mode.x86 N 7 Dd) b0)) := by cext img.iN
+  have uR : Code ML5 (N + 7) (enc (.jmp32 (jrel (N + 7) (Dd - 1)))) := by cext img.iRet
+  have RT := xor_tail_x86 ML5 A k1 k2 N Dd (v k1) d2 b0 hk1 hk2 hbig hN hDd hDb (hv k1 hk1) hb0 u1 u2 u3 u4 u5 u6 uN uR
+  let mEnd := wr (wr (wr (wr ML5 (A + 8311) 4 (A + 8323 + 8192 * k1)) (A + 8323 + 8192 * k1) 2 (k2 * 16))
+    (N + 6) 1 (k1 ^^^ k2)) Dd 1 (k1 ^^^ k2)
+  have RA : runN Mode.x86 (9 + (9 + (1 + (1 + (1 + (7 + 10)))))) (A, m) = some (Dd - 1, mEnd) :=
+    runN_trans Mode.x86 R1 (runN_trans Mode.x86 R2 (runN_trans Mode.x86 (runN_one _ _ _ P1)
+      (runN_trans Mode.x86 (runN_one _ _ _ P2) (runN_trans Mode.x86 (runN_one _ _ _ P3)
+        (runN_trans Mode.x86 RL RT)))))
   refine ⟨mEnd, RA, ?_, ?_⟩
   · have : mEnd Dd = (k1 ^^^ k2) / 256 ^ (Dd - Dd) % 256 := wr_apply_in _ _ _ _ _ ⟨Nat.le_refl _, by omega⟩
     rw [this]; simp; omega
