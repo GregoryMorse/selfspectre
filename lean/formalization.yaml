@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/99c678e569c7c4c0772db297c5ddd5e4c9b6322e/schema/v0.4.schema.json
+version: "v0.4"
+project:
+  name: "Write-Execute computation: a Lean formalization of Self-Spectre with errata"
+  description: >-
+    Formalizes the Write-Execute half of Gregory Morse's 2019 paper "Self-Spectre,
+    Write-Execute and the Hidden State". An ideal word-level machine whose only
+    operations are a store and a jump, with no data reads, simulates finite Turing
+    machines step for step, preserving halting, divergence and the tape; a finite
+    image is exact until its guard faults. The development proves the jump-table
+    lookup, the 8-bit tables, wide ADD, SUB, SHL, SHR, XOR, 32x32 multiplication,
+    64/32 division, two-step modular reduction, modular exponentiation with its
+    multiplication count, the AES-128 T-table cipher and the Write-Execute AES
+    procedure against FIPS-197, and the Spectre index arithmetic of the paper's
+    figures. Supporting byte-level x86/x64 models of Figs. 5 and 7 and native
+    vectors for the corrected C and MASM sources accompany the selected statement.
+  authors: ["Gregory Morse"]
+  responsible_maintainers: ["Gregory Morse"]
+  license: "MIT"
+classification:
+  arxiv: ["cs.CR", "cs.LO"]
+  msc2020: ["94A60", "68M07", "03D10"]
+sources:
+  - title: "Self-spectre, write-execute and the hidden state"
+    authors: ["Gregory Morse"]
+    type: "paper"
+    id: "doi:10.2478/tmmp-2019-0010"
+    location: "https://doi.org/10.2478/tmmp-2019-0010"
+    relationship: "adapts"
+    author_endorsement: "participated"
+    note: >-
+      Tatra Mt. Math. Publ. 73 (2019) 131-144. Only the Write-Execute part is
+      formalized, with exact minimal corrections W01-W10 (errata/selfspectre-2019-errata.tex,
+      errata/edits.json) quoted from the published PDF and legacy source fixes L01-L05
+      (errata/minimal.diff). The Spectre side channel itself is not formalized, only the
+      index arithmetic of its figures. The original paper remains a separately licensed
+      cited source, not a new mathematical result.
+  - title: "Advanced Encryption Standard (AES), FIPS PUB 197"
+    authors: ["National Institute of Standards and Technology"]
+    type: "other"
+    id: "doi:10.6028/NIST.FIPS.197"
+    location: "https://doi.org/10.6028/NIST.FIPS.197"
+    relationship: "background"
+    note: >-
+      The AES-128 specification and its Appendix B and C.1 examples. The Lean specification
+      is checked against both examples and against the Write-Execute AES procedure.
+  - title: "Spectre Attacks: Exploiting Speculative Execution"
+    authors: ["Paul Kocher", "Jann Horn", "Anders Fogh", "Daniel Genkin", "Daniel Gruss", "Werner Haas", "Mike Hamburg", "Moritz Lipp", "Stefan Mangard", "Thomas Prescher", "Michael Schwarz", "Yuval Yarom"]
+    type: "paper"
+    id: "arxiv:1801.01203"
+    location: "https://arxiv.org/abs/1801.01203"
+    relationship: "background"
+    note: >-
+      Context for the paper's speculative-execution half. Its attack and the processor
+      behavior it relies on are not modeled.
+  - title: "Intel 64 and IA-32 Architectures Software Developer's Manual"
+    authors: ["Intel Corporation"]
+    type: "other"
+    id: "https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html"
+    location: "https://www.intel.com/content/www/us/en/developer/articles/technical/intel-sdm.html"
+    relationship: "background"
+    note: >-
+      Reference for the instruction encodings (MOV, JMP rel8 and rel32, RIP-relative addressing)
+      in the supporting byte-level model. The model is a small subset written for this
+      development, not a verified processor.
+related_formalizations:
+  - id: "https://github.com/GregoryMorse/smcTuring/tree/1ab379c2288ef5952c6e1bbdb8d655d31e5fbbd4"
+    relationship: "builds-on"
+    note: >-
+      The word-level memory update and finite Turing machine definitions in
+      lean/WriteExecute/Base are vendored from the same author's smcTuring development
+      (see lean/VENDORED.md). The Write-Execute machine, its universality construction
+      and everything else are new here.
+  - id: "https://github.com/leanprover-community/mathlib4/tree/302343bb9a029d4edab4f736703f0736896c1b64/Mathlib/Computability"
+    relationship: "builds-on"
+    note: >-
+      The supporting module Base/MathlibTM0 relates the vendored machine to the pinned Mathlib
+      TM0 development. It is a dependency relationship and is not part of the selected statement.
+status:
+  scope: >-
+    The selected Palomar record is PalomarWE.mathematical_result: read-freedom of the ideal machine,
+    Turing-completeness with halting, divergence, faults and tape preservation, the finite image,
+    confinement of finite fetch sets, the jump-table lookup and 8-bit tables, wide arithmetic,
+    division, modular reduction and exponentiation, AES-128 (S-box, Te tables, FIPS-197 equality of
+    the Write-Execute procedure, Appendix C.1) and the Spectre index arithmetic. The machine
+    model is ideal: unbounded integer addresses and values, no registers or stack. The paper's
+    x86/x64 figures, the carry branch and the NOT table layout are proved only in a small byte-level
+    model (X86/ directory) and the assembled MASM and C are checked by native test vectors; both are
+    supporting material, not selected registered claims. PAPER_MAP.md lists every claim with its
+    status, including the open obligations: the XOR copy loop of Fig. 6, the AES-NI sequence of
+    Fig. 3, and a byte-for-byte comparison of the assembler output with the Lean encodings.
+    No physical processor, operating-system or cache behavior is formalized.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: []
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude Opus 5.5", "Claude Sonnet 5.5"]
+      framework: "Claude Code"
+      tool_setup: >-
+        Agent-written Lean proofs, generated exhaustive table checks, a generated Challenge, an errata
+        generator and audit, native MSVC/MASM test harnesses, memory-capped local builds, and GitHub
+        Actions CI. Lean 4.35.0-rc3 with the pinned Mathlib; direct lean.exe runs under a 1.5 GB cap
+        for Mathlib-free modules and cold builds on CI.
+      prompting_notes: >-
+        Human-directed complete formalization of the author's own paper, with a written plan, nine
+        numbered rounds, exact minimal corrections quoted from the published PDF, no sorry or custom
+        axiom outside the Challenge theorem hole, and standard axioms only.
+  spend_usd: "subscription-based; exact cost not tracked"
+  notes: >-
+    Gregory Morse supplied the paper, the original C and MASM sources, the intended claims and the
+    project direction. Claude produced the formalization, validation code and documents. Lean kernel
+    and axiom audits and native tests are mechanical evidence, not independent human peer review.
+fidelity:
+  divergences: >-
+    Corrections to the published text are W01-W10: the unbounded-image caveat of the universality claim
+    (W01), the instruction-purity wording (W02), the division signature and quotient-overflow behavior
+    (W03, W04), the modular exponentiation loop description (W05), Table 2 arithmetic, the subject
+    classification, the MOVNTPS width and the Meltdown probe-array size (W06-W09), and the 19-byte NOT
+    and NZ table entry 247 (W10). Corrections to the code are L01-L05: Te1-Te3 and Te4 diagnostics, the
+    modular exponentiation of one, the mulmod high-half reduction, the NOT/NZ table index bound and the
+    modular exponentiation precondition. Each has source excerpts and Lean references in errata/edits.json
+    and is validated by validation/audit_errata.py. The machine is ideal and unbounded; finite hardware is
+    not claimed to be unbounded. Fig. 6 and the AES-NI sequence are not proved. No further mismatch is
+    claimed absent after an unspecified universal review.
+review:
+  status: "agent-reviewed"
+  reviewers: ["Claude Code (automated source and proof audit)"]
+  notes: >-
+    The agent checked source alignment of the selected definitions, the errata against the published PDF,
+    and standard-axiom closure of every WriteExecute declaration. This is not independent human
+    mathematical review. The author review of the errata PDF is requested separately. Protected
+    Comparator, NanoDa and the Palomar full preflight are pending gates until their run records are
+    attached to lean/FINAL_ACCEPTANCE.json.
+acknowledgements: >-
+  The Lean and Mathlib contributors for the proof assistant and library, and the smcTuring development
+  for the vendored word-level base definitions.

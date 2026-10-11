@@ -83,6 +83,24 @@ The PreLinkEvent in each project automatically invokes `ml.exe` (x86) or `ml64.e
 
 > **Note:** `spectreopt.c` is compiled with `MaxSpeed` optimisation even in Debug|x64 builds so that the victim function is not trivially defeated by the compiler.
 
+## Lean formalization
+
+The Write-Execute part of the paper is formalized in Lean 4 (`lean/`, toolchain `leanprover/lean4:v4.35.0-rc3`,
+Mathlib pinned in `lean/lakefile.toml`). The selected statement `PalomarWE.mathematical_result`
+(`lean/Challenge.lean`, proved in `lean/Solution.lean`) covers read-freedom of the ideal word-level machine,
+Turing-completeness (with the finite-image caveat), confinement, the jump-table lookup and 8-bit tables,
+wide arithmetic, division, modular reduction and exponentiation, AES-128 (T-tables and the Write-Execute
+procedure against FIPS-197) and the Spectre index arithmetic. Supporting byte-level x86/x64 models of Figs. 5 and 7
+are checked against the assembled objects. The Fig. 6 XOR copy loop is not yet proved.
+
+* `lean/PAPER_MAP.md` - every claim with its status; `lean/PALOMAR_SEMANTICS.md` - the selected statement and its model boundaries.
+* `lean/errata/selfspectre-2019-errata.tex` (PDF in `output/pdf/`) - corrections W01-W10 to the published text, quoted from the
+  published PDF; `lean/errata/minimal.diff` - code fixes L01-L05 (already applied to `writeexec.c`, `spectreopt.c`, `writeexc.asm`).
+* Build: `cd lean && lake exe cache get && lake build WriteExecute Challenge Solution`. CI: `.github/workflows/proof.yml`
+  (Linux proof job and Windows native acceptance); `.github/workflows/palomar-full.yml` is the Palomar mechanical preflight.
+* Development process and rules: `FORMALIZATION_PLAN.md`, `CLAUDE.md`, `lean/ROUNDS.md`. The formalization was produced with
+  AI assistance (see `lean/formalization.yaml`); it has not had independent human mathematical review.
+
 ## Third-Party Code
 
 `spectre.c` is the original Spectre v1 proof-of-concept from the paper:
@@ -120,4 +138,4 @@ https://github.com/GregoryMorse
 ## License
 
 Original source code in this repository is released under the MIT License — see [LICENSE](LICENSE).  
-`spectre.c` retains its original authorship and is reproduced here as a reference document.
+`spectre.c` retains its original authorship and is reproduced here as a reference document; see [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

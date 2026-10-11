@@ -20,12 +20,12 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 | C13 | §3 | AES T-tables equal the algebraic definition and the literal tables | F | R5 | proved | `AES.sbox_alg` (S-box = GF inverse + affine, all 256), `te4_lit`, `te0_bytes`..`te3_bytes` (generated exhaustive checks, `AES/Checks.lean`) |
 | C14 | §3 | T-table round = FIPS-197 round; final round uses Te4 | F | R5 | proved | `AES.round_step`, `te_byte`, `sbox_and255` |
 | C15 | §4 | WE AES lookup procedure = AES-128 encryption (FIPS-197 C.1) | F | R5 | proved (algorithm level) | `AES.weCipher_eq` against the FIPS spec; `fips197_c1`, `fips197_b` check the spec itself. Asm bytes: R6/R7 vectors |
-| C16 | Fig. 5 p.140 | `not` through SHL4 and the NOT table, byte level (W10) | F+M | R6 | proved (model); bytes vs COFF in R7 | `X86.fig5_x86`, `fig5_x64` (published layout incl. NOP slide for k >= 248), `fig5_corrected`, `w10_original_sizes` (entry 247 = 19 B), `w10_corrected_sizes`, `x86_notres_offsets` (layout data) |
+| C16 | Fig. 5 p.140 | `not` and `nz` through SHL4 and the 256-entry table, byte level (W10, L04) | F+M | R6/R8 | proved (model); bytes checked against COFF | `X86.fig5_x86`, `fig5_x64`, `fig5_nz_x86`, `fig5_nz_x64` (published layout incl. NOP slide for k >= 248), `fig5c_*` (corrected layout, uniform 16-byte entries, exactly 14 steps), `fig5_original`/`fig5_corrected` (generic in the table function), `w10_original_sizes` (entry 247 = 19 B), `w10_corrected_sizes`, `*_notres_offsets`/`*_nzres_offsets` (layout data); `validation/compare_listings.py`: 3092 Lean-encoded byte strings (NOT/NZ/SHL4 entries, `iX`, `i3`, `iN`) equal the COFF `.text` of the published (x86, x64) and corrected (x86c, x64c) objects, relocations applied (evidence) |
 | C17 | Fig. 7 p.142 | Carry conditional jump, byte level | F+M | R6 | proved (model) | `X86.carry_branch` (lands on nocry + 2c), `x86_carry_geometry`, `x64_carry_geometry`; SHL1 word store = `shl_lookup` with c = 1 |
-| C18 | Fig. 6 p.141 | XOR double lookup and re-executable copy loop | F+M | R6 | open | not attempted (could); the double lookup uses `shl_lookup` and `table16_lookup`-style steps, the copy loop needs a two-pass argument |
+| C18 | Fig. 6 p.141 | XOR double lookup and re-executable copy loop | F+M | R6 | **open** | arithmetic content is C08 (`Arith.xorN_spec`, XOR through the 256x256 table byte by byte, proved). Open: the byte-level proof of `WriteExecXOR` (patched second-level jump through 8192-byte group stride, the `xorloop` copy loop executed twice, `xorargshl1/2` self-patching). The layout (`xorarg1_*` stride 8192, 16-byte entries) is extracted in `validation/layout/*.json` |
 | C19 | Fig. 1 p.134 | Branchless select yields the malicious index iff j mod 6 = 0 | F | R4 | proved | `Spectre.select_32`, `select_64` |
 | C20 | §2 p.134 | `mix_i = (i*167+13) & 255` permutes 0..255 | F | R4 | proved | `Spectre.mix_perm`, `mix_injective`, `mix_surjective` |
-| C21 | Fig. 3 | AES-NI sequence = AES-128 (stretch) | F | R5 | open | not attempted (stretch) |
+| C21 | Fig. 3 | AES-NI sequence = AES-128 | F | R5/R8 | proved (given the round keys) | `AES.aesNi_eq` (pxor + 9 aesenc + aesenclast with the SDM operation order equals `cipher`), `subBytes_shiftRows`; `aeskeygenassist` key expansion not modeled |
 | C22 | asm comments | ShiftRows index formulas = FIPS-197 ShiftRows | F | R5 | proved | `AES.nvalInv_nval`, `nval_nvalInv`, `pos_src`, `src_pos` |
 
 ## Errata (see `errata/edits.json`)
@@ -45,4 +45,23 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 
 Dropped as unneeded or uncertain: `ONLY64` notation (presentation only), "RSRE" (abbreviation varies by vendor).
 
-Code fixes L01-L05: applied in R7.
+Code fixes L01-L05: applied in R7. L04 is additionally confirmed by assembling the corrected source: the NOT and NZ
+tables have uniform 16-byte entries and `notres = notarg + 37 + 4096` (x86 and x64, `validation/layout/{x86,x64}c.json`,
+theorems `x86c_geometry`, `x64c_geometry`, `*c_notres_offsets`).
+
+## Selected statement (R8)
+
+`WriteExecute/Spec/Paper.lean` defines eight results; `WriteExecute/Paper.lean` proves them; `Challenge.lean` is generated from the Spec.
+
+| Result definition | Claims | Proof |
+|---|---|---|
+| `ReadFree` | C01 | `Paper.readFree` |
+| `TuringComplete` | C02 | `Paper.turingComplete` |
+| `FiniteRealization` | C03 | `Paper.finiteRealization` |
+| `Confinement` | C04 | `Paper.confinement` |
+| `Primitives` | C05, C06 | `Paper.primitives` |
+| `Arithmetic` | C07-C12 | `Paper.arithmetic` |
+| `AESResult` | C13-C15 (C22 inside the proof) | `Paper.aesResult` |
+| `SpectreArithmetic` | C19, C20 | `Paper.spectreArithmetic` |
+
+Not selected (supporting): C16, C17 (byte-level model and COFF evidence), C21. Open: C18.

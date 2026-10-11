@@ -1,0 +1,21 @@
+{
+  "passed": true,
+  "metadata_sha256": "ba7de1f485ba4285f6c6f1251c4ebc127d84284641daa727ce6672e94e916a91",
+  "schema_sha256": "25ff6b25ca4511635aff4443cf20480c15e59dddf19591c730950b442ea54fce",
+  "schema_revision": "99c678e569c7c4c0772db297c5ddd5e4c9b6322e",
+  "pipeline_revision": "d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44",
+  "classification": {
+    "arxiv": {
+      "cs.CR": "Cryptography and Security",
+      "cs.LO": "Logic in Computer Science"
+    },
+    "msc2020": {
+      "94A60": "Cryptography",
+      "68M07": "Mathematical problems of computer architecture",
+      "03D10": "Turing machines and related notions"
+    }
+  },
+  "license_text_match": true,
+  "authoritative_spdx_detection_claimed": false,
+  "scope": "Pinned upstream v0.4 schema and registry taxonomy membership, not external acceptance"
+}

@@ -5,6 +5,7 @@ public import WriteExecute.Base.MathlibTM0
 public import WriteExecute.Spec.Machine
 public import WriteExecute.Model.Run
 public import WriteExecute.Model.ReadFree
+public import WriteExecute.Spec.Confinement
 public import WriteExecute.Model.Confinement
 public import WriteExecute.Spec.Universal
 public import WriteExecute.Universal.Layout
@@ -30,6 +31,7 @@ public import WriteExecute.AES.Checks
 public import WriteExecute.AES.Basic
 public import WriteExecute.AES.Equiv
 public import WriteExecute.AES.Vectors
+public import WriteExecute.AES.AesNi
 public import WriteExecute.Spec.X86
 public import WriteExecute.X86.Basic
 public import WriteExecute.X86.Patch
@@ -39,3 +41,5 @@ public import WriteExecute.X86.NotTable
 public import WriteExecute.X86.LayoutData
 public import WriteExecute.X86.Fig5Final
 public import WriteExecute.X86.Fig7
+public import WriteExecute.Spec.Paper
+public import WriteExecute.Paper

@@ -1,6 +1,6 @@
 name = "selfspectre"
 version = "0.1.0"
-defaultTargets = ["WriteExecute"]
+defaultTargets = ["WriteExecute", "Challenge", "Solution"]
 
 [leanOptions]
 autoImplicit = false
@@ -12,3 +12,9 @@ rev = "302343bb9a029d4edab4f736703f0736896c1b64"
 
 [[lean_lib]]
 name = "WriteExecute"
+
+[[lean_lib]]
+name = "Challenge"
+
+[[lean_lib]]
+name = "Solution"

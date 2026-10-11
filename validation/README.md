@@ -9,3 +9,14 @@
   then `python validation/extract_layout.py` and `python validation/purity_scan.py`.
 - `layout/{x86,x64}.json`, `layout/purity.json` — committed outputs.
 - `reference/` — published TMMP PDF (SHA-256 `8d9b4072…1940`) and its `pdftotext -layout` text.
+- `run_listings.py <name> [asm]` — assembles a copy of `writeexc.asm` (x86 + x64, with listings) into `validation/.build/<name>/`.
+  `lst` = the published source (git history before L04), `lstc` = the current corrected source.
+  `extract_layout.py [lst|lstc]` writes `layout/{x86,x64}.json` (published) or `layout/{x86c,x64c}.json` (corrected);
+  `gen_x86_layout.py` turns all four into `lean/WriteExecute/X86/LayoutData.lean`.
+- `compare_listings.py` + `compare_dump.lean` — evidence: the bytes the Lean byte model assigns to the NOT/NZ/SHL4 table entries
+  and fixed instructions equal the relocated COFF `.text` (needs the four objects and built oleans).
+- `make_challenge.py [--check]` — generates `lean/Challenge.lean` from the Spec modules (plan D6).
+- `palomar/` — pinned policy assets (`refresh_policy.py`, `fetch_policy_assets.py`) and `validate_metadata.py`
+  (`lean/formalization.yaml` against the pinned v0.4 schema and the registry taxonomies).
+- `ci/` — `linux.sh` (cold build, Challenge/Solution, `axioms.py`, generated-file and errata checks) used by `.github/workflows/proof.yml`.
+- `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).

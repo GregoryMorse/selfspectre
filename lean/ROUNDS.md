@@ -9,10 +9,10 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
 | R2 | WE machine, read-freedom, confinement | DONE |
 | R3 | Turing-completeness (TC-U must; TC-B should) DONE (Mathlib composition with `MathlibTM0` deferred to CI, optional) |
 | R4 | Arithmetic, division, modexp, Spectre arithmetic | DONE (vectors deferred to R7) |
-| R5 | AES (should) | done |
-| R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | done (C18 open) |
+| R5 | AES (should) | DONE (C21 AES-NI closed in R8) |
+| R6 | Byte-level x86/x64 model, Figs. 5–7 (should) | DONE (C18 open; NZ, corrected layout, COFF comparison closed in R8) |
 | R7 | Legacy corrections, native acceptance, errata TeX | DONE (author review pending) |
-| R8 | Palomar package, CI, handoff | todo |
+| R8 | Palomar package, CI, handoff | package done; CI and Palomar full preflight pending (push authorized, preflight dispatch not) |
 
 ## Handoff notes
 
@@ -127,3 +127,27 @@ State machine for `FORMALIZATION_PLAN.md`. Update at every round close.
   PDF `output/pdf/selfspectre-2019-errata.pdf` (1 page). `audit_errata.py`: inventory (all `before` found in the
   published text), `--pdf` (<= 3 pages), `--refs` (writes `lean/ErrataRefs.lean`; builds, so every Lean reference exists).
 - Open: author review (the user); COFF-vs-Lean byte comparison (`compare_listings.py`) not done.
+
+### R8 (package built; CI pending)
+
+Gap closing before the package:
+- C21: `AES/AesNi.lean` (`aesNi_eq`). NZ analogue: `Fig5`/`NotTable` generalized over the table function `F`; `fig5_nz_x86/x64`.
+- L04 confirmed on the assembled objects: `run_listings.py lstc` + `extract_layout.py lstc` give `validation/layout/{x86,x64}c.json`;
+  `LayoutData` now has the `x86c`/`x64c` layouts (`*c_geometry`, `*c_notres_offsets`), `Fig5Final` has `fig5c_*` (14 steps for every `k`).
+- `compare_listings.py`: 3092 Lean-encoded byte strings equal the relocated COFF `.text` (published and corrected, x86 and x64).
+- Still open: C18 (Fig. 6, `WriteExecXOR` copy loop; the arithmetic is C08), WE-entry edge vectors against the assembled procedures,
+  author review of the errata PDF.
+
+Package:
+- `Spec/Paper.lean` (eight results) and `Paper.lean` (proofs); `Spec/Confinement.lean` holds the C04 vocabulary moved out of `Model/Confinement`.
+- `validation/make_challenge.py` -> `lean/Challenge.lean` (706 lines, 50 KB: over the preferred 300 lines/32 KiB, under the hard 1,000/100 KiB limits;
+  AES tables are 17 KB of it - disclosed warning). `Solution.lean`, `comparator.json` (one theorem, eight definitions, standard axioms),
+  `formalization.yaml` (validated by `validation/palomar/validate_metadata.py` against the pinned v0.4 schema and taxonomies: pass),
+  `PALOMAR_SEMANTICS.md`, `LICENSE_AUDIT.md` (root `LICENSE` is now pure MIT; the spectre.c notice moved to `THIRD_PARTY_NOTICES.md`).
+- Local verification: all Mathlib-free modules, `Challenge` and `Solution` build under the guard; `axiom_audit.py Solution`: 1590 declarations, 0 violations.
+  CI-only (never built locally): `Base/MathlibTM0`, root `WriteExecute`, the Mathlib cache.
+- `.github/workflows/proof.yml` (Linux cold build + audits; Windows native acceptance) and `palomar-full.yml` (`request_id: selfspectre001`).
+- Palomar policy refresh 2026-10-11: PalomarPolicy `96b034cc31a72a63d4f4041911dce337a85c9a04`, PalomarSubmission
+  `d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44`, formalization.yaml schema `99c678e569c7c4c0772db297c5ddd5e4c9b6322e` (unchanged pins).
+- Next: run `proof.yml` on the pushed commit; fix failures; record in `FINAL_ACCEPTANCE.json`; then, only on the user's instruction,
+  dispatch `palomar-full.yml` with the exact commit. Never submit or register without a separate instruction.

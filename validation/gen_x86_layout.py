@@ -20,7 +20,9 @@ namespace WriteExecute.X86
 
 open WriteExecute.Arith
 """]
-for arch in ("x86", "x64"):
+for arch in ("x86", "x64", "x86c", "x64c"):   # `c`: layout of the corrected source (L04)
+    corr = arch.endswith("c")
+    D = 4096 if corr else 4099
     d = json.load(open(root / "validation/layout" / f"{arch}.json"))
     L, T = d["labels"], d["tables"]
     for t in ("notres", "nzres", "shlres4"):
@@ -30,12 +32,15 @@ for arch in ("x86", "x64"):
               "carry1retval", "nocry1", "hascarry1", "carry2retval", "nocry2", "hascarry2"):
         out.append(f"@[expose] def {arch}_{k} : Nat := {L[k]}\n")
     a = arch
+    EO = "" if corr else "Eo "
+    J = " + 16 * j" if corr else " j"
+    shift = "uniform stride in the corrected source" if corr else "shifted by 3 from entry 248 on in the published source"
     out.append(f"""
 theorem {a}_geometry :
     {a}_shlres4 = {a}_shlarg4 + 5 + 65536 ∧ {a}_shlret4 = {a}_shlres4 + 9 ∧
-    {a}_notargshl = {a}_notarg + 32 ∧ {a}_notres = {a}_notarg + 37 + 4099 ∧
+    {a}_notargshl = {a}_notarg + 32 ∧ {a}_notres = {a}_notarg + 37 + {D} ∧
     {a}_notret = {a}_notres + 7 ∧ {a}_shlres4 + 14 ≤ {a}_notarg ∧
-    {a}_nzargshl = {a}_nzarg + 32 ∧ {a}_nzres = {a}_nzarg + 37 + 4099 ∧ {a}_nzret = {a}_nzres + 7 := by
+    {a}_nzargshl = {a}_nzarg + 32 ∧ {a}_nzres = {a}_nzarg + 37 + {D} ∧ {a}_nzret = {a}_nzres + 7 := by
   decide
 
 /-- Fig. 7: `carryNretval: jmp nocryN+8000h` is followed by the 2-byte `nocryN: jmp copy`, then `hascarryN`. -/
@@ -45,12 +50,12 @@ theorem {a}_carry_geometry :
     {a}_shlres = {a}_shlarg + 5 + 65536 ∧ {a}_shlret = {a}_shlres + 9 := by
   decide
 
-/-- The published layout: the NOT table entries sit at `base + 16 j`, shifted by 3 from entry 248 on. -/
-theorem {a}_notres_offsets : ∀ j, j < 256 → {a}_notres_tab.getD j 0 = Eo ({a}_notarg + 37) j :=
-  all1 (p := fun j => {a}_notres_tab.getD j 0 = Eo ({a}_notarg + 37) j) (by decide +kernel)
+/-- The NOT table entries sit at `base + 16 j` ({shift}). -/
+theorem {a}_notres_offsets : ∀ j, j < 256 → {a}_notres_tab.getD j 0 = {EO}({a}_notarg + 37){J} :=
+  all1 (p := fun j => {a}_notres_tab.getD j 0 = {EO}({a}_notarg + 37){J}) (by decide +kernel)
 
-theorem {a}_nzres_offsets : ∀ j, j < 256 → {a}_nzres_tab.getD j 0 = Eo ({a}_nzarg + 37) j :=
-  all1 (p := fun j => {a}_nzres_tab.getD j 0 = Eo ({a}_nzarg + 37) j) (by decide +kernel)
+theorem {a}_nzres_offsets : ∀ j, j < 256 → {a}_nzres_tab.getD j 0 = {EO}({a}_nzarg + 37){J} :=
+  all1 (p := fun j => {a}_nzres_tab.getD j 0 = {EO}({a}_nzarg + 37){J}) (by decide +kernel)
 
 theorem {a}_shlres4_offsets : ∀ j, j < 256 → {a}_shlres4_tab.getD j 0 = {a}_shlarg4 + 5 + 256 * j :=
   all1 (p := fun j => {a}_shlres4_tab.getD j 0 = {a}_shlarg4 + 5 + 256 * j) (by decide +kernel)

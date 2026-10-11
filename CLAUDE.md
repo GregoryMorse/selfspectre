@@ -30,4 +30,4 @@ user before deviating. Do not browse `../smcTuring` beyond the paths the plan na
 ## Authorizations
 
 - Local commits to `master` at green increments: authorized (2026-10-11).
-- Pushes to `origin` and GitHub Actions runs: **not authorized**; the user does these.
+- Pushes to `origin` (branch `master`) once CI is ready: authorized (2026-10-11, R8). The push triggers `proof.yml`. Dispatching `palomar-full.yml`, any Palomar submission, registration, proof tag or gist: **not authorized** without a separate explicit user instruction.

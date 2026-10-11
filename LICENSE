@@ -19,17 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
--------------------------------------------------------------------------------
-
-spectre.c is the original Spectre v1 proof-of-concept from:
-
-  Paul Kocher, Jann Horn, Anders Fogh, Daniel Genkin, Daniel Gruss,
-  Werner Haas, Mike Hamburg, Moritz Lipp, Stefan Mangard, Thomas Prescher,
-  Michael Schwarz, Yuval Yarom.
-  "Spectre Attacks: Exploiting Speculative Execution."
-  IEEE Symposium on Security & Privacy, 2019.
-  https://spectreattack.com/spectre.pdf
-
-It is included in this repository for reference purposes only, with minor
-modifications to fix compilation warnings as noted in the file header.

@@ -4,7 +4,9 @@ Listings (~170 MB) stay in validation/.build and are never committed."""
 import json, re, struct, subprocess, sys
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
-B = ROOT / "validation/.build/lst"
+NAME = sys.argv[1] if len(sys.argv) > 1 else "lst"   # lst = published source, lstc = corrected source
+B = ROOT / "validation/.build" / NAME
+SUF = "c" if NAME == "lstc" else ""
 SYM = re.compile(r"^\s*([A-Za-z_@$?][\w@$?]*) [ .]*\s*L\s+(?:Near)?\s*([0-9A-F]{8}) _TEXT")
 FAMILIES = ["notres", "nzres", "shlres", "shlres4", "shlres5", "shlres6", "shlres7", "xorarg1", "orarg1", "andarg1"]
 SINGLES = ["notarg", "notargshl", "notres", "notret", "nzarg", "nzargshl", "nzres", "nzret", "shlarg", "shlres", "shlret",
@@ -35,7 +37,7 @@ def main():
             ent = sorted((int(m.group(1)), o) for k, o in lab.items() if (m := pat.match(k)))
             if len(ent) < 2: continue
             res["tables"][fam] = {"offsets": [o for _, o in ent], "indices": [i for i, _ in ent]}
-        (ROOT / f"validation/layout/{arch}.json").write_text(json.dumps(res, indent=0) + "\n")
+        (ROOT / f"validation/layout/{arch}{SUF}.json").write_text(json.dumps(res, indent=0) + "\n")
         # report stride anomalies
         print(arch, "text", len(text), "labels", len(lab))
         for fam, t in res["tables"].items():
