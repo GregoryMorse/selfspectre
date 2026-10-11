@@ -59,3 +59,5 @@ validation/native/*.log
 output/pdf/*.aux
 output/pdf/*.log
 /writeexec/writeexec/
+validation/native/*.exe
+validation/native/*.obj

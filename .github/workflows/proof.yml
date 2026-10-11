@@ -59,6 +59,11 @@ jobs:
         run: |
           python validation/native_vectors.py
           if ($LASTEXITCODE) { exit $LASTEXITCODE }
+      - name: Edge vectors against the assembled Write-Execute entry points (x86 and x64)
+        shell: pwsh
+        run: |
+          python validation/native_edge.py
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
       - name: Write-Execute harness in Debug/Release x Win32/x64
         shell: pwsh
         run: |

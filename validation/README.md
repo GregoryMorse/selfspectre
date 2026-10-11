@@ -19,4 +19,5 @@
 - `palomar/` — pinned policy assets (`refresh_policy.py`, `fetch_policy_assets.py`) and `validate_metadata.py`
   (`lean/formalization.yaml` against the pinned v0.4 schema and the registry taxonomies).
 - `ci/` — `linux.sh` (cold build, Challenge/Solution, `axioms.py`, generated-file and errata checks) used by `.github/workflows/proof.yml`.
+- `native_edge.py` — assembles `writeexc.asm` (x86, x64) and runs `native/edge_vectors.c`: deterministic boundary vectors (232,081 checks: all 8-bit pairs, every shift count, carry/borrow boundaries, MUL32/DIV32/MOD32/MODEXP32, FIPS-197 C.1) against the assembled entry points. Evidence, not proof.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
