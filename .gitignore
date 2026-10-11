@@ -41,3 +41,9 @@ x64/Release/tables.asm
 
 # MSBuild tlog directories
 *.tlog/
+
+# Lean / validation build artifacts
+lean/.lake/
+validation/.build/
+validation/.cache/
+__pycache__/
