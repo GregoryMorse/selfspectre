@@ -151,7 +151,7 @@ Package:
   `PALOMAR_SEMANTICS.md`, `LICENSE_AUDIT.md` (root `LICENSE` is now pure MIT; the spectre.c notice moved to `THIRD_PARTY_NOTICES.md`).
 - Local verification: all Mathlib-free modules, `Challenge` and `Solution` build under the guard; `axiom_audit.py Solution`: 1590 declarations, 0 violations.
   CI-only (never built locally): `Base/MathlibTM0`, root `WriteExecute`, the Mathlib cache.
-- `.github/workflows/proof.yml` (Linux cold build + audits; Windows native acceptance) and `palomar-full.yml` (`request_id: selfspectre001`).
+- `.github/workflows/proof.yml` (Linux cold build + audits; Windows native acceptance) and `palomar-full.yml` (`request_id: selfspectr01`).
 - Palomar policy refresh 2026-10-11: PalomarPolicy `96b034cc31a72a63d4f4041911dce337a85c9a04`, PalomarSubmission
   `d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44`, formalization.yaml schema `99c678e569c7c4c0772db297c5ddd5e4c9b6322e` (unchanged pins).
 - Next: run `proof.yml` on the pushed commit; fix failures; record in `FINAL_ACCEPTANCE.json`; then, only on the user's instruction,
