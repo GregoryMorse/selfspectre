@@ -11,8 +11,7 @@
     "WriteExecute.Paper.Confinement",
     "WriteExecute.Paper.Primitives",
     "WriteExecute.Paper.Arithmetic",
-    "WriteExecute.Paper.AESResult",
-    "WriteExecute.Paper.SpectreArithmetic"
+    "WriteExecute.Paper.AESResult"
   ],
   "permitted_axioms": [
     "propext",

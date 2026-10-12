@@ -90,7 +90,7 @@ Mathlib pinned in `lean/lakefile.toml`). The selected statement `PalomarWE.mathe
 (`lean/Challenge.lean`, proved in `lean/Solution.lean`) covers read-freedom of the ideal word-level machine,
 Turing-completeness (with the finite-image caveat), confinement, the jump-table lookup and 8-bit tables,
 wide arithmetic, division, modular reduction and exponentiation, AES-128 (T-tables and the Write-Execute
-procedure against FIPS-197) and the Spectre index arithmetic. Supporting byte-level x86/x64 models of Figs. 5, 6 and 7
+procedure against FIPS-197). Supporting byte-level x86/x64 models of Figs. 5, 6 and 7
 (including the Fig. 6 XOR copy loop, 35 and 38 steps) are checked against the assembled objects.
 
 * `lean/PAPER_MAP.md` - every claim with its status; `lean/PALOMAR_SEMANTICS.md` - the selected statement and its model boundaries.

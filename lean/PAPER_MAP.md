@@ -62,6 +62,5 @@ theorems `x86c_geometry`, `x64c_geometry`, `*c_notres_offsets`).
 | `Primitives` | C05, C06 | `Paper.primitives` |
 | `Arithmetic` | C07-C12 | `Paper.arithmetic` |
 | `AESResult` | C13-C15 (C22 inside the proof) | `Paper.aesResult` |
-| `SpectreArithmetic` | C19, C20 | `Paper.spectreArithmetic` |
 
-Not selected (supporting): C16, C17, C18 (byte-level model and COFF evidence), C21. Open: none; the `aeskeygenassist` key expansion is not modeled (C21 is given the round keys).
+Not selected (supporting): C16, C17, C18, C19, C20 (Spectre index arithmetic, `Paper.spectreArithmetic`, removed from the selected statement after the automated review) (byte-level model and COFF evidence), C21. Open: none; the `aeskeygenassist` key expansion is not modeled (C21 is given the round keys).

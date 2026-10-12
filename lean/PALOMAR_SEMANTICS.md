@@ -22,7 +22,6 @@ each result definition from the development's individual theorems. All proofs us
 | `WriteExecute.Paper.Primitives` | The jump-table lookup `[JMP e] ... [e: MOV res f; JMP ret]` computes the table function in three steps; the 8-bit tables NOT, NZ, SHL (SHLGEN), SHR (SHRGEN), INC, DEC, SUB and ADD (with the carry expression) are what their names say. | §4 p.139-140, C05-C06 |
 | `WriteExecute.Paper.Arithmetic` | Any-width ADD, SUB, SHL, SHR, XOR; 32x32 to 64-bit multiplication; 64/32 division and modulo including the remainder-overflow bit; the two-step modular reduction and the failure of the published `mulmod`; modular exponentiation (`m >= 2` for the assembler, `m >= 1` for the corrected C) and the multiplication count. | §3-4 p.136, 139, C07-C12 (W03-W05, L02, L03, L05) |
 | `WriteExecute.Paper.AESResult` | The S-box is the GF(2^8) inverse plus affine map; `Te4` repeats it in every byte; the Write-Execute AES lookup procedure computes the FIPS-197 cipher for every expanded key and plaintext; the FIPS-197 Appendix C.1 known answer holds for the specification. | §3-4, C13-C15, C22 |
-| `WriteExecute.Paper.SpectreArithmetic` | Fig. 1's branch-free select yields the malicious index exactly when `j mod 6 = 0` (32- and 64-bit `size_t`); `mix_i = (i*167+13) & 255` permutes `0 .. 255`. | §2, C19-C20 |
 
 ## Model boundaries (read before relying on the statement)
 

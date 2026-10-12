@@ -11,8 +11,7 @@ project:
     lookup, the 8-bit tables, wide ADD, SUB, SHL, SHR, XOR, 32x32 multiplication,
     64/32 division, two-step modular reduction, modular exponentiation with its
     multiplication count, the AES-128 T-table cipher and the Write-Execute AES
-    procedure against FIPS-197, and the Spectre index arithmetic of the paper's
-    figures. Supporting byte-level x86/x64 models of Figs. 5 and 7 and native
+    procedure against FIPS-197. Supporting byte-level x86/x64 models of Figs. 5 and 7 and native
     vectors for the corrected C and MASM sources accompany the selected statement.
   authors: ["Gregory Morse"]
   responsible_maintainers: ["Gregory Morse"]
@@ -32,8 +31,8 @@ sources:
       Tatra Mt. Math. Publ. 73 (2019) 131-144. Only the Write-Execute part is
       formalized, with exact minimal corrections W01-W10 (errata/selfspectre-2019-errata.tex,
       errata/edits.json) quoted from the published PDF and legacy source fixes L01-L05
-      (errata/minimal.diff). The Spectre side channel itself is not formalized, only the
-      index arithmetic of its figures. The original paper remains a separately licensed
+      (errata/minimal.diff). The Spectre side channel itself is not formalized; the
+      index arithmetic of its figures is proved only as supporting material, outside the selected statement. The original paper remains a separately licensed
       cited source, not a new mathematical result.
   - title: "Advanced Encryption Standard (AES), FIPS PUB 197"
     authors: ["National Institute of Standards and Technology"]
@@ -82,7 +81,7 @@ status:
     Turing-completeness with halting, divergence, faults and tape preservation, the finite image,
     confinement of finite fetch sets, the jump-table lookup and 8-bit tables, wide arithmetic,
     division, modular reduction and exponentiation, AES-128 (S-box, Te tables, FIPS-197 equality of
-    the Write-Execute procedure, Appendix C.1) and the Spectre index arithmetic. The machine
+    the Write-Execute procedure, Appendix C.1). The machine
     model is ideal: unbounded integer addresses and values, no registers or stack. The paper's
     x86/x64 figures (Fig. 5 NOT/NZ, Fig. 6 XOR copy loop, Fig. 7 carry branch), the NOT table layout and
     the AES-NI sequence of Fig. 3 are proved only in a small byte-level model (X86/ directory) or against the

@@ -4,7 +4,6 @@ public import WriteExecute.Spec.Confinement
 public import WriteExecute.Spec.Universal
 public import WriteExecute.Spec.Arith
 public import WriteExecute.Spec.AES
-public import WriteExecute.Spec.Spectre
 
 public section
 
@@ -112,14 +111,5 @@ reproduces the FIPS-197 Appendix C.1 known answer. -/
   AES.aes128 [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
     [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff] =
     [0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30, 0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a]
-
-/-- C19-C20: Fig. 1 selects the malicious index exactly when `j % 6 = 0` (32- and 64-bit `size_t`), and the
-probe order `(i * 167 + 13) & 255` is a permutation of `0 .. 255`. -/
-@[expose] def SpectreArithmetic : Prop :=
-  (∀ (j : Nat) (t m : BitVec 32), Spectre.selectIdx 32 j t m = if j % 6 = 0 then m else t) ∧
-  (∀ (j : Nat) (t m : BitVec 64), Spectre.selectIdx 64 j t m = if j % 6 = 0 then m else t) ∧
-  (∀ i, i < 256 → Spectre.mixIdx i < 256) ∧
-  (∀ a b, a < 256 → b < 256 → Spectre.mixIdx a = Spectre.mixIdx b → a = b) ∧
-  (∀ j, j < 256 → ∃ i, i < 256 ∧ Spectre.mixIdx i = j)
 
 end WriteExecute.Paper

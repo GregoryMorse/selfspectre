@@ -61,3 +61,6 @@ output/pdf/*.log
 /writeexec/writeexec/
 validation/native/*.exe
 validation/native/*.obj
+
+# Private notes (never commit)
+/.private/

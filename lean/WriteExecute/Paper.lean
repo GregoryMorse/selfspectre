@@ -72,7 +72,13 @@ theorem aesResult : AESResult :=
   ⟨AES.sbox_alg, AES.te4_lit,
     fun w pt hpt hb idx hidx => AES.weCipher_eq w pt hpt hb idx hidx, AES.fips197_c1⟩
 
-theorem spectreArithmetic : SpectreArithmetic :=
+/-- Supporting (not selected): C19-C20, index arithmetic of the paper's Fig. 1 and probe order. -/
+theorem spectreArithmetic :
+    (∀ (j : Nat) (t m : BitVec 32), Spectre.selectIdx 32 j t m = if j % 6 = 0 then m else t) ∧
+    (∀ (j : Nat) (t m : BitVec 64), Spectre.selectIdx 64 j t m = if j % 6 = 0 then m else t) ∧
+    (∀ i, i < 256 → Spectre.mixIdx i < 256) ∧
+    (∀ a b, a < 256 → b < 256 → Spectre.mixIdx a = Spectre.mixIdx b → a = b) ∧
+    (∀ j, j < 256 → ∃ i, i < 256 ∧ Spectre.mixIdx i = j) :=
   ⟨Spectre.select_32, Spectre.select_64, fun i hi => (Spectre.mix_perm i hi).1,
     Spectre.mix_injective, Spectre.mix_surjective⟩
 
