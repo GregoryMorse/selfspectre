@@ -1,6 +1,6 @@
 {
-  "exact_commit_verified_by_ci": "a18ab134aad84b5474c878d11ea52fc8cb1c9c6c",
-  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38171737998",
+  "exact_commit_verified_by_ci": "aeb4e9e44e13eb79c2d0d54e8875730846fb8559",
+  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38245193701",
   "verified": {
     "linux_cold_build": "success",
     "windows_native_vectors": "success",
