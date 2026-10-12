@@ -1,32 +1,32 @@
 {
   "as_of": "2026-10-03",
   "repository": "https://github.com/leanprover-community/mathlib4.git",
-  "revision": "302343bb9a029d4edab4f736703f0736896c1b64",
+  "revision": "5e043698502894993991089b2dd893867c0db5c2",
   "files": {
     "lean-toolchain": {
-      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/302343bb9a029d4edab4f736703f0736896c1b64/lean-toolchain",
-      "path": "validation\\.cache\\mathlib-metadata\\302343bb9a029d4edab4f736703f0736896c1b64\\lean-toolchain",
+      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/5e043698502894993991089b2dd893867c0db5c2/lean-toolchain",
+      "path": "validation\\.cache\\mathlib-metadata\\5e043698502894993991089b2dd893867c0db5c2\\lean-toolchain",
       "sha256": "bc84812c94489d1e3e191baa1dc10d5eb684382d7fe9d2a5ab085e72c1c67e47"
     },
     "lakefile.lean": {
-      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/302343bb9a029d4edab4f736703f0736896c1b64/lakefile.lean",
-      "path": "validation\\.cache\\mathlib-metadata\\302343bb9a029d4edab4f736703f0736896c1b64\\lakefile.lean",
-      "sha256": "7a0f61511e9ae54f26f812589428a53b36d5d2ddf03265f903de78b21bcb13f2"
+      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/5e043698502894993991089b2dd893867c0db5c2/lakefile.lean",
+      "path": "validation\\.cache\\mathlib-metadata\\5e043698502894993991089b2dd893867c0db5c2\\lakefile.lean",
+      "sha256": "1578ce1e498583c021d481d4dd6b980b2ea3a6bbb14a420ff96dbda4469772a6"
     },
     "lake-manifest.json": {
-      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/302343bb9a029d4edab4f736703f0736896c1b64/lake-manifest.json",
-      "path": "validation\\.cache\\mathlib-metadata\\302343bb9a029d4edab4f736703f0736896c1b64\\lake-manifest.json",
-      "sha256": "3f6b292c3eabc163bffa4d284da96537ba1a7fab42eb3c163eefb21177ea91f3"
+      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/5e043698502894993991089b2dd893867c0db5c2/lake-manifest.json",
+      "path": "validation\\.cache\\mathlib-metadata\\5e043698502894993991089b2dd893867c0db5c2\\lake-manifest.json",
+      "sha256": "5f5f5d5825931416d9fc99a21950b1f8cfa9c98a52a6af0af89a577d72310014"
     },
     "Cache/IO.lean": {
-      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/302343bb9a029d4edab4f736703f0736896c1b64/Cache/IO.lean",
-      "path": "validation\\.cache\\mathlib-metadata\\302343bb9a029d4edab4f736703f0736896c1b64\\Cache\\IO.lean",
+      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/5e043698502894993991089b2dd893867c0db5c2/Cache/IO.lean",
+      "path": "validation\\.cache\\mathlib-metadata\\5e043698502894993991089b2dd893867c0db5c2\\Cache\\IO.lean",
       "sha256": "ad63152d09c75a6ce7874e0c45f7e1504fb00bc8daad0a9d73352f1c4cfcc1fa"
     },
     "Cache/Main.lean": {
-      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/302343bb9a029d4edab4f736703f0736896c1b64/Cache/Main.lean",
-      "path": "validation\\.cache\\mathlib-metadata\\302343bb9a029d4edab4f736703f0736896c1b64\\Cache\\Main.lean",
-      "sha256": "9cafc9a834be68969cb0793ac0f87342c4a4f9917328eb76b7975f0d4bd24c58"
+      "url": "https://raw.githubusercontent.com/leanprover-community/mathlib4/5e043698502894993991089b2dd893867c0db5c2/Cache/Main.lean",
+      "path": "validation\\.cache\\mathlib-metadata\\5e043698502894993991089b2dd893867c0db5c2\\Cache\\Main.lean",
+      "sha256": "4267092dc90c54d5cb2ba6c8742e7d1cbe2f0330bd3b3a027624fedda67871fa"
     }
   },
   "adapter_checked": false,
@@ -40,7 +40,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "afc2695efcb6855264d85a45632db1ddc56c8774",
+        "rev": "fb13df72ecefd8ddbf9291021d7f33a8673eb57b",
         "name": "plausible",
         "manifestFile": "lake-manifest.json",
         "inputRev": "main",
@@ -52,7 +52,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "50cd21bc62f2c8357c4f269d1185921cbfcdfc90",
+        "rev": "29ff470276c725ae01505d55b17148c18fc7dfd3",
         "name": "LeanSearchClient",
         "manifestFile": "lake-manifest.json",
         "inputRev": "main",
@@ -64,7 +64,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "7ad9f2e325aa6cec3dacaa97c2653a98032750eb",
+        "rev": "10a2cfff285e1c7c2ebc49c0ba22cab0f3c58ee5",
         "name": "importGraph",
         "manifestFile": "lake-manifest.json",
         "inputRev": "main",
@@ -76,7 +76,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "87dfe779d5dfd03142ee4fe158911b8eb553ec98",
+        "rev": "c643bbb3c24f8a25f9c14e3a6b1ceb13d01f3de1",
         "name": "proofwidgets",
         "manifestFile": "lake-manifest.json",
         "inputRev": "main",
@@ -88,7 +88,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "36cb0105a76ff3de70add8ae91afb6cfc57fafe3",
+        "rev": "a90fbf7b02ff06a0deebf74088dff9e5fe02c9ea",
         "name": "aesop",
         "manifestFile": "lake-manifest.json",
         "inputRev": "master",
@@ -100,7 +100,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "d93a8a0622807953d1e424f0fe2a5f5b5520c12e",
+        "rev": "37b0ba0b26109cf9f9c541f0f9557e50cfa1a3b9",
         "name": "Qq",
         "manifestFile": "lake-manifest.json",
         "inputRev": "master",
@@ -112,7 +112,7 @@
         "type": "git",
         "subDir": null,
         "scope": "leanprover-community",
-        "rev": "679a93b2dc7563f54cc0a851c2574e2647e47ba0",
+        "rev": "33131f4fb10067cb3009bf4db615d9680c1ccd6b",
         "name": "batteries",
         "manifestFile": "lake-manifest.json",
         "inputRev": "main",
@@ -135,8 +135,5 @@
     "name": "mathlib",
     "lakeDir": ".lake",
     "fixedToolchain": true
-  },
-  "installed_revision": "302343bb9a029d4edab4f736703f0736896c1b64",
-  "project_manifest_sha256": "92206dd60adc3c890bf150267120654e8b26d09dcfa2b260d6c7482c6d1fa935",
-  "tm0_cache_ready": true
+  }
 }

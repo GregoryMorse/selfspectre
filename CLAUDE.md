@@ -15,7 +15,7 @@ user before deviating. Do not browse `../smcTuring` beyond the paths the plan na
   aggregate cap, Lean `-M768 -j1`). A capped failure is a failed check; never bypass the guard
   or retry without it. Do not kill unrelated processes.
 - No SSH/remote servers. Cold full builds and Palomar runs use GitHub Actions.
-- Pins: Lean `leanprover/lean4:v4.35.0-rc3`, Mathlib `302343bb9a029d4edab4f736703f0736896c1b64`.
+- Pins: Lean `leanprover/lean4:v4.35.0-rc3`, Mathlib `5e043698502894993991089b2dd893867c0db5c2`.
   Do not change them without asking.
 - No `sorry`/`admit` (except `lean/Challenge.lean`), no `axiom`, `native_decide`, `bv_decide`,
   `Lean.ofReduceBool`, `unsafe`. Only `propext`, `Quot.sound`, `Classical.choice` may appear.

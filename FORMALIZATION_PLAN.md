@@ -144,7 +144,7 @@ Infrastructure copied (adapt paths/names, keep behaviour): `validation/limited_r
 `lean/PALOMAR_{SUBMISSION,SEMANTICS,AUDIT}.md`, `lean/LICENSE_AUDIT.md`.
 
 **D5 — Pins.** Lean `leanprover/lean4:v4.35.0-rc3` (commit `470d5ce1400764999581fd26d5d72b00d990b0f4`),
-Mathlib `302343bb9a029d4edab4f736703f0736896c1b64` — identical to smcTuring, so vendored code
+Mathlib `5e043698502894993991089b2dd893867c0db5c2` — identical to smcTuring, so vendored code
 compiles unchanged and the Palomar pipeline is known to accept them. Palomar reusable workflow
 `PalomarRegistry/PalomarSubmission/.github/workflows/submission.yml@d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44`,
 profile `palomar-standard-v1`, schema rev `99c678e569c7c4c0772db297c5ddd5e4c9b6322e`; re-check for
