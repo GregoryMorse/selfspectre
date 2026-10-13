@@ -74,7 +74,7 @@ theorem aesResult : AESResult :=
     fun w pt hpt hb idx hidx => AES.weCipher_eq w pt hpt hb idx hidx, AES.fips197_c1⟩
 
 theorem mistraining : Mistraining :=
-  ⟨fun P k hP hk s0 j h6 hj => Speculation.mistrain P k hP hk s0 j h6 hj,
+  ⟨fun P k hP hk s0 j h29 hj => Speculation.mistrain P k hP hk s0 j h29 hj,
     fun j t m size ht hm => Speculation.select_guard_32 j t m size ht hm,
     fun j t m size ht hm => Speculation.select_guard_64 j t m size ht hm,
     Speculation.counter2_trains⟩
@@ -95,6 +95,7 @@ theorem victimLeak : VictimLeak := by
 
 theorem windowDepth : WindowDepth :=
   ⟨fun k s u l h h4 => Speculation.leak_after k s u l h h4,
+    fun k s u h h4 => Speculation.leak_after_cleared k s u h h4,
     fun W d n t => Speculation.branch_mono W d n t⟩
 
 theorem hiddenComputation : HiddenComputation :=

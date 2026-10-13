@@ -70,9 +70,14 @@ structure Predictor where
 /-- The textbook 2-bit saturating counter (an example of a predictor satisfying the assumption). -/
 @[expose] def counter2 : Predictor := ⟨Nat, fun c => decide (2 ≤ c), ctrUpdate⟩
 
-/-- Fig. 1's schedule: iteration `j` calls the victim with the malicious index exactly when `j % 6 = 0`,
+/-- Fig. 1's schedule: the call with loop variable `j` uses the malicious index exactly when `j % 6 = 0`,
 so its guard `x < array1_size` is false exactly then. -/
 @[expose] def guardAt (j : Nat) : Bool := decide (j % 6 ≠ 0)
+
+/-- The guards of the calls made before the call with loop variable `j` in one round of the PoC's
+training loop `for (j = 29; j >= 0; j--)` (spectre.c): the calls with loop variables `29, 28, ..., j + 1`,
+in time order. -/
+@[expose] def historyBefore (j : Nat) : List Bool := (List.range (29 - j)).map (fun i => guardAt (29 - i))
 
 /-- Reload phase: the 256 pages are timed in the order `mixIdx i`; the pages found in the cache. -/
 @[expose] def probeHits (touched : List Int) : List Nat :=

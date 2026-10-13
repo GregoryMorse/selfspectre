@@ -113,15 +113,16 @@ reproduces the FIPS-197 Appendix C.1 known answer. -/
     [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff] =
     [0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30, 0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a]
 
-/-- C19, C23 (Fig. 1, Sec. 2): with the branch predictor an abstract parameter that guesses "taken" after
-`k <= 5` consecutive "taken" outcomes, the schedule of the paper's mistraining loop (five in-bounds calls,
-then the malicious call when `j % 6 = 0`) makes the predictor guess "taken" for a guard that is false;
-Fig. 1's branch-free select makes the guard true exactly off that schedule (32- and 64-bit `size_t`), and
-the textbook 2-bit counter satisfies the assumption. -/
+/-- C19, C23 (Fig. 1, Sec. 2): take the branch predictor as an abstract parameter that guesses "taken"
+after `k <= 5` consecutive "taken" outcomes, whatever its earlier state. In every round of the PoC's
+training loop (`for (j = 29; j >= 0; j--)`, five in-bounds calls before each malicious call), at each of
+the five malicious calls (`j % 6 = 0`) the predictor guesses "taken" although the guard is false. Fig. 1's
+branch-free select makes the guard true exactly at the other calls (32- and 64-bit `size_t`), and the
+textbook 2-bit counter satisfies the assumption. -/
 @[expose] def Mistraining : Prop :=
   (∀ (P : Speculation.Predictor) (k : Nat), P.Trains k → k ≤ 5 → ∀ (s0 : P.S) (j : Nat),
-      6 ≤ j → j % 6 = 0 →
-      P.predict (P.after s0 ((List.range j).map Speculation.guardAt)) = true ∧ Speculation.guardAt j = false) ∧
+      j ≤ 29 → j % 6 = 0 →
+      P.predict (P.after s0 (Speculation.historyBefore j)) = true ∧ Speculation.guardAt j = false) ∧
   (∀ (j : Nat) (t m : BitVec 32) (size : Nat), t.toNat < size → size ≤ m.toNat →
       ((Spectre.selectIdx 32 j t m).toNat < size ↔ Speculation.guardAt j = true)) ∧
   (∀ (j : Nat) (t m : BitVec 64) (size : Nat), t.toNat < size → size ≤ m.toNat →
@@ -149,20 +150,28 @@ agree (mod 256). From an initially populated cache nothing is claimed beyond the
         Speculation.probeHits (Speculation.branch W true false 1 t2).touched ↔
         t1.s.mem a % 256 = t2.s.mem a % 256))
 
-/-- C25 (Sec. 3, Tables 1-2, Fig. 4): the speculation depth. A hidden computation of `k` steps followed by
-one probe leaks exactly when the window covers all `k + 1` steps, and a larger window only ever adds
-cache pages, so a too-short window leaves a prefix of the results. -/
+/-- C25 (Sec. 3, Tables 1-2, Fig. 4): the speculation depth, for a hidden computation of `k` steps followed by
+one probe. Touch-trace boundary (any initial cache): the probe's page is added to the touch trace exactly
+when the window covers all `k + 1` steps. Observable leak (cleared probe array, as the PoC flushes it): the
+reload finds no page when `W <= k` and exactly the probed page when `W >= k + 1`. Monotonicity: the touch
+trace of a longer window extends that of a shorter one (the earlier touches are kept). -/
 @[expose] def WindowDepth : Prop :=
   (∀ (k : Nat) (s u : WE.State) (l : List Int), WE.run k s = (WE.Status.running, u) → u.mem u.pc = 4 →
       (∀ W, W ≤ k → (Speculation.branch W true false (k + 1) ⟨s, l⟩).touched = l) ∧
       (∀ W, k + 1 ≤ W → (Speculation.branch W true false (k + 1) ⟨s, l⟩).touched =
         (u.mem (u.pc + 2 + u.mem (u.pc + 1)) % 256) :: l)) ∧
+  (∀ (k : Nat) (s u : WE.State), WE.run k s = (WE.Status.running, u) → u.mem u.pc = 4 →
+      (∀ W, W ≤ k → Speculation.probeHits (Speculation.branch W true false (k + 1) ⟨s, []⟩).touched = []) ∧
+      (∀ W, k + 1 ≤ W → Speculation.probeHits (Speculation.branch W true false (k + 1) ⟨s, []⟩).touched =
+        [(u.mem (u.pc + 2 + u.mem (u.pc + 1)) % 256).toNat])) ∧
   (∀ (W d n : Nat) (t : Speculation.TState), ∃ l,
       (Speculation.branch (W + d) true false n t).touched = l ++ (Speculation.branch W true false n t).touched)
 
-/-- C26 (Secs. 3-4): the hidden state. A mispredicted body that runs `n` Write-Execute steps without a probe
-computes exactly the ideal Write-Execute run, leaves the cache untouched and is squashed without a trace;
-in particular every Turing computation is carried out step for step inside the window. -/
+/-- C26 (Secs. 3-4): the hidden state. On the transient machine, `n` Write-Execute steps without a probe
+compute exactly the ideal Write-Execute run and leave the touch trace unchanged; a mispredicted body of `n`
+such steps with a window `W >= n` is squashed without any trace (architectural state and touch trace both
+restored). Every Turing computation of `n` steps is carried out on the transient machine in `n (Q + 2)`
+steps in the same way. -/
 @[expose] def HiddenComputation : Prop :=
   (∀ (n : Nat) (s u : WE.State) (l : List Int), WE.run n s = (WE.Status.running, u) →
       Speculation.trun n ⟨s, l⟩ = (WE.Status.running, ⟨u, l⟩) ∧

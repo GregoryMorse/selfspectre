@@ -26,10 +26,10 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 | C19 | Fig. 1 p.134 | Branchless select yields the malicious index iff j mod 6 = 0 | F | R4 | proved | `Spectre.select_32`, `select_64` |
 | C20 | §2 p.134 | `mix_i = (i*167+13) & 255` permutes 0..255 | F | R4 | proved | `Spectre.mix_perm`, `mix_injective`, `mix_surjective` |
 | C21 | Fig. 3 | AES-NI sequence = AES-128 | F | R5/R8 | proved (given the round keys) | `AES.aesNi_eq` (pxor + 9 aesenc + aesenclast with the SDM operation order equals `cipher`), `subBytes_shiftRows`; `aeskeygenassist` key expansion not modeled |
-| C23 | Fig. 1 / §2 | Mistraining: the predictor guesses taken at the malicious call after the five training calls (abstract predictor, 2-bit counter instance) | F (contract) | R9 | proved | `Speculation.mistrain`, `counter2_trains`, `select_guard_32/64` |
+| C23 | Fig. 1 / §2, spectre.c loop | Mistraining: in every round of `for (j = 29; j >= 0; j--)` the predictor guesses taken at each malicious call (abstract predictor trained by <= 5 taken outcomes; 2-bit counter instance) | F (contract) | R9 | proved | `Speculation.mistrain`, `historyBefore`, `counter2_trains`, `select_guard_32/64` |
 | C24 | Fig. 2 | Victim leak: the wrong path adds the secret byte's page; the architectural state is restored; from a cleared probe array the reload in `mix_i` order finds exactly that page (`Speculation.hits_single`) | F (contract) | R9 | proved | `Speculation.branch_one`, `probe_hits` |
-| C25 | §3, Tables 1-2, Fig. 4 | Speculation depth: leak iff the window covers the hidden steps; a larger window only adds pages | F (contract) | R9 | proved | `Speculation.leak_after`, `branch_mono` |
-| C26 | §3-§4 | Hidden computation: the wrong path runs the ideal Write-Execute run (and every Turing computation) with no cache trace and no architectural effect | F (contract) | R9 | proved | `Speculation.trun_run`, `hidden` |
+| C25 | §3, Tables 1-2, Fig. 4 | Speculation depth: touch-trace boundary for any cache; observable reload hits from a cleared probe array (none if `W <= k`, the probed page if `W >= k+1`); longer windows extend the touch trace | F (contract) | R9 | proved | `Speculation.leak_after`, `leak_after_cleared`, `hits_nil`, `branch_mono` |
+| C26 | §3-§4 | Hidden computation: on the transient machine the ideal Write-Execute run (and every Turing computation) leaves the touch trace unchanged; a mispredicted body is squashed with state and touch trace restored | F (contract) | R9 | proved | `Speculation.trun_run`, `hidden` |
 | C22 | asm comments | ShiftRows index formulas = FIPS-197 ShiftRows | F | R5 | proved | `AES.nvalInv_nval`, `nval_nvalInv`, `pos_src`, `src_pos` |
 
 ## Errata (see `errata/edits.json`)

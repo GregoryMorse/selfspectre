@@ -153,6 +153,8 @@ theorem probe_hits : ∀ p : Nat, p < 256 → probeHits [(p : Int)] = [p] := by
   · exact hits_c6 q hq
   · exact hits_c7 q hq
 
+theorem hits_nil : probeHits [] = [] := by decide +kernel
+
 /-- From a cleared cache one probed page is exactly the reload hit. -/
 theorem hits_single (x : Int) : probeHits ([x % 256]) = [(x % 256).toNat] := by
   have h0 : 0 ≤ x % 256 := by omega
@@ -177,6 +179,15 @@ theorem leak_after (k : Nat) (s u : WE.State) (l : List Int) (h : WE.run k s = (
     have e := trun_add k 1 ⟨s, l⟩
     rw [trun_run k s u l h] at e
     simp [branch, hm, e, trun, tstep_probe ⟨u, l⟩ h4]
+
+theorem leak_after_cleared (k : Nat) (s u : WE.State) (h : WE.run k s = (.running, u))
+    (h4 : u.mem u.pc = 4) :
+    (∀ W, W ≤ k → probeHits (branch W true false (k + 1) ⟨s, []⟩).touched = []) ∧
+    (∀ W, k + 1 ≤ W → probeHits (branch W true false (k + 1) ⟨s, []⟩).touched =
+      [(u.mem (u.pc + 2 + u.mem (u.pc + 1)) % 256).toNat]) := by
+  have L := leak_after k s u [] h h4
+  exact ⟨fun W hW => by rw [L.1 W hW]; exact hits_nil,
+    fun W hW => by rw [L.2 W hW]; exact hits_single _⟩
 
 theorem hidden (n : Nat) (s u : WE.State) (l : List Int) (h : WE.run n s = (.running, u)) :
     trun n ⟨s, l⟩ = (.running, ⟨u, l⟩) ∧
@@ -205,11 +216,13 @@ theorem counter2_trains : counter2.Trains 3 := by
   omega
 
 theorem mistrain (P : Predictor) (k : Nat) (hP : P.Trains k) (hk : k ≤ 5) (s0 : P.S) (j : Nat)
-    (h6 : 6 ≤ j) (hj : j % 6 = 0) :
-    P.predict (P.after s0 ((List.range j).map guardAt)) = true ∧ guardAt j = false := by
-  obtain ⟨i, rfl⟩ : ∃ i, j = i + 5 := ⟨j - 5, by omega⟩
-  have hl : (List.range (i + 5)).map guardAt = (List.range i).map guardAt ++ List.replicate 5 true := by
-    rw [List.range_add, List.map_append]
+    (h29 : j ≤ 29) (hj : j % 6 = 0) :
+    P.predict (P.after s0 (historyBefore j)) = true ∧ guardAt j = false := by
+  have hl : historyBefore j =
+      (List.range (24 - j)).map (fun i => guardAt (29 - i)) ++ List.replicate 5 true := by
+    unfold historyBefore
+    have e : 29 - j = (24 - j) + 5 := by omega
+    rw [e, List.range_add, List.map_append]
     congr 1
     apply List.eq_replicate_iff.2
     refine ⟨by simp, ?_⟩
@@ -220,7 +233,7 @@ theorem mistrain (P : Predictor) (k : Nat) (hP : P.Trains k) (hk : k ≤ 5) (s0 
     omega
   refine ⟨?_, by simp [guardAt, hj]⟩
   rw [hl]
-  have := hP (P.after s0 ((List.range i).map guardAt)) 5 hk
+  have := hP (P.after s0 ((List.range (24 - j)).map (fun i => guardAt (29 - i)))) 5 hk
   simpa [Predictor.after, List.foldl_append] using this
 
 theorem select_guard_32 (j : Nat) (t m : BitVec 32) (size : Nat) (ht : t.toNat < size)

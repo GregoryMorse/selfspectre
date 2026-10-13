@@ -3,8 +3,9 @@ version: "v0.4"
 project:
   name: "Write-Execute computation: a Lean formalization of Self-Spectre with errata"
   description: >-
-    Formalizes the Write-Execute half of Gregory Morse's 2019 paper "Self-Spectre,
-    Write-Execute and the Hidden State". An ideal word-level machine whose only
+    Formalizes Gregory Morse's 2019 paper "Self-Spectre, Write-Execute and the Hidden State":
+    the Write-Execute half unconditionally, the Self-Spectre half as conditional theorems over an
+    abstract speculation contract. An ideal word-level machine whose only
     operations are a store and a jump, with no data reads, simulates finite Turing
     machines step for step, preserving halting, divergence and the tape; a finite
     image is exact until its guard faults. The development proves the jump-table
@@ -14,8 +15,9 @@ project:
     procedure against FIPS-197. The Self-Spectre half is proved as a conditional result under an abstract
     speculation contract (a branch predictor and a speculation window as parameters, rollback of the
     architectural state, persistence of the cache): the Fig. 1 mistraining schedule, the Fig. 2 victim leak
-    with the mix-order reload from a cleared probe array, the speculation-depth boundary and the hidden Write-Execute computation.
-    Supporting byte-level x86/x64 models of Figs. 5 and 7 and native
+    with the mix-order reload from a cleared probe array, the speculation-depth boundary (touch trace for any
+    cache, observable reload hits from a cleared probe array) and the hidden Write-Execute computation.
+    Supporting byte-level x86/x64 models of Figs. 5, 6 and 7 and native
     vectors for the corrected C and MASM sources accompany the selected statement.
   authors: ["Gregory Morse"]
   responsible_maintainers: ["Gregory Morse"]
@@ -32,12 +34,18 @@ sources:
     relationship: "adapts"
     author_endorsement: "participated"
     note: >-
-      Tatra Mt. Math. Publ. 73 (2019) 131-144. Only the Write-Execute part is
-      formalized, with exact minimal corrections W01-W10 (errata/selfspectre-2019-errata.tex,
-      errata/edits.json) quoted from the published PDF and legacy source fixes L01-L05
-      (errata/minimal.diff). The Spectre side channel is formalized only under an abstract leakage
-      contract (a predictor and a speculation window as parameters); no processor is modeled. The original paper remains a separately licensed
-      cited source, not a new mathematical result.
+      Tatra Mt. Math. Publ. 73 (2019) 131-144. Two kinds of selected results are formalized. The
+      Write-Execute part (Sec. 4) is proved unconditionally about an ideal machine, with exact minimal
+      corrections W01-W10 (errata/selfspectre-2019-errata.tex, errata/edits.json) quoted from the
+      published PDF and legacy source fixes L01-L05 (errata/minimal.diff). The Self-Spectre part
+      (Secs. 2-3: Fig. 1 mistraining, Fig. 2 victim leak, speculation depth, hidden computation) is
+      proved only as conditional theorems over an abstract speculation contract, in which the branch
+      predictor and the speculation window are parameters and architectural rollback and cache
+      persistence are assumptions; the observable leak claims assume a cleared probe array. Not modeled
+      and not claimed: any processor's pipeline, branch predictor, cache, timing or handling of
+      self-modifying code, whether any CPU satisfies the contract, and the measured Tables 1-2 and Fig. 4
+      (native evidence only). The original paper remains a separately licensed cited source, not a new
+      mathematical result.
   - title: "Advanced Encryption Standard (AES), FIPS PUB 197"
     authors: ["National Institute of Standards and Technology"]
     type: "other"
@@ -54,8 +62,9 @@ sources:
     location: "https://arxiv.org/abs/1801.01203"
     relationship: "background"
     note: >-
-      Context for the paper's speculative-execution half. Its attack and the processor
-      behavior it relies on are not modeled.
+      Context for the paper's speculative-execution half. The bounds-check-bypass pattern is stated only
+      at the level of the abstract speculation contract; the processor behavior it relies on is not
+      modeled.
   - title: "Intel 64 and IA-32 Architectures Software Developer's Manual"
     authors: ["Intel Corporation"]
     type: "other"
@@ -85,8 +94,9 @@ status:
     Turing-completeness with halting, divergence, faults and tape preservation, the finite image,
     confinement of finite fetch sets, the jump-table lookup and 8-bit tables, wide arithmetic,
     division, modular reduction and exponentiation, AES-128 (S-box, Te tables, FIPS-197 equality of
-    the Write-Execute procedure, Appendix C.1) and the Self-Spectre results under the contract (Mistraining, VictimLeak, WindowDepth,
-    HiddenComputation). The machine
+    the Write-Execute procedure, Appendix C.1) and the conditional Self-Spectre results over the abstract speculation contract
+    (Mistraining, VictimLeak, WindowDepth, HiddenComputation; observable leak claims from a cleared probe array).
+    The machine
     model is ideal: unbounded integer addresses and values, no registers or stack. The paper's
     x86/x64 figures (Fig. 5 NOT/NZ, Fig. 6 XOR copy loop, Fig. 7 carry branch), the NOT table layout and
     the AES-NI sequence of Fig. 3 are proved only in a small byte-level model (X86/ directory) or against the
@@ -127,7 +137,10 @@ fidelity:
     modular exponentiation of one, the mulmod high-half reduction, the NOT/NZ table index bound and the
     modular exponentiation precondition. Each has source excerpts and Lean references in errata/edits.json
     and is validated by validation/audit_errata.py. The machine is ideal and unbounded; finite hardware is
-    not claimed to be unbounded. The AES-NI key expansion (aeskeygenassist) is not modeled. No further mismatch is
+    not claimed to be unbounded. The Self-Spectre results are conditional on an abstract speculation contract
+    (predictor and window as parameters, rollback and cache persistence assumed); the PoC's descending training
+    loop is followed exactly, and the observable leak claims assume a cleared probe array, as the PoC flushes it.
+    The AES-NI key expansion (aeskeygenassist) is not modeled. No further mismatch is
     claimed absent after an unspecified universal review.
 review:
   status: "agent-reviewed"
