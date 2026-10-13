@@ -1,6 +1,6 @@
 {
-  "exact_commit_verified_by_ci": "aeb4e9e44e13eb79c2d0d54e8875730846fb8559",
-  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38245193701",
+  "exact_commit_verified_by_ci": "ab6dfb149e382cacbff684a32217535636809d29",
+  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38326421670",
   "verified": {
     "linux_cold_build": "success",
     "windows_native_vectors": "success",
@@ -9,12 +9,13 @@
     "listing_comparison": "3092 matches / 0 mismatches (evidence, not proof)"
   },
   "unverified": [
-    "Palomar full preflight (palomar-full.yml) not dispatched: needs explicit user authorization",
+    "Renderer/cache build on the Mathlib 5e043698 pin (the preflight has no render step)",
     "Protected Comparator / NanoDa run records not attached",
     "Author review of the errata PDF"
   ],
   "open_obligations": [],
-  "submission_performed": false,
+  "palomar_full_preflight": "pass, run 38327159704 on ab6dfb149e382cacbff684a32217535636809d29",
+  "submission_performed": "by the author (private record), not by the agent",
   "registration_performed": false,
   "closed_after_first_ci": [
     "C18 (Fig. 6 XOR copy loop): X86/Fig6.lean, Fig6Final.lean",
