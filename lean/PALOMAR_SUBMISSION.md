@@ -3,14 +3,14 @@
 | Field | Value |
 |---|---|
 | Repository | GregoryMorse/selfspectre |
-| Exact commit | 783f2a5791e8ddbc80f49343c53beb100abbd5bb (CI run 38331956907; full preflight run 38332593404; docs-only commits after it). Revision after the second automated review: VictimLeak reload result stated from a cleared probe array; first-submission commit ab6dfb1 |
+| Exact commit | 62e20ac83c2e6903c9d2bb3793253c59c99c0d17 (CI run 38375370566; full preflight run 38376642196; docs-only commits after it). Revisions after automated reviews: 2 (VictimLeak from a cleared probe array, 783f2a5) and 3 (source note; WindowDepth observable leak from a cleared probe array; PoC loop order) |
 | project_path | lean |
 | Comparator config | lean/comparator.json |
 | Metadata | lean/formalization.yaml |
 | Selected statement | PalomarWE.mathematical_result (Write-Execute and Self-Spectre under an abstract speculation contract, C23-C26) |
 | First submission / existing id | first submission; id blank |
 
-Notes: AI assistance (Claude) is disclosed in formalization.yaml. The model is ideal (unbounded). Warning: Challenge.lean is 837 lines / ~58 KB (hard limit 1000 / 100 KiB; preferred 300 / 32 KiB).
+Notes: AI assistance (Claude) is disclosed in formalization.yaml. The model is ideal (unbounded). Warning: Challenge.lean is 851 lines / ~60 KB (hard limit 1000 / 100 KiB; preferred 300 / 32 KiB).
 Closed since the first sheet: C18 (Fig. 6 byte-level proof, `X86/Fig6.lean`) and the WE-entry edge vectors (`validation/native_edge.py`).
 Unverified: renderer on the new pin, Comparator/NanoDa run records, author errata review, research-interest review of the Self-Spectre results (an earlier submission of abb8273 was reviewed with a separately selected Spectre index-arithmetic result and flagged; that result was dropped and the contract-level Self-Spectre results added in R9).
 Mathlib re-pinned 302343bb -> 5e043698 (same Lean v4.35.0-rc3) so that Plausible is fb13df7, the revision Verso pins; Mathlib 302343bb (Plausible afc2695) is rejected by the renderer's manifest merge (PalomarSubmission #166 / #131). Full preflight passed on the final commit.
