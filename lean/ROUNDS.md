@@ -156,3 +156,14 @@ Package:
   `d4e41c1d5b0d114c4859e6e5831dc6d3ad1d0d44`, formalization.yaml schema `99c678e569c7c4c0772db297c5ddd5e4c9b6322e` (unchanged pins).
 - Next: run `proof.yml` on the pushed commit; fix failures; record in `FINAL_ACCEPTANCE.json`; then, only on the user's instruction,
   dispatch `palomar-full.yml` with the exact commit. Never submit or register without a separate instruction.
+
+### R9 (Self-Spectre under an abstract speculation contract; single submission)
+
+Decision (user, 2026-10-13): formalize the Spectre half as a conditional result under a leakage contract (no processor model) and
+submit everything together; if the automated review dislikes it, the Self-Spectre results are removed from the Challenge later.
+- `Spec/Speculation.lean`: contract machine (`TState`, `tstep`, `trun`, `branch`), abstract `Predictor`, `counter2`, `guardAt`, `probeHits`.
+- `Speculation/Contract.lean`: `trun_run`, `trun_add`, `branch_mono`, `branch_one`, `probe_hits`, `leak_after`, `hidden`, `mistrain`,
+  `select_guard_32/64`, `counter2_trains`. Statements `Mistraining`, `VictimLeak`, `WindowDepth`, `HiddenComputation`, `SelfSpectre`
+  in `Spec/Paper.lean` (C23-C26), proofs in `Paper.lean`; `PalomarWE.mathematical_result` has eight conjuncts again (Self-Spectre replaces the dropped index-arithmetic result).
+- Challenge 833 lines / 58 KB (hard limits 1000 / 100 KiB). Local: Mathlib-free modules, `Challenge`, `Solution` build; `axiom_audit.py Solution`: 1727 declarations, 0 violations.
+- Honest limits: the contract is an assumption, not a CPU model; Tables 1-2 and Fig. 4 stay evidence.

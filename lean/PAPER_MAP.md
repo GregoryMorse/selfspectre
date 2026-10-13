@@ -26,6 +26,10 @@ Status: todo / proved / open (with note). Paper locations are the published TMMP
 | C19 | Fig. 1 p.134 | Branchless select yields the malicious index iff j mod 6 = 0 | F | R4 | proved | `Spectre.select_32`, `select_64` |
 | C20 | §2 p.134 | `mix_i = (i*167+13) & 255` permutes 0..255 | F | R4 | proved | `Spectre.mix_perm`, `mix_injective`, `mix_surjective` |
 | C21 | Fig. 3 | AES-NI sequence = AES-128 | F | R5/R8 | proved (given the round keys) | `AES.aesNi_eq` (pxor + 9 aesenc + aesenclast with the SDM operation order equals `cipher`), `subBytes_shiftRows`; `aeskeygenassist` key expansion not modeled |
+| C23 | Fig. 1 / §2 | Mistraining: the predictor guesses taken at the malicious call after the five training calls (abstract predictor, 2-bit counter instance) | F (contract) | R9 | proved | `Speculation.mistrain`, `counter2_trains`, `select_guard_32/64` |
+| C24 | Fig. 2 | Victim leak: the wrong path touches exactly the secret byte's page; the architectural state is restored; reload in `mix_i` order recovers the page | F (contract) | R9 | proved | `Speculation.branch_one`, `probe_hits` |
+| C25 | §3, Tables 1-2, Fig. 4 | Speculation depth: leak iff the window covers the hidden steps; a larger window only adds pages | F (contract) | R9 | proved | `Speculation.leak_after`, `branch_mono` |
+| C26 | §3-§4 | Hidden computation: the wrong path runs the ideal Write-Execute run (and every Turing computation) with no cache trace and no architectural effect | F (contract) | R9 | proved | `Speculation.trun_run`, `hidden` |
 | C22 | asm comments | ShiftRows index formulas = FIPS-197 ShiftRows | F | R5 | proved | `AES.nvalInv_nval`, `nval_nvalInv`, `pos_src`, `src_pos` |
 
 ## Errata (see `errata/edits.json`)
@@ -51,7 +55,7 @@ theorems `x86c_geometry`, `x64c_geometry`, `*c_notres_offsets`).
 
 ## Selected statement (R8)
 
-`WriteExecute/Spec/Paper.lean` defines eight results; `WriteExecute/Paper.lean` proves them; `Challenge.lean` is generated from the Spec.
+`WriteExecute/Spec/Paper.lean` defines twelve results (R9: the Self-Spectre contract results were added); `WriteExecute/Paper.lean` proves them; `Challenge.lean` is generated from the Spec.
 
 | Result definition | Claims | Proof |
 |---|---|---|
@@ -62,5 +66,20 @@ theorems `x86c_geometry`, `x64c_geometry`, `*c_notres_offsets`).
 | `Primitives` | C05, C06 | `Paper.primitives` |
 | `Arithmetic` | C07-C12 | `Paper.arithmetic` |
 | `AESResult` | C13-C15 (C22 inside the proof) | `Paper.aesResult` |
+| `Mistraining` | C19, C23 | `Paper.mistraining` |
+| `VictimLeak` | C20, C24 | `Paper.victimLeak` |
+| `WindowDepth` | C25 | `Paper.windowDepth` |
+| `HiddenComputation` | C26 | `Paper.hiddenComputation` |
+| `SelfSpectre` | C19, C20, C23-C26 | `Paper.selfSpectre` |
 
-Not selected (supporting): C16, C17, C18, C19, C20 (Spectre index arithmetic, `Paper.spectreArithmetic`, removed from the selected statement after the automated review) (byte-level model and COFF evidence), C21. Open: none; the `aeskeygenassist` key expansion is not modeled (C21 is given the round keys).
+Not selected (supporting): C16, C17, C18 (byte-level model and COFF evidence), C21. Open: none; the `aeskeygenassist` key expansion is not modeled (C21 is given the round keys).
+
+## Whole-paper coverage (R9)
+
+| Paper part | Disposition |
+|---|---|
+| Sec. 1 Introduction, conclusion | prose; not formalizable |
+| Sec. 2 Background (Meltdown/Spectre taxonomy, CLFLUSH/RDTSC, Fig. 1) | Fig. 1 and `mix_i`: C19, C20, C23 (proved); taxonomy and instruction facts: editorial (W07-W09) |
+| Sec. 3 Self-Spectre method (speculation depth, Fig. 2, hidden computation, AES/RSA primitives, Fig. 3) | C12-C15, C21, C24-C26 (proved under the abstract contract); Tables 1-2 and Fig. 4 are measurements, native evidence only; compiled instruction counts (e.g. 93+5*44) are compiler output |
+| Sec. 4 Write-Execute (model, primitives, arithmetic, Figs. 5-7) | C01-C11, C16-C18 (proved; assembled objects compared with COFF bytes) |
+| Real processor behavior (pipeline, predictor, cache, timing) | not formalized: the vendors do not publish it; only the abstract contract is stated, never claimed for a CPU |

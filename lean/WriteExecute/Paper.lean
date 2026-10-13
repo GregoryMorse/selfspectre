@@ -19,6 +19,7 @@ public import WriteExecute.AES.Equiv
 public import WriteExecute.AES.Vectors
 public import WriteExecute.Spectre.Mix
 public import WriteExecute.Spectre.Select
+public import WriteExecute.Speculation.Contract
 
 public section
 
@@ -71,6 +72,32 @@ theorem arithmetic : Arithmetic :=
 theorem aesResult : AESResult :=
   ⟨AES.sbox_alg, AES.te4_lit,
     fun w pt hpt hb idx hidx => AES.weCipher_eq w pt hpt hb idx hidx, AES.fips197_c1⟩
+
+theorem mistraining : Mistraining :=
+  ⟨fun P k hP hk s0 j h6 hj => Speculation.mistrain P k hP hk s0 j h6 hj,
+    fun j t m size ht hm => Speculation.select_guard_32 j t m size ht hm,
+    fun j t m size ht hm => Speculation.select_guard_64 j t m size ht hm,
+    Speculation.counter2_trains⟩
+
+theorem victimLeak : VictimLeak := by
+  refine ⟨fun W t a hW h4 hr => ?_, Speculation.probe_hits, fun W t1 t2 a hW hpc htl h41 h42 hr1 hr2 => ?_⟩
+  · rw [Speculation.branch_one W hW t a h4 hr]
+    exact ⟨rfl, rfl⟩
+  · have e1 : t1.s.mem (t1.s.pc + 1) = a - (t1.s.pc + 2) := hr1
+    have e2 : t2.s.mem (t2.s.pc + 1) = a - (t2.s.pc + 2) := hr2
+    rw [Speculation.branch_one W hW t1 a h41 e1, Speculation.branch_one W hW t2 a h42 e2, htl]
+    simp
+
+theorem windowDepth : WindowDepth :=
+  ⟨fun k s u l h h4 => Speculation.leak_after k s u l h h4,
+    fun W d n t => Speculation.branch_mono W d n t⟩
+
+theorem hiddenComputation : HiddenComputation :=
+  ⟨fun n s u l h => Speculation.hidden n s u l h,
+    fun A Q M cfg cfg' n l h =>
+      Speculation.trun_run (n * (Q + 2)) _ _ l (Universal.simulate M n cfg cfg' h)⟩
+
+theorem selfSpectre : SelfSpectre := ⟨mistraining, victimLeak, windowDepth, hiddenComputation⟩
 
 /-- Supporting (not selected): C19-C20, index arithmetic of the paper's Fig. 1 and probe order. -/
 theorem spectreArithmetic :

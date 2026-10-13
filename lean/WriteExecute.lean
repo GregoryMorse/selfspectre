@@ -26,6 +26,8 @@ public import WriteExecute.Arith.ModExp
 public import WriteExecute.Spec.Spectre
 public import WriteExecute.Spectre.Mix
 public import WriteExecute.Spectre.Select
+public import WriteExecute.Spec.Speculation
+public import WriteExecute.Speculation.Contract
 public import WriteExecute.Spec.AES
 public import WriteExecute.AES.Checks
 public import WriteExecute.AES.Basic

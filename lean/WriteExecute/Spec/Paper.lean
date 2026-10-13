@@ -4,6 +4,7 @@ public import WriteExecute.Spec.Confinement
 public import WriteExecute.Spec.Universal
 public import WriteExecute.Spec.Arith
 public import WriteExecute.Spec.AES
+public import WriteExecute.Spec.Speculation
 
 public section
 
@@ -111,5 +112,63 @@ reproduces the FIPS-197 Appendix C.1 known answer. -/
   AES.aes128 [0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f]
     [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff] =
     [0x69, 0xc4, 0xe0, 0xd8, 0x6a, 0x7b, 0x04, 0x30, 0xd8, 0xcd, 0xb7, 0x80, 0x70, 0xb4, 0xc5, 0x5a]
+
+/-- C19, C23 (Fig. 1, Sec. 2): with the branch predictor an abstract parameter that guesses "taken" after
+`k <= 5` consecutive "taken" outcomes, the schedule of the paper's mistraining loop (five in-bounds calls,
+then the malicious call when `j % 6 = 0`) makes the predictor guess "taken" for a guard that is false;
+Fig. 1's branch-free select makes the guard true exactly off that schedule (32- and 64-bit `size_t`), and
+the textbook 2-bit counter satisfies the assumption. -/
+@[expose] def Mistraining : Prop :=
+  (∀ (P : Speculation.Predictor) (k : Nat), P.Trains k → k ≤ 5 → ∀ (s0 : P.S) (j : Nat),
+      6 ≤ j → j % 6 = 0 →
+      P.predict (P.after s0 ((List.range j).map Speculation.guardAt)) = true ∧ Speculation.guardAt j = false) ∧
+  (∀ (j : Nat) (t m : BitVec 32) (size : Nat), t.toNat < size → size ≤ m.toNat →
+      ((Spectre.selectIdx 32 j t m).toNat < size ↔ Speculation.guardAt j = true)) ∧
+  (∀ (j : Nat) (t m : BitVec 64) (size : Nat), t.toNat < size → size ≤ m.toNat →
+      ((Spectre.selectIdx 64 j t m).toNat < size ↔ Speculation.guardAt j = true)) ∧
+  Speculation.counter2.Trains 3
+
+/-- C24 (Fig. 2): a mispredicted victim whose body is the probe `temp &= array2[array1[x] * 512]` leaves
+the architectural state unchanged and brings exactly the page of the secret byte into the cache; the
+reload phase, timing the pages in the order `mixIdx`, finds exactly that page; two runs differ in the
+cache exactly when the secret bytes differ. -/
+@[expose] def VictimLeak : Prop :=
+  (∀ (W : Nat) (t : Speculation.TState) (a : Int), 1 ≤ W →
+      t.s.mem t.s.pc = 4 → t.s.mem (t.s.pc + 1) = a - (t.s.pc + 2) →
+      (Speculation.branch W true false 1 t).s = t.s ∧
+      (Speculation.branch W true false 1 t).touched = (t.s.mem a % 256) :: t.touched) ∧
+  (∀ p : Nat, p < 256 → Speculation.probeHits [(p : Int)] = [p]) ∧
+  (∀ (W : Nat) (t1 t2 : Speculation.TState) (a : Int), 1 ≤ W →
+      t1.s.pc = t2.s.pc → t1.touched = t2.touched →
+      t1.s.mem t1.s.pc = 4 → t2.s.mem t2.s.pc = 4 →
+      t1.s.mem (t1.s.pc + 1) = a - (t1.s.pc + 2) → t2.s.mem (t2.s.pc + 1) = a - (t2.s.pc + 2) →
+      ((Speculation.branch W true false 1 t1).touched = (Speculation.branch W true false 1 t2).touched ↔
+        t1.s.mem a % 256 = t2.s.mem a % 256))
+
+/-- C25 (Sec. 3, Tables 1-2, Fig. 4): the speculation depth. A hidden computation of `k` steps followed by
+one probe leaks exactly when the window covers all `k + 1` steps, and a larger window only ever adds
+cache pages, so a too-short window leaves a prefix of the results. -/
+@[expose] def WindowDepth : Prop :=
+  (∀ (k : Nat) (s u : WE.State) (l : List Int), WE.run k s = (WE.Status.running, u) → u.mem u.pc = 4 →
+      (∀ W, W ≤ k → (Speculation.branch W true false (k + 1) ⟨s, l⟩).touched = l) ∧
+      (∀ W, k + 1 ≤ W → (Speculation.branch W true false (k + 1) ⟨s, l⟩).touched =
+        (u.mem (u.pc + 2 + u.mem (u.pc + 1)) % 256) :: l)) ∧
+  (∀ (W d n : Nat) (t : Speculation.TState), ∃ l,
+      (Speculation.branch (W + d) true false n t).touched = l ++ (Speculation.branch W true false n t).touched)
+
+/-- C26 (Secs. 3-4): the hidden state. A mispredicted body that runs `n` Write-Execute steps without a probe
+computes exactly the ideal Write-Execute run, leaves the cache untouched and is squashed without a trace;
+in particular every Turing computation is carried out step for step inside the window. -/
+@[expose] def HiddenComputation : Prop :=
+  (∀ (n : Nat) (s u : WE.State) (l : List Int), WE.run n s = (WE.Status.running, u) →
+      Speculation.trun n ⟨s, l⟩ = (WE.Status.running, ⟨u, l⟩) ∧
+      ∀ W, n ≤ W → Speculation.branch W true false n ⟨s, l⟩ = ⟨s, l⟩) ∧
+  (∀ (A Q : Nat) (M : TM.Machine A Q) (cfg cfg' : TM.Configuration A Q) (n : Nat) (l : List Int),
+      TM.run M n cfg = some cfg' →
+      Speculation.trun (n * (Q + 2)) ⟨Universal.encode M cfg, l⟩ =
+        (WE.Status.running, ⟨Universal.encode M cfg', l⟩))
+
+/-- Self-Spectre under the leakage contract: mistraining, victim leak, window depth, hidden computation. -/
+@[expose] def SelfSpectre : Prop := Mistraining ∧ VictimLeak ∧ WindowDepth ∧ HiddenComputation
 
 end WriteExecute.Paper

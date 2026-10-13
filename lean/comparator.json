@@ -11,7 +11,12 @@
     "WriteExecute.Paper.Confinement",
     "WriteExecute.Paper.Primitives",
     "WriteExecute.Paper.Arithmetic",
-    "WriteExecute.Paper.AESResult"
+    "WriteExecute.Paper.AESResult",
+    "WriteExecute.Paper.Mistraining",
+    "WriteExecute.Paper.VictimLeak",
+    "WriteExecute.Paper.WindowDepth",
+    "WriteExecute.Paper.HiddenComputation",
+    "WriteExecute.Paper.SelfSpectre"
   ],
   "permitted_axioms": [
     "propext",
