@@ -1,6 +1,6 @@
 {
-  "exact_commit_verified_by_ci": "ab6dfb149e382cacbff684a32217535636809d29",
-  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38326421670",
+  "exact_commit_verified_by_ci": "783f2a5791e8ddbc80f49343c53beb100abbd5bb",
+  "ci_run": "https://github.com/GregoryMorse/selfspectre/actions/runs/38331956907",
   "verified": {
     "linux_cold_build": "success",
     "windows_native_vectors": "success",
@@ -14,7 +14,7 @@
     "Author review of the errata PDF"
   ],
   "open_obligations": [],
-  "palomar_full_preflight": "pass, run 38327159704 on ab6dfb149e382cacbff684a32217535636809d29",
+  "palomar_full_preflight": "pass, run 38332593404 on 783f2a5791e8ddbc80f49343c53beb100abbd5bb",
   "submission_performed": "by the author (private record), not by the agent",
   "registration_performed": false,
   "closed_after_first_ci": [
