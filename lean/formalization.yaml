@@ -14,7 +14,7 @@ project:
     procedure against FIPS-197. The Self-Spectre half is proved as a conditional result under an abstract
     speculation contract (a branch predictor and a speculation window as parameters, rollback of the
     architectural state, persistence of the cache): the Fig. 1 mistraining schedule, the Fig. 2 victim leak
-    with the mix-order reload, the speculation-depth boundary and the hidden Write-Execute computation.
+    with the mix-order reload from a cleared probe array, the speculation-depth boundary and the hidden Write-Execute computation.
     Supporting byte-level x86/x64 models of Figs. 5 and 7 and native
     vectors for the corrected C and MASM sources accompany the selected statement.
   authors: ["Gregory Morse"]

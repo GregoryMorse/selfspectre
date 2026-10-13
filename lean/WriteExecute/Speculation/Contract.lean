@@ -153,6 +153,15 @@ theorem probe_hits : ∀ p : Nat, p < 256 → probeHits [(p : Int)] = [p] := by
   · exact hits_c6 q hq
   · exact hits_c7 q hq
 
+/-- From a cleared cache one probed page is exactly the reload hit. -/
+theorem hits_single (x : Int) : probeHits ([x % 256]) = [(x % 256).toNat] := by
+  have h0 : 0 ≤ x % 256 := by omega
+  have h1 : x % 256 < 256 := by omega
+  have e : x % 256 = ((x % 256).toNat : Int) := by omega
+  have := probe_hits (x % 256).toNat (by omega)
+  rw [← e] at this
+  exact this
+
 theorem leak_after (k : Nat) (s u : WE.State) (l : List Int) (h : WE.run k s = (.running, u))
     (h4 : u.mem u.pc = 4) :
     (∀ W, W ≤ k → (branch W true false (k + 1) ⟨s, l⟩).touched = l) ∧

@@ -129,20 +129,24 @@ the textbook 2-bit counter satisfies the assumption. -/
   Speculation.counter2.Trains 3
 
 /-- C24 (Fig. 2): a mispredicted victim whose body is the probe `temp &= array2[array1[x] * 512]` leaves
-the architectural state unchanged and brings exactly the page of the secret byte into the cache; the
-reload phase, timing the pages in the order `mixIdx`, finds exactly that page; two runs differ in the
-cache exactly when the secret bytes differ. -/
+the architectural state unchanged and adds the page of the secret byte to the cache. Starting from a cleared
+probe array (the paper flushes all 256 pages first), the reload phase, timing the pages in the order
+`mixIdx`, finds exactly that one page, so two runs have the same reload hits exactly when the secret bytes
+agree (mod 256). From an initially populated cache nothing is claimed beyond the first part. -/
 @[expose] def VictimLeak : Prop :=
   (∀ (W : Nat) (t : Speculation.TState) (a : Int), 1 ≤ W →
       t.s.mem t.s.pc = 4 → t.s.mem (t.s.pc + 1) = a - (t.s.pc + 2) →
       (Speculation.branch W true false 1 t).s = t.s ∧
       (Speculation.branch W true false 1 t).touched = (t.s.mem a % 256) :: t.touched) ∧
-  (∀ p : Nat, p < 256 → Speculation.probeHits [(p : Int)] = [p]) ∧
+  (∀ (W : Nat) (t : Speculation.TState) (a : Int), 1 ≤ W → t.touched = [] →
+      t.s.mem t.s.pc = 4 → t.s.mem (t.s.pc + 1) = a - (t.s.pc + 2) →
+      Speculation.probeHits (Speculation.branch W true false 1 t).touched = [(t.s.mem a % 256).toNat]) ∧
   (∀ (W : Nat) (t1 t2 : Speculation.TState) (a : Int), 1 ≤ W →
-      t1.s.pc = t2.s.pc → t1.touched = t2.touched →
+      t1.touched = [] → t2.touched = [] →
       t1.s.mem t1.s.pc = 4 → t2.s.mem t2.s.pc = 4 →
       t1.s.mem (t1.s.pc + 1) = a - (t1.s.pc + 2) → t2.s.mem (t2.s.pc + 1) = a - (t2.s.pc + 2) →
-      ((Speculation.branch W true false 1 t1).touched = (Speculation.branch W true false 1 t2).touched ↔
+      (Speculation.probeHits (Speculation.branch W true false 1 t1).touched =
+        Speculation.probeHits (Speculation.branch W true false 1 t2).touched ↔
         t1.s.mem a % 256 = t2.s.mem a % 256))
 
 /-- C25 (Sec. 3, Tables 1-2, Fig. 4): the speculation depth. A hidden computation of `k` steps followed by

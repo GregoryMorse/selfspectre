@@ -80,13 +80,18 @@ theorem mistraining : Mistraining :=
     Speculation.counter2_trains⟩
 
 theorem victimLeak : VictimLeak := by
-  refine ⟨fun W t a hW h4 hr => ?_, Speculation.probe_hits, fun W t1 t2 a hW hpc htl h41 h42 hr1 hr2 => ?_⟩
+  refine ⟨fun W t a hW h4 hr => ?_, fun W t a hW hc h4 hr => ?_,
+    fun W t1 t2 a hW hc1 hc2 h41 h42 hr1 hr2 => ?_⟩
   · rw [Speculation.branch_one W hW t a h4 hr]
     exact ⟨rfl, rfl⟩
-  · have e1 : t1.s.mem (t1.s.pc + 1) = a - (t1.s.pc + 2) := hr1
-    have e2 : t2.s.mem (t2.s.pc + 1) = a - (t2.s.pc + 2) := hr2
-    rw [Speculation.branch_one W hW t1 a h41 e1, Speculation.branch_one W hW t2 a h42 e2, htl]
-    simp
+  · rw [Speculation.branch_one W hW t a h4 hr, hc]
+    exact Speculation.hits_single _
+  · rw [Speculation.branch_one W hW t1 a h41 hr1, Speculation.branch_one W hW t2 a h42 hr2, hc1, hc2,
+      Speculation.hits_single, Speculation.hits_single]
+    have h1 : 0 ≤ t1.s.mem a % 256 := by omega
+    have h2 : 0 ≤ t2.s.mem a % 256 := by omega
+    simp only [List.cons.injEq, and_true]
+    omega
 
 theorem windowDepth : WindowDepth :=
   ⟨fun k s u l h h4 => Speculation.leak_after k s u l h h4,
