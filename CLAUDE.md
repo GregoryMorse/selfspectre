@@ -7,7 +7,7 @@ State*, TMMP 73 (2019) 131–144, with errata, legacy-code corrections and a Pal
 (current round and handoff notes: `lean/ROUNDS.md`). Decisions in plan §2 are settled; ask the
 user before deviating. Do not browse `../smcTuring` beyond the paths the plan names.
 
-**Current round: R9** (Self-Spectre contract model, single submission; R0-R8 done, see lean/ROUNDS.md). Update this line at each round close.
+**Current round: none** (R0-R9 done; registered as PALOMAR-2026-10-14-000007 v1; follow-up: title wording, see lean/ROUNDS.md). Update this line at each round close.
 
 ## Hard rules
 

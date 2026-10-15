@@ -167,3 +167,10 @@ submit everything together; if the automated review dislikes it, the Self-Spectr
   in `Spec/Paper.lean` (C23-C26), proofs in `Paper.lean`; `PalomarWE.mathematical_result` has eight conjuncts again (Self-Spectre replaces the dropped index-arithmetic result).
 - Challenge 833 lines / 58 KB (hard limits 1000 / 100 KiB). Local: Mathlib-free modules, `Challenge`, `Solution` build; `axiom_audit.py Solution`: 1727 declarations, 0 violations.
 - Honest limits: the contract is an assumption, not a CPU model; Tables 1-2 and Fig. 4 stay evidence.
+- Review rounds: review 1 (abb8273) flagged the separately selected index arithmetic -> dropped; review 2 (ab6dfb1) `VictimLeak`
+  from a cleared probe array (783f2a5); review 3 (783f2a5) source note, `WindowDepth` observable leak from a cleared probe array,
+  touch-trace wording, PoC loop order in `Mistraining` (62e20ac). Challenge 851 lines / ~60 KB.
+- Closed 2026-10-14: registered as PALOMAR-2026-10-14-000007 v1 (commit `fe72073`, docs-only on `62e20ac`; trust level high).
+  Submissions and registration were performed by the author.
+- Follow-up for a later registry version: the title wording ("... with errata"); the `review.notes` in `formalization.yaml`
+  still describe the preflight as a pending gate.

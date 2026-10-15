@@ -6,19 +6,31 @@
     "windows_native_vectors": "success",
     "axiom_audit": "0 violations (local and CI)",
     "metadata_validation": "pass",
-    "listing_comparison": "3092 matches / 0 mismatches (evidence, not proof)"
+    "listing_comparison": "7778 matches / 0 mismatches (evidence, not proof)"
   },
   "unverified": [
-    "Renderer/cache build on the Mathlib 5e043698 pin (the preflight has no render step)",
-    "Protected Comparator / NanoDa run records not attached",
     "Author review of the errata PDF"
   ],
   "open_obligations": [],
   "palomar_full_preflight": "pass, run 38376642196 on 62e20ac83c2e6903c9d2bb3793253c59c99c0d17",
-  "submission_performed": "by the author (private record), not by the agent",
-  "registration_performed": false,
+  "submission_performed": "by the author (four submissions; private records), not by the agent",
+  "registration_performed": "by the author, 2026-10-14",
   "closed_after_first_ci": [
     "C18 (Fig. 6 XOR copy loop): X86/Fig6.lean, Fig6Final.lean",
     "WE-entry edge vectors against assembled procedures: validation/native_edge.py (232,081 checks, x86 and x64)"
+  ],
+  "registered_commit": "fe720739a11adeb1e9e2b2b13948cc6a7586920d",
+  "registry": {
+    "id": "PALOMAR-2026-10-14-000007",
+    "version": 1,
+    "url": "https://palomar-registry.org/entry?id=PALOMAR-2026-10-14-000007&version=1",
+    "status": "registered",
+    "trust_level": "high",
+    "published_at": "2026-10-14T13:02:02Z",
+    "archive_fork": "PalomarArchive/GregoryMorse--selfspectre--a1f730509db7"
+  },
+  "registry_pipeline": "Renderer, Comparator and NanoDa ran in the Palomar pipeline for the registered entry (status registered, trust level high); their individual run records are not attached here",
+  "follow_up": [
+    "Title wording ('... with errata') to be revised in a later registry version (author)"
   ]
 }

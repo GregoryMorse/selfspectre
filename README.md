@@ -86,7 +86,8 @@ The PreLinkEvent in each project automatically invokes `ml.exe` (x86) or `ml64.e
 ## Lean formalization
 
 The Write-Execute part of the paper is formalized in Lean 4 (`lean/`, toolchain `leanprover/lean4:v4.35.0-rc3`,
-Mathlib pinned in `lean/lakefile.toml`). The selected statement `PalomarWE.mathematical_result`
+Mathlib pinned in `lean/lakefile.toml`). Registered in the Palomar registry as [PALOMAR-2026-10-14-000007](https://palomar-registry.org/entry?id=PALOMAR-2026-10-14-000007&version=1) (version 1, 2026-10-14, commit `fe72073`).
+The selected statement `PalomarWE.mathematical_result`
 (`lean/Challenge.lean`, proved in `lean/Solution.lean`) covers read-freedom of the ideal word-level machine,
 Turing-completeness (with the finite-image caveat), confinement, the jump-table lookup and 8-bit tables,
 wide arithmetic, division, modular reduction and exponentiation, AES-128 (T-tables and the Write-Execute
