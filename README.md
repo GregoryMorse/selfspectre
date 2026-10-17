@@ -16,11 +16,11 @@ Presented at the **18th Central European Conference on Cryptology (CECC'18)**, J
 
 This repository demonstrates two novel computation-hiding techniques applied to the AES-128 and RSA algorithms:
 
-1. **Speculative execution side-channel** — performing arithmetic inside the CPU's speculative execution pipeline using Spectre-style branch-predictor training, with results recovered via cache timing. The program itself carries no conventionally observable data in registers or memory during the computation.
+1. **Speculative execution side-channel** — attempting to perform arithmetic on a mispredicted path and recover the result through cache timing. If the path is squashed, its architectural register and memory changes do not commit; whether the cache trace is observable is processor and build dependent.
 
 2. **Write-execute self-modifying code** — performing arbitrary computations by writing operands directly into instruction opcodes in the executable `.text` section and jumping to them, so that at no point during computation are operands present in registers or addressable memory — only encoded within the instructions themselves.
 
-Either technique can support strong white-box cryptography: in binary form, both approaches are highly resistant to static analysis and conventional debugging.
+The paper proposes these as computation-hiding techniques. The demos and formalization do not establish resistance to static analysis or debugging on a modern platform.
 
 ## Repository Structure
 
@@ -46,18 +46,18 @@ output/pdf/              errata PDF
 ## Projects
 
 ### `selfspectre` — AES-128 Spectre Demo
-Demonstrates recovering AES-128 encryption round results via speculative execution and cache-timing side-channels. Uses `spectreaes.c` (entry point) and `spectreopt.c` (shared victim helpers), with the Spectre wrappers in `spectrecode.asm` and the write-execute arithmetic core in `writeexc.asm`.
+Demonstrates hidden AES-128 computation in the speculative pipeline and reads its result through cache timing. The AES executable uses `spectreaes.c` and `spectreopt.c`; it does not link `spectrecode.asm` or `writeexc.asm`.
 
 ### `spectrersa` — RSA Spectre Demo
-Demonstrates speculative recovery of RSA modular-exponentiation intermediate values using varying exponentiation depths (1–8 squarings). Uses `spectrersa.c` (entry point) and `spectreopt.c` (shared helpers).
+Demonstrates hidden modular-exponentiation steps at varying depths, including C and assembly implementations. It uses `spectrersa.c`, `spectreopt.c`, and `spectrecode.asm`. The example modulus is the small, fixed product `61 * 53`; this is a research workload, not a production RSA implementation.
 
 ### `writeexec` — Write-Execute Arithmetic Framework
 Standalone test harness for `writeexc.asm`. Exercises all write-execute primitives: bitwise operations (SHL, SHR, NOT, XOR, OR, AND), arithmetic (ADD, SUB, INC, DEC, MUL, DIV, MODEXP), and AES-128 table lookups (Te0–Te4, full AES round). Results are verified against standard C implementations and timed for performance comparison.
 
 ### `spectrepoc` — Original Spectre v1 Proof-of-Concept
-The unmodified Spectre v1 PoC from the original paper by Kocher et al. Reads an arbitrary secret string from process memory using branch-predictor training and cache-timing side-channels. Useful as a baseline to verify whether your CPU/OS has hardware or software mitigations in place: if it prints `Success` and recovers the secret, Spectre v1 is exploitable on your system; if scores are low or results are `Unclear`, mitigations are active.
+The original Spectre v1 PoC from the paper by Kocher et al. attempts to recover a string through branch-predictor training and cache timing. Its output is an experimental observation, not a mitigation-status test. In particular, low scores or `Unclear` do not identify a CPU, microcode, OS, compiler, or timing cause.
 
-Accepts optional command-line arguments: `[cache_hit_threshold] [address] [length]`. The default threshold is 80; lower values may help on CPUs with fast caches, higher values on systems with mitigation overhead.
+Accepts optional command-line arguments: `[cache_hit_threshold] [address] [length]`. The default timing threshold is a fixed value of 80, not a calibrated property of the machine.
 
 ## Building
 
@@ -76,6 +76,30 @@ pinned revision (needs `git`, `make` and a C compiler; 32-bit Linux builds need 
 deterministic vector checks (`code_vectors`, `edge_vectors`) and the legacy randomized `writeexec` harness (several
 minutes). The Spectre programs are built but never run by the tests; `-DSELFSPECTRE_BUILD_SPECTRE=OFF` skips them.
 The workflow `.github/workflows/portable.yml` runs this grid, plus the Visual Studio solution, on GitHub Actions.
+
+### Status of the speculative demos
+
+A passing build and native vector test run establish that the programs compile and that the tested arithmetic agrees with its reference. CTest never runs `selfspectre_aes`, `selfspectre_rsa`, or `spectrepoc`; a native demo run is needed to check speculative behavior on a particular processor. The Lean Self-Spectre results assume an abstract predictor, speculation window, and cache-leak contract; [the selected-statement notes](lean/PALOMAR_SEMANTICS.md) explicitly model no processor.
+
+The build requests no MSVC Spectre v1 instrumentation (`/Qspectre-` in CMake; `SpectreMitigation=false` in the Visual Studio projects). This removes one possible software barrier in these binaries, but does not establish that a given CPU will run the victim body far enough to leave a detectable cache trace. Intel describes bounds-check-bypass mitigation as primarily a software problem, and Microsoft documents both the effect and the limits of `/Qspectre` ([Intel guidance](https://www.intel.com/content/www/us/en/developer/articles/technical/software-security-guidance/technical-documentation/analysis-speculative-execution-side-channels.html), [MSVC documentation](https://learn.microsoft.com/en-us/cpp/build/reference/qspectre?view=msvc-170)). A low score alone cannot attribute failure to microcode or to a runtime library.
+
+The AES and RSA demos use 4,096-byte probe spacing, shuffled reload order, and a measured cache threshold at startup. AES measures both isolated lines and a full shuffled probe sweep. RSA keeps its validated isolated-line calibration and then checks a full flushed sweep for background hits; changing its compiled decoder layout measurably changed its results. Windows and Linux pin the thread to its starting logical CPU. Pass a numeric first argument to override the threshold; set `WE_CPU=<logical-index>` to select a CPU or `WE_CPU=any` to disable pinning. `spectrersa --depth-sweep [threshold]` checks the individual two-, four-, and five-step computations. The demos report score-based `Success` separately from a `Correct` reference comparison; read both labels together. Their inputs and AES key are fixed in source.
+
+At startup the demos print CPUID feature bits and reject missing timing/flush instructions before using them. AES-NI modes are skipped when AES-NI is absent. The focused Windows build script and native CMake configure select RDTSCP or the RDTSC+LFENCE fallback from CPUID. `WE_FORCE_RDTSC=1` tests that fallback in the focused script; cross builds can select it with `-DSELFSPECTRE_FORCE_RDTSC=ON`. On 32-bit MSVC, the fallback keeps the timed load inside one assembly block so the compiler cannot move it outside the timestamps. Automatic calibration needs CLFLUSH; the legacy `NOCLFLUSH` path needs an explicitly measured threshold. Non-MSVC CMake builds now target SSE2 generally and enable AES instructions only in AES-NI functions.
+
+`src/portable/we_spectre_params.h` names the experimental training settings: 30 calls per attempt, a six-call period, 100 delay spins, and up to 999 attempts. Cache calibration measures the timing cut, not these branch-predictor settings or the speculation window. CPUID likewise identifies instructions, not whether a particular Intel or AMD processor will speculatively complete a chosen AES/RSA depth. The run's `Correct` and confidence counts are the platform check. The RSA training loop retains its original macro form because a seemingly equivalent refactor changed generated code and reduced recovery on this machine.
+
+The [native reproducibility investigation](validation/SPECTRE_INVESTIGATION.md) compares the paper's cases with old and repaired x64/x86 runs on an i9-14900HX. The old 512-byte probe layout classified thousands of flushed lines as hits. With automatic pinning and calibration, ten-round AES-NI returned 10/10 correct in each build; the latest complete RSA chain returned 160/160 correct groups in both, while earlier runs varied slightly. These are native measurements, not Lean proofs or cross-machine guarantees.
+
+For a focused Windows MSVC build and run, without the separate `spectrepoc` target:
+
+```powershell
+python validation/limited_run.py -- python validation/build_native_demos.py x64
+python validation/limited_run.py -- build/native/x64/Release/selfspectre.exe
+python validation/limited_run.py -- build/native/x64/Release/spectrersa.exe --depth-sweep
+```
+
+Use `x86` in the build command and path to check the 32-bit cases. `validation/limited_run.py` applies this repository's 1.5 GB aggregate memory limit.
 
 ### Visual Studio
 

@@ -3,6 +3,10 @@ ifndef X64
 endif
 option casemap :none
 
+; Keep in sync with WE_PROBE_STRIDE in portable/we_cache_probe.h.
+PROBE_STRIDE EQU 4096
+PROBE_SHIFT EQU 12
+
 .code
 
 ;EXTERN tmp:BYTE
@@ -63,29 +67,29 @@ endif
 
 mov eax, edx
 and acmltr, 0ffh
-shl acmltr, 9
+shl acmltr, PROBE_SHIFT
 lea ctr, array2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff00h
-shl acmltr, 9 - 8
-lea ctr, array2 + 256 * 512
+shl acmltr, PROBE_SHIFT - 8
+lea ctr, array2 + 256 * PROBE_STRIDE
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff0000h
-shr acmltr, 16 - 9
-lea ctr, array2 + 256 * 512 * 2
+shr acmltr, 16 - PROBE_SHIFT
+lea ctr, array2 + 256 * PROBE_STRIDE * 2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff000000h
-shr acmltr, 24 - 9 ; 24 - 9, where shl rax, 9 comes from 200h
-lea ctr, array2 + 256 * 512 * 3
+shr acmltr, 24 - PROBE_SHIFT ; 24 - 12, where shl rax, 12 comes from 1000h
+lea ctr, array2 + 256 * PROBE_STRIDE * 3
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
@@ -140,29 +144,29 @@ endif
 
 mov eax, edx
 and acmltr, 0ffh
-shl acmltr, 9
+shl acmltr, PROBE_SHIFT
 lea ctr, array2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff00h
-shl acmltr, 9 - 8
-lea ctr, array2 + 256 * 512
+shl acmltr, PROBE_SHIFT - 8
+lea ctr, array2 + 256 * PROBE_STRIDE
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff0000h
-shr acmltr, 16 - 9
-lea ctr, array2 + 256 * 512 * 2
+shr acmltr, 16 - PROBE_SHIFT
+lea ctr, array2 + 256 * PROBE_STRIDE * 2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff000000h
-shr acmltr, 24 - 9 ; 24 - 9, where shl rax, 9 comes from 200h
-lea ctr, array2 + 256 * 512 * 3
+shr acmltr, 24 - PROBE_SHIFT ; 24 - 12, where shl rax, 12 comes from 1000h
+lea ctr, array2 + 256 * PROBE_STRIDE * 3
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
@@ -245,29 +249,29 @@ endif
 
 mov eax, edx
 and acmltr, 0ffh
-shl acmltr, 9
+shl acmltr, PROBE_SHIFT
 lea ctr, array2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff00h
-shl acmltr, 9 - 8
-lea ctr, array2 + 256 * 512
+shl acmltr, PROBE_SHIFT - 8
+lea ctr, array2 + 256 * PROBE_STRIDE
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff0000h
-shr acmltr, 16 - 9
-lea ctr, array2 + 256 * 512 * 2
+shr acmltr, 16 - PROBE_SHIFT
+lea ctr, array2 + 256 * PROBE_STRIDE * 2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff000000h
-shr acmltr, 24 - 9 ; 24 - 9, where shl rax, 9 comes from 200h
-lea ctr, array2 + 256 * 512 * 3
+shr acmltr, 24 - PROBE_SHIFT ; 24 - 12, where shl rax, 12 comes from 1000h
+lea ctr, array2 + 256 * PROBE_STRIDE * 3
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
@@ -364,29 +368,29 @@ endif
 
 mov eax, edx
 and acmltr, 0ffh
-shl acmltr, 9
+shl acmltr, PROBE_SHIFT
 lea ctr, array2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff00h
-shl acmltr, 9 - 8
-lea ctr, array2 + 256 * 512
+shl acmltr, PROBE_SHIFT - 8
+lea ctr, array2 + 256 * PROBE_STRIDE
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff0000h
-shr acmltr, 16 - 9
-lea ctr, array2 + 256 * 512 * 2
+shr acmltr, 16 - PROBE_SHIFT
+lea ctr, array2 + 256 * PROBE_STRIDE * 2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff000000h
-shr acmltr, 24 - 9 ; 24 - 9, where shl rax, 9 comes from 200h
-lea ctr, array2 + 256 * 512 * 3
+shr acmltr, 24 - PROBE_SHIFT ; 24 - 12, where shl rax, 12 comes from 1000h
+lea ctr, array2 + 256 * PROBE_STRIDE * 3
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
@@ -497,29 +501,29 @@ endif
 
 mov eax, edx
 and acmltr, 0ffh
-shl acmltr, 9
+shl acmltr, PROBE_SHIFT
 lea ctr, array2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff00h
-shl acmltr, 9 - 8
-lea ctr, array2 + 256 * 512
+shl acmltr, PROBE_SHIFT - 8
+lea ctr, array2 + 256 * PROBE_STRIDE
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff0000h
-shr acmltr, 16 - 9
-lea ctr, array2 + 256 * 512 * 2
+shr acmltr, 16 - PROBE_SHIFT
+lea ctr, array2 + 256 * PROBE_STRIDE * 2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff000000h
-shr acmltr, 24 - 9 ; 24 - 9, where shl rax, 9 comes from 200h
-lea ctr, array2 + 256 * 512 * 3
+shr acmltr, 24 - PROBE_SHIFT ; 24 - 12, where shl rax, 12 comes from 1000h
+lea ctr, array2 + 256 * PROBE_STRIDE * 3
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
@@ -658,29 +662,29 @@ endif
 
 mov eax, edx
 and acmltr, 0ffh
-shl acmltr, 9
+shl acmltr, PROBE_SHIFT
 lea ctr, array2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff00h
-shl acmltr, 9 - 8
-lea ctr, array2 + 256 * 512
+shl acmltr, PROBE_SHIFT - 8
+lea ctr, array2 + 256 * PROBE_STRIDE
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff0000h
-shr acmltr, 16 - 9
-lea ctr, array2 + 256 * 512 * 2
+shr acmltr, 16 - PROBE_SHIFT
+lea ctr, array2 + 256 * PROBE_STRIDE * 2
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 
 mov eax, edx
 and acmltr, 0ff000000h
-shr acmltr, 24 - 9 ; 24 - 9, where shl rax, 9 comes from 200h
-lea ctr, array2 + 256 * 512 * 3
+shr acmltr, 24 - PROBE_SHIFT ; 24 - 12, where shl rax, 12 comes from 1000h
+lea ctr, array2 + 256 * PROBE_STRIDE * 3
 mov al, byte ptr [ctr + acmltr]
 ;and al, byte ptr [tmp]
 

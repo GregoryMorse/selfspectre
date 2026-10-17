@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "portable/we_cache_probe.h"
 #ifdef _MSC_VER
 #include <intrin.h> /* for rdtsc, rdtscp, clflush */
 #pragma optimize("gt",on)
@@ -9,9 +10,15 @@
 #include <x86intrin.h> /* for rdtsc, rdtscp, clflush */
 #endif
 
+#if defined(__GNUC__)
+#define WE_AES_ONLY __attribute__((target("aes")))
+#else
+#define WE_AES_ONLY
+#endif
+
 extern unsigned int array1_size;
 extern uint8_t array1[160];
-extern uint8_t array2[256 * 512 * 16];
+extern uint8_t array2[256 * WE_PROBE_STRIDE * 16];
 extern uint8_t tmp;
 
 uint32_t _n;
@@ -58,10 +65,10 @@ void victim_function_rsa8(size_t x1, uint32_t base) {
 		uint32_t res6 = (res5 * (unsigned long long)base) % _n;
 		uint32_t res7 = (res6 * (unsigned long long)base) % _n;
 		uint32_t res8 = (res7 * (unsigned long long)base) % _n;
-		tmp &= array2[((uint8_t*)&res8)[0] * 512];
-		tmp &= array2[((uint8_t*)&res8)[1] * 512 + 256 * 512];
-		tmp &= array2[((uint8_t*)&res8)[2] * 512 + 256 * 512 * 2];
-		tmp &= array2[((uint8_t*)&res8)[3] * 512 + 256 * 512 * 3];
+		tmp &= array2[((uint8_t*)&res8)[0] * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res8)[1] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res8)[2] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 2];
+		tmp &= array2[((uint8_t*)&res8)[3] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 3];
 	}
 }
 
@@ -73,10 +80,10 @@ void victim_function_rsa6(size_t x1, uint32_t base) {
 		uint32_t res4 = (res3 * (unsigned long long)base) % _n;
 		uint32_t res5 = (res4 * (unsigned long long)base) % _n;
 		uint32_t res6 = (res5 * (unsigned long long)base) % _n;
-		tmp &= array2[((uint8_t*)&res6)[0] * 512];
-		tmp &= array2[((uint8_t*)&res6)[1] * 512 + 256 * 512];
-		tmp &= array2[((uint8_t*)&res6)[2] * 512 + 256 * 512 * 2];
-		tmp &= array2[((uint8_t*)&res6)[3] * 512 + 256 * 512 * 3];
+		tmp &= array2[((uint8_t*)&res6)[0] * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res6)[1] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res6)[2] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 2];
+		tmp &= array2[((uint8_t*)&res6)[3] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 3];
 	}
 }
 
@@ -87,10 +94,10 @@ void victim_function_rsa5(size_t x1, uint32_t base) {
 		uint32_t res3 = (res2 * (unsigned long long)base) % _n;
 		uint32_t res4 = (res3 * (unsigned long long)base) % _n;
 		uint32_t res5 = (res4 * (unsigned long long)base) % _n;
-		tmp &= array2[((uint8_t*)&res5)[0] * 512];
-		tmp &= array2[((uint8_t*)&res5)[1] * 512 + 256 * 512];
-		tmp &= array2[((uint8_t*)&res5)[2] * 512 + 256 * 512 * 2];
-		tmp &= array2[((uint8_t*)&res5)[3] * 512 + 256 * 512 * 3];
+		tmp &= array2[((uint8_t*)&res5)[0] * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res5)[1] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res5)[2] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 2];
+		tmp &= array2[((uint8_t*)&res5)[3] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 3];
 	}
 }
 
@@ -100,10 +107,10 @@ void victim_function_rsa4(size_t x1, uint32_t base) {
 		uint32_t res2 = (res * (unsigned long long)base) % _n;
 		uint32_t res3 = (res2 * (unsigned long long)base) % _n;
 		uint32_t res4 = (res3 * (unsigned long long)base) % _n;
-		tmp &= array2[((uint8_t*)&res4)[0] * 512];
-		tmp &= array2[((uint8_t*)&res4)[1] * 512 + 256 * 512];
-		tmp &= array2[((uint8_t*)&res4)[2] * 512 + 256 * 512 * 2];
-		tmp &= array2[((uint8_t*)&res4)[3] * 512 + 256 * 512 * 3];
+		tmp &= array2[((uint8_t*)&res4)[0] * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res4)[1] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res4)[2] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 2];
+		tmp &= array2[((uint8_t*)&res4)[3] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 3];
 	}
 }
 
@@ -111,10 +118,10 @@ void victim_function_rsa2(size_t x1, uint32_t base) {
 	if (x1 < array1_size) {
 		uint32_t res = (*((uint32_t*)&array1[x1]) * (unsigned long long)base) % _n;
 		uint32_t res2 = (res * (unsigned long long)base) % _n;
-		tmp &= array2[((uint8_t*)&res2)[0] * 512];
-		tmp &= array2[((uint8_t*)&res2)[1] * 512 + 256 * 512];
-		tmp &= array2[((uint8_t*)&res2)[2] * 512 + 256 * 512 * 2];
-		tmp &= array2[((uint8_t*)&res2)[3] * 512 + 256 * 512 * 3];
+		tmp &= array2[((uint8_t*)&res2)[0] * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res2)[1] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE];
+		tmp &= array2[((uint8_t*)&res2)[2] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 2];
+		tmp &= array2[((uint8_t*)&res2)[3] * WE_PROBE_STRIDE + 256 * WE_PROBE_STRIDE * 3];
 	}
 }
 
@@ -122,10 +129,10 @@ void victim_function_rsa1(size_t x1, uint32_t base) {
 	if (x1 < array1_size) {
 		//uint32_t res = (*((uint32_t*)&array1[x1]) + base) + n;
 		uint32_t res = (*((uint32_t*)&array1[x1]) * (unsigned long long)base) % _n;
-		tmp &= array2[512 * ((uint8_t*)&res)[0]];
-		tmp &= array2[512 * ((uint8_t*)&res)[1] + 512 * 256];
-		tmp &= array2[512 * ((uint8_t*)&res)[2] + 512 * 256 * 2];
-		tmp &= array2[512 * ((uint8_t*)&res)[3] + 512 * 256 * 3];
+		tmp &= array2[WE_PROBE_STRIDE * ((uint8_t*)&res)[0]];
+		tmp &= array2[WE_PROBE_STRIDE * ((uint8_t*)&res)[1] + WE_PROBE_STRIDE * 256];
+		tmp &= array2[WE_PROBE_STRIDE * ((uint8_t*)&res)[2] + WE_PROBE_STRIDE * 256 * 2];
+		tmp &= array2[WE_PROBE_STRIDE * ((uint8_t*)&res)[3] + WE_PROBE_STRIDE * 256 * 3];
 	}
 }
 
@@ -1184,7 +1191,7 @@ static __m128i aes_128_key_expansion(__m128i key, __m128i keygened) {
 	return _mm_xor_si128(key, keygened);
 }
 
-int AES_set_encrypt_key_intrin(const unsigned char *userKey, const int bits,
+WE_AES_ONLY int AES_set_encrypt_key_intrin(const unsigned char *userKey, const int bits,
 	AES_KEY *key) {
 	if (bits == 128) key->rounds = 10;
 	*((__m128i*)&key->rd_key[0]) = _mm_loadu_si128((const __m128i*) userKey);
@@ -1201,7 +1208,7 @@ int AES_set_encrypt_key_intrin(const unsigned char *userKey, const int bits,
 	return 0;
 }
 
-void AES_encrypt_intrin(const unsigned char *in, unsigned char *out,
+WE_AES_ONLY void AES_encrypt_intrin(const unsigned char *in, unsigned char *out,
 	const AES_KEY *key) {
 	const u32 *rk = key->rd_key;
 	__m128i m = _mm_loadu_si128((__m128i*)in);
@@ -1219,7 +1226,7 @@ void AES_encrypt_intrin(const unsigned char *in, unsigned char *out,
 	_mm_storeu_si128((__m128i*)out, m);
 }
 
-void AES_encrypt_intrin_round1(const unsigned char *in, unsigned char *out) {
+WE_AES_ONLY void AES_encrypt_intrin_round1(const unsigned char *in, unsigned char *out) {
 	const u32 *rk = intrin_key.rd_key;
 	__m128i m = _mm_loadu_si128((__m128i*)in);
 	m = _mm_xor_si128(m, *((__m128i*)&rk[0]));
@@ -1227,12 +1234,12 @@ void AES_encrypt_intrin_round1(const unsigned char *in, unsigned char *out) {
 	_mm_storeu_si128((__m128i*)out, m);
 }
 
-void AES_128_encrypt_intrin(unsigned char *out, unsigned char *in) {
+WE_AES_ONLY void AES_128_encrypt_intrin(unsigned char *out, unsigned char *in) {
 	AES_set_encrypt_key_intrin(userKey, 128, &intrin_key);
 	AES_encrypt_intrin(in, out, &intrin_key);
 }
 
-void victim_function_aes_intrin(size_t x1) {
+WE_AES_ONLY void victim_function_aes_intrin(size_t x1) {
 	if (x1 < array1_size) {
 		const u32 *rk = intrin_key.rd_key;
 		__m128i m = _mm_loadu_si128((__m128i*)&array1[x1]);
@@ -1248,47 +1255,47 @@ void victim_function_aes_intrin(size_t x1) {
 		m = _mm_aesenc_si128(m, *((__m128i*)&rk[36]));
 		m = _mm_aesenclast_si128(m, *((__m128i*)&rk[40]));
 		_mm_storeu_si128((__m128i*)&m, m);
-		tmp &= array2[512 * ((unsigned char*)&m)[3]];
-		tmp &= array2[512 * ((unsigned char*)&m)[2] + 512 * 256];
-		tmp &= array2[512 * ((unsigned char*)&m)[1] + 512 * 256 * 2];
-		tmp &= array2[512 * ((unsigned char*)&m)[0] + 512 * 256 * 3];
-		tmp &= array2[512 * ((unsigned char*)&m)[7] + 512 * 256 * 4];
-		tmp &= array2[512 * ((unsigned char*)&m)[6] + 512 * 256 * 5];
-		tmp &= array2[512 * ((unsigned char*)&m)[5] + 512 * 256 * 6];
-		tmp &= array2[512 * ((unsigned char*)&m)[4] + 512 * 256 * 7];
-		tmp &= array2[512 * ((unsigned char*)&m)[11] + 512 * 256 * 8];
-		tmp &= array2[512 * ((unsigned char*)&m)[10] + 512 * 256 * 9];
-		tmp &= array2[512 * ((unsigned char*)&m)[9] + 512 * 256 * 10];
-		tmp &= array2[512 * ((unsigned char*)&m)[8] + 512 * 256 * 11];
-		tmp &= array2[512 * ((unsigned char*)&m)[15] + 512 * 256 * 12];
-		tmp &= array2[512 * ((unsigned char*)&m)[14] + 512 * 256 * 13];
-		tmp &= array2[512 * ((unsigned char*)&m)[13] + 512 * 256 * 14];
-		tmp &= array2[512 * ((unsigned char*)&m)[12] + 512 * 256 * 15];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[3]];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[2] + WE_PROBE_STRIDE * 256];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[1] + WE_PROBE_STRIDE * 256 * 2];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[0] + WE_PROBE_STRIDE * 256 * 3];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[7] + WE_PROBE_STRIDE * 256 * 4];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[6] + WE_PROBE_STRIDE * 256 * 5];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[5] + WE_PROBE_STRIDE * 256 * 6];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[4] + WE_PROBE_STRIDE * 256 * 7];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[11] + WE_PROBE_STRIDE * 256 * 8];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[10] + WE_PROBE_STRIDE * 256 * 9];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[9] + WE_PROBE_STRIDE * 256 * 10];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[8] + WE_PROBE_STRIDE * 256 * 11];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[15] + WE_PROBE_STRIDE * 256 * 12];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[14] + WE_PROBE_STRIDE * 256 * 13];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[13] + WE_PROBE_STRIDE * 256 * 14];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[12] + WE_PROBE_STRIDE * 256 * 15];
 	}
 }
 
-void victim_function_aes_intrin_round1(size_t x1) {
+WE_AES_ONLY void victim_function_aes_intrin_round1(size_t x1) {
 	if (x1 < array1_size) {
 		const u32 *rk = intrin_key.rd_key;
 		__m128i m = _mm_loadu_si128((__m128i*)&array1[x1]);
 		m = _mm_xor_si128(m, *((__m128i*)&rk[0]));
 		m = _mm_aesenc_si128(m, *((__m128i*)&rk[4]));
-		tmp &= array2[512 * ((unsigned char*)&m)[3]];
-		tmp &= array2[512 * ((unsigned char*)&m)[2] + 512 * 256];
-		tmp &= array2[512 * ((unsigned char*)&m)[1] + 512 * 256 * 2];
-		tmp &= array2[512 * ((unsigned char*)&m)[0] + 512 * 256 * 3];
-		tmp &= array2[512 * ((unsigned char*)&m)[7] + 512 * 256 * 4];
-		tmp &= array2[512 * ((unsigned char*)&m)[6] + 512 * 256 * 5];
-		tmp &= array2[512 * ((unsigned char*)&m)[5] + 512 * 256 * 6];
-		tmp &= array2[512 * ((unsigned char*)&m)[4] + 512 * 256 * 7];
-		tmp &= array2[512 * ((unsigned char*)&m)[11] + 512 * 256 * 8];
-		tmp &= array2[512 * ((unsigned char*)&m)[10] + 512 * 256 * 9];
-		tmp &= array2[512 * ((unsigned char*)&m)[9] + 512 * 256 * 10];
-		tmp &= array2[512 * ((unsigned char*)&m)[8] + 512 * 256 * 11];
-		tmp &= array2[512 * ((unsigned char*)&m)[15] + 512 * 256 * 12];
-		tmp &= array2[512 * ((unsigned char*)&m)[14] + 512 * 256 * 13];
-		tmp &= array2[512 * ((unsigned char*)&m)[13] + 512 * 256 * 14];
-		tmp &= array2[512 * ((unsigned char*)&m)[12] + 512 * 256 * 15];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[3]];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[2] + WE_PROBE_STRIDE * 256];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[1] + WE_PROBE_STRIDE * 256 * 2];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[0] + WE_PROBE_STRIDE * 256 * 3];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[7] + WE_PROBE_STRIDE * 256 * 4];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[6] + WE_PROBE_STRIDE * 256 * 5];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[5] + WE_PROBE_STRIDE * 256 * 6];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[4] + WE_PROBE_STRIDE * 256 * 7];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[11] + WE_PROBE_STRIDE * 256 * 8];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[10] + WE_PROBE_STRIDE * 256 * 9];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[9] + WE_PROBE_STRIDE * 256 * 10];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[8] + WE_PROBE_STRIDE * 256 * 11];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[15] + WE_PROBE_STRIDE * 256 * 12];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[14] + WE_PROBE_STRIDE * 256 * 13];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[13] + WE_PROBE_STRIDE * 256 * 14];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&m)[12] + WE_PROBE_STRIDE * 256 * 15];
 	}
 }
 
@@ -1381,22 +1388,22 @@ void victim_function_aes(size_t x1) {
 			(Te4[(t2) & 0xff] & 0x000000ff) ^
 			rk[3];
 		//PUTU32(out + 12, s3);
-		tmp &= array2[512 * ((unsigned char*)&s0)[0]];
-		tmp &= array2[512 * ((unsigned char*)&s0)[1] + 512 * 256];
-		tmp &= array2[512 * ((unsigned char*)&s0)[2] + 512 * 256 * 2];
-		tmp &= array2[512 * ((unsigned char*)&s0)[3] + 512 * 256 * 3];
-		tmp &= array2[512 * ((unsigned char*)&s1)[0] + 512 * 256 * 4];
-		tmp &= array2[512 * ((unsigned char*)&s1)[1] + 512 * 256 * 5];
-		tmp &= array2[512 * ((unsigned char*)&s1)[2] + 512 * 256 * 6];
-		tmp &= array2[512 * ((unsigned char*)&s1)[3] + 512 * 256 * 7];
-		tmp &= array2[512 * ((unsigned char*)&s2)[0] + 512 * 256 * 8];
-		tmp &= array2[512 * ((unsigned char*)&s2)[1] + 512 * 256 * 9];
-		tmp &= array2[512 * ((unsigned char*)&s2)[2] + 512 * 256 * 10];
-		tmp &= array2[512 * ((unsigned char*)&s2)[3] + 512 * 256 * 11];
-		tmp &= array2[512 * ((unsigned char*)&s3)[0] + 512 * 256 * 12];
-		tmp &= array2[512 * ((unsigned char*)&s3)[1] + 512 * 256 * 13];
-		tmp &= array2[512 * ((unsigned char*)&s3)[2] + 512 * 256 * 14];
-		tmp &= array2[512 * ((unsigned char*)&s3)[3] + 512 * 256 * 15];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s0)[0]];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s0)[1] + WE_PROBE_STRIDE * 256];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s0)[2] + WE_PROBE_STRIDE * 256 * 2];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s0)[3] + WE_PROBE_STRIDE * 256 * 3];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s1)[0] + WE_PROBE_STRIDE * 256 * 4];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s1)[1] + WE_PROBE_STRIDE * 256 * 5];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s1)[2] + WE_PROBE_STRIDE * 256 * 6];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s1)[3] + WE_PROBE_STRIDE * 256 * 7];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s2)[0] + WE_PROBE_STRIDE * 256 * 8];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s2)[1] + WE_PROBE_STRIDE * 256 * 9];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s2)[2] + WE_PROBE_STRIDE * 256 * 10];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s2)[3] + WE_PROBE_STRIDE * 256 * 11];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s3)[0] + WE_PROBE_STRIDE * 256 * 12];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s3)[1] + WE_PROBE_STRIDE * 256 * 13];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s3)[2] + WE_PROBE_STRIDE * 256 * 14];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&s3)[3] + WE_PROBE_STRIDE * 256 * 15];
 	}
 }
 
@@ -1415,21 +1422,21 @@ void victim_function_aes_round1(size_t x1) {
 		t2 = Te0[s2 >> 24] ^ Te1[(s3 >> 16) & 0xff] ^ Te2[(s0 >> 8) & 0xff] ^ Te3[s1 & 0xff] ^ rk[6];
 		t3 = Te0[s3 >> 24] ^ Te1[(s0 >> 16) & 0xff] ^ Te2[(s1 >> 8) & 0xff] ^ Te3[s2 & 0xff] ^ rk[7];
 
-		tmp &= array2[512 * ((unsigned char*)&t0)[0]];
-		tmp &= array2[512 * ((unsigned char*)&t0)[1] + 512 * 256];
-		tmp &= array2[512 * ((unsigned char*)&t0)[2] + 512 * 256 * 2];
-		tmp &= array2[512 * ((unsigned char*)&t0)[3] + 512 * 256 * 3];
-		tmp &= array2[512 * ((unsigned char*)&t1)[0] + 512 * 256 * 4];
-		tmp &= array2[512 * ((unsigned char*)&t1)[1] + 512 * 256 * 5];
-		tmp &= array2[512 * ((unsigned char*)&t1)[2] + 512 * 256 * 6];
-		tmp &= array2[512 * ((unsigned char*)&t1)[3] + 512 * 256 * 7];
-		tmp &= array2[512 * ((unsigned char*)&t2)[0] + 512 * 256 * 8];
-		tmp &= array2[512 * ((unsigned char*)&t2)[1] + 512 * 256 * 9];
-		tmp &= array2[512 * ((unsigned char*)&t2)[2] + 512 * 256 * 10];
-		tmp &= array2[512 * ((unsigned char*)&t2)[3] + 512 * 256 * 11];
-		tmp &= array2[512 * ((unsigned char*)&t3)[0] + 512 * 256 * 12];
-		tmp &= array2[512 * ((unsigned char*)&t3)[1] + 512 * 256 * 13];
-		tmp &= array2[512 * ((unsigned char*)&t3)[2] + 512 * 256 * 14];
-		tmp &= array2[512 * ((unsigned char*)&t3)[3] + 512 * 256 * 15];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t0)[0]];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t0)[1] + WE_PROBE_STRIDE * 256];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t0)[2] + WE_PROBE_STRIDE * 256 * 2];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t0)[3] + WE_PROBE_STRIDE * 256 * 3];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t1)[0] + WE_PROBE_STRIDE * 256 * 4];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t1)[1] + WE_PROBE_STRIDE * 256 * 5];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t1)[2] + WE_PROBE_STRIDE * 256 * 6];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t1)[3] + WE_PROBE_STRIDE * 256 * 7];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t2)[0] + WE_PROBE_STRIDE * 256 * 8];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t2)[1] + WE_PROBE_STRIDE * 256 * 9];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t2)[2] + WE_PROBE_STRIDE * 256 * 10];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t2)[3] + WE_PROBE_STRIDE * 256 * 11];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t3)[0] + WE_PROBE_STRIDE * 256 * 12];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t3)[1] + WE_PROBE_STRIDE * 256 * 13];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t3)[2] + WE_PROBE_STRIDE * 256 * 14];
+		tmp &= array2[WE_PROBE_STRIDE * ((unsigned char*)&t3)[3] + WE_PROBE_STRIDE * 256 * 15];
 	}
 }

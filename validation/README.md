@@ -5,6 +5,8 @@
 - `axiom_audit.py` — checks locally buildable `WriteExecute` declarations use only the three standard axioms.
 - `native.py` — builds/runs the legacy `writeexec` harness in the four configurations (`vs/` projects, output in `build/msbuild`).
 - `cmake_local.py [x86|x64]` — local MSVC build and ctest of the CMake targets (`build/msvc-<arch>`); `msbuild_local.py [Config|Platform ...]` — builds `vs/selfspectre.sln` (output in `build/msbuild`). The portable grid (Windows, Linux x86/x64, macOS x64) runs in `.github/workflows/portable.yml`.
+- `build_native_demos.py [x64|x86]` — focused MSVC Release build of the AES and RSA demos plus deterministic C vectors in `build/native/<arch>/Release`; it does not build `spectrepoc`. It selects RDTSCP or the RDTSC+LFENCE fallback from CPUID (`WE_FORCE_RDTSC=1` exercises the latter). Run it through `limited_run.py`. `build_cache_timing.py` builds the isolated 512/4096-byte timing diagnostic into `validation/.build`.
+- `SPECTRE_INVESTIGATION.md` — current-machine diagnosis, repair, and guarded AES/RSA results. The speculative demos are hardware measurements and are not part of CTest.
 - Listings (needed by `extract_layout.py`/`purity_scan.py`): copy `src/writeexc.asm` and `asm_listings.bat` into
   `validation/.build/lst/`, run `asm_listings.bat` there (x86 + x64 listings, ~170 MB each, never committed),
   then `python validation/extract_layout.py` and `python validation/purity_scan.py`.

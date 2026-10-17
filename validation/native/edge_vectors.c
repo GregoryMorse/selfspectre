@@ -8,8 +8,9 @@
 #include <stdlib.h>
 #define _CRT_RAND_S
 #include "../../src/portable/we_portable.h"
+#include "../../src/portable/we_cache_probe.h"
 #include "../../src/portable/writeexec_api.h"
-unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * 512 * 16]; uint8_t tmp;
+unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * WE_PROBE_STRIDE * 16]; uint8_t tmp;
 typedef struct { uint32_t rd_key[60]; int rounds; } AES_KEY_;
 extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY_ *key);
 

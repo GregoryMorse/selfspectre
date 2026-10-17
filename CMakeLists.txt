@@ -8,6 +8,7 @@ project(selfspectre C)
 # This is evidence for the Lean development, not part of it; see validation/README.md.
 
 option(SELFSPECTRE_BUILD_SPECTRE "Build the Spectre proof-of-concept programs (built, never run by the tests)" ON)
+option(SELFSPECTRE_FORCE_RDTSC "Build the Spectre demos with the RDTSC+LFENCE timer" OFF)
 
 enable_testing()
 
@@ -56,7 +57,7 @@ function(we_configure target)
     # -fno-strict-aliasing: the legacy sources reinterpret integers through pointers; -fcommon: they define
     # some globals (e.g. key) in more than one file.
     target_compile_definitions(${target} PRIVATE _GNU_SOURCE)
-    target_compile_options(${target} PRIVATE -O2 -fno-strict-aliasing -fcommon -maes -msse4.2 -w)
+    target_compile_options(${target} PRIVATE -O2 -fno-strict-aliasing -fcommon -msse2 -w)
     if(APPLE)
       target_link_options(${target} PRIVATE -Wl,-segprot,__TEXT,rwx,rwx)
     else()
@@ -91,14 +92,38 @@ set_tests_properties(writeexec_harness PROPERTIES FAIL_REGULAR_EXPRESSION "[0-9A
 
 # ---- Spectre programs (built only) -------------------------------------------------------------------------
 if(SELFSPECTRE_BUILD_SPECTRE)
+  set(WE_SPECTRE_USE_RDTSC ${SELFSPECTRE_FORCE_RDTSC})
+  if(NOT WE_SPECTRE_USE_RDTSC AND NOT CMAKE_CROSSCOMPILING)
+    try_run(WE_TIMER_PROBE_EXIT WE_TIMER_PROBE_COMPILED
+      ${CMAKE_BINARY_DIR}/cpu_timer_probe
+      ${CMAKE_SOURCE_DIR}/validation/native/cpu_timer_features.c)
+    if(NOT WE_TIMER_PROBE_COMPILED)
+      message(FATAL_ERROR "Could not compile the CPU timer feature probe")
+    elseif(WE_TIMER_PROBE_EXIT EQUAL 3)
+      set(WE_SPECTRE_USE_RDTSC TRUE)
+    elseif(NOT WE_TIMER_PROBE_EXIT EQUAL 0)
+      message(FATAL_ERROR "This CPU lacks RDTSC/SSE2 timing support for the speculative demos")
+    endif()
+  endif()
+  if(WE_SPECTRE_USE_RDTSC)
+    message(STATUS "Speculative demo timer: RDTSC+LFENCE")
+  else()
+    message(STATUS "Speculative demo timer: RDTSCP")
+  endif()
   add_executable(spectrepoc src/spectre.c)
   we_configure(spectrepoc)
   add_executable(selfspectre_aes src/spectreaes.c src/spectreopt.c)
   we_configure(selfspectre_aes)
+  if(WE_SPECTRE_USE_RDTSC)
+    target_compile_definitions(selfspectre_aes PRIVATE NORDTSCP)
+  endif()
   # spectrecode.asm refers to C globals; the macOS ELF bridge (cmake/elf2blob.py) cannot express those references
   # (Mach-O has no pc-relative relocation to an undefined symbol in an assembler expression), so this program is not built there.
   if(NOT APPLE)
     add_executable(selfspectre_rsa src/spectrersa.c src/spectreopt.c ${RSA_OBJECTS})
     we_configure(selfspectre_rsa)
+    if(WE_SPECTRE_USE_RDTSC)
+      target_compile_definitions(selfspectre_rsa PRIVATE NORDTSCP)
+    endif()
   endif()
 endif()

@@ -3,7 +3,8 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * 512 * 16]; uint8_t tmp;
+#include "../../src/portable/we_cache_probe.h"
+unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * WE_PROBE_STRIDE * 16]; uint8_t tmp;
 #define main spectreopt_main_unused
 #include "../../src/spectreopt.c"
 #undef main
