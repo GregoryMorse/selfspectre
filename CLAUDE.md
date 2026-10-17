@@ -14,7 +14,10 @@ user before deviating. Do not browse `../smcTuring` beyond the paths the plan na
 - Run every build/test serially through `python validation/limited_run.py -- <cmd>` (1.5 GB
   aggregate cap, Lean `-M768 -j1`). A capped failure is a failed check; never bypass the guard
   or retry without it. Do not kill unrelated processes.
-- No SSH/remote servers. Cold full builds and Palomar runs use GitHub Actions.
+- No SSH/remote servers, except 157.181.172.78 (user-authorized 2026-10-17, for portability tests in a `selfspectre` folder; the
+  permission classifier blocked the attempt, so the grid is tested in GitHub Actions). Cold full builds and Palomar runs use GitHub Actions.
+- Layout: native sources in `src/`, Visual Studio files in `vs/`, all build output under `build/` (CMake `build/cmake`, MSBuild
+  `build/msbuild`). Keep the root clean; never build in place.
 - Pins: Lean `leanprover/lean4:v4.35.0-rc3`, Mathlib `5e043698502894993991089b2dd893867c0db5c2`.
   Do not change them without asking.
 - No `sorry`/`admit` (except `lean/Challenge.lean`), no `axiom`, `native_decide`, `bv_decide`,

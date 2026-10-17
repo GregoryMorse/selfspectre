@@ -37,9 +37,11 @@ endif()
 # we_uasm_object(<variable> <source.asm> <name>) sets <variable> to the object file produced from the source.
 function(we_uasm_object var source name)
   set(obj ${CMAKE_BINARY_DIR}/${name}.o)
+  set(patched ${CMAKE_BINARY_DIR}/${name}_uasm.asm)
   add_custom_command(OUTPUT ${obj}
-    COMMAND ${UASM_EXE} ${UASM_FORMAT} ${UASM_DEFS} -Fo${obj} ${source}
-    DEPENDS ${source} uasm_build
+    COMMAND ${CMAKE_COMMAND} -DIN=${source} -DOUT=${patched} -P ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
+    COMMAND ${UASM_EXE} ${UASM_FORMAT} ${UASM_DEFS} -Fo${obj} ${patched}
+    DEPENDS ${source} uasm_build ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
     COMMENT "UASM ${source}"
     VERBATIM)
   set(${var} ${obj} PARENT_SCOPE)

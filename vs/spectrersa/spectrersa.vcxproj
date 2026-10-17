@@ -80,7 +80,7 @@
       <SpecifySectionAttributes>.text,ERW</SpecifySectionAttributes>
     </Link>
     <PreLinkEvent>
-      <Command>COPY /Y ..\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml.exe /Fo "$(OutDir)spectrecode.obj" /c ..\spectrecode.asm)</Command>
+      <Command>COPY /Y ..\..\src\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml.exe /Fo "$(OutDir)spectrecode.obj" /c ..\..\src\spectrecode.asm)</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -95,7 +95,7 @@
       <SpecifySectionAttributes>.text,ERW</SpecifySectionAttributes>
     </Link>
     <PreLinkEvent>
-      <Command>COPY /Y ..\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml64.exe /DX64 /Fo "$(OutDir)spectrecode.obj" /c ..\spectrecode.asm)</Command>
+      <Command>COPY /Y ..\..\src\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml64.exe /DX64 /Fo "$(OutDir)spectrecode.obj" /c ..\..\src\spectrecode.asm)</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -115,7 +115,7 @@
       <ImageHasSafeExceptionHandlers>true</ImageHasSafeExceptionHandlers>
     </Link>
     <PreLinkEvent>
-      <Command>COPY /Y ..\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml.exe /safeseh /Fo "$(OutDir)spectrecode.obj" /c ..\spectrecode.asm)</Command>
+      <Command>COPY /Y ..\..\src\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml.exe /safeseh /Fo "$(OutDir)spectrecode.obj" /c ..\..\src\spectrecode.asm)</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -134,24 +134,24 @@
       <SpecifySectionAttributes>.text,ERW</SpecifySectionAttributes>
     </Link>
     <PreLinkEvent>
-      <Command>COPY /Y ..\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml64.exe /DX64 /Fo "$(OutDir)spectrecode.obj" /c ..\spectrecode.asm)</Command>
+      <Command>COPY /Y ..\..\src\spectrecode.asm $(OutDir) &amp;&amp; setlocal EnableDelayedExpansion &amp;&amp; (FOR /F %%i IN ('DIR /B /O:D $(OutDir)spectrecode.asm $(OutDir)spectrecode.obj') DO SET NEWEST=%%i) &amp;&amp; IF '!NEWEST!'=='spectrecode.asm' (ml64.exe /DX64 /Fo "$(OutDir)spectrecode.obj" /c ..\..\src\spectrecode.asm)</Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="..\spectrecode.asm">
+    <CustomBuild Include="..\..\src\spectrecode.asm">
       <FileType>Document</FileType>
       <DeploymentContent>true</DeploymentContent>
     </CustomBuild>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\spectreopt.c">
+    <ClCompile Include="..\..\src\spectreopt.c">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">MaxSpeed</Optimization>
       <BasicRuntimeChecks Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Default</BasicRuntimeChecks>
     </ClCompile>
-    <ClCompile Include="..\spectrersa.c" />
+    <ClCompile Include="..\..\src\spectrersa.c" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\spectre.c" />
+    <None Include="..\..\src\spectre.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -13,26 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Reference">
-      <UniqueIdentifier>{A1B2C3D4-E5F6-4789-ABCD-EF1234567891}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\spectreopt.c">
+    <ClCompile Include="..\..\src\writeexec.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\spectrersa.c">
+    <ClCompile Include="..\..\src\spectreopt.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <CustomBuild Include="..\spectrecode.asm">
+    <CustomBuild Include="..\..\src\writeexc.asm">
       <Filter>Source Files</Filter>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\spectre.c">
-      <Filter>Reference</Filter>
-    </None>
   </ItemGroup>
 </Project>

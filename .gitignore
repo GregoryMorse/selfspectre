@@ -1,17 +1,14 @@
-# Visual Studio build output
-# (anchored: the Lean directory lean/WriteExecute/X86 must not match)
-/[Dd]ebug/
-/[Rr]elease/
-/x64/
-/x86/
-/*/[Dd]ebug/
-/*/[Rr]elease/
-/*/x64/
-/*/x86/
+# Build output: CMake trees and the Visual Studio (MSBuild) output live under /build; nothing is built in place
+/build/
+/vs/**/x64/
+/vs/**/x86/
+/vs/**/Debug/
+/vs/**/Release/
 [Bb]in/
 [Oo]bj/
 [Ll]og/
 [Ll]ogs/
+vcpkg_installed/
 
 # Visual Studio intermediate files
 *.user
@@ -36,14 +33,6 @@
 *.dll
 *.exe
 
-# Copied ASM sources (written to OutDir by PreLinkEvent)
-x64/Debug/writeexc.asm
-x64/Debug/spectrecode.asm
-x64/Debug/tables.asm
-x64/Release/writeexc.asm
-x64/Release/spectrecode.asm
-x64/Release/tables.asm
-
 # MSBuild tlog directories
 *.tlog/
 
@@ -58,12 +47,9 @@ validation/native/*.obj
 validation/native/*.log
 output/pdf/*.aux
 output/pdf/*.log
-/writeexec/writeexec/
 validation/native/*.exe
 validation/native/*.obj
 
 # Private notes (never commit)
 /.private/
 
-# CMake build trees
-/build/

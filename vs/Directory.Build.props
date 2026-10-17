@@ -1,0 +1,13 @@
+<Project>
+  <!-- Keeps the Visual Studio build output out of the source tree: everything goes to build/msbuild. -->
+  <PropertyGroup>
+    <WeBuildRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\build\msbuild\'))</WeBuildRoot>
+    <OutDir>$(WeBuildRoot)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(WeBuildRoot)obj\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(MSBuildThisFileDirectory)..\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+  </ItemDefinitionGroup>
+</Project>

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches: [master]
-    paths: ['CMakeLists.txt', 'cmake/**', 'portable/**', '*.c', '*.asm', 'validation/native/**', '.github/workflows/portable.yml']
+    paths: ['CMakeLists.txt', 'cmake/**', 'src/**', 'vs/**', 'validation/native/**', '.github/workflows/portable.yml']
   pull_request:
 permissions:
   contents: read
@@ -23,11 +23,29 @@ jobs:
         with:
           persist-credentials: false
       - name: Configure
-        run: cmake -S . -B build -A ${{ matrix.platform }}
+        run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
       - name: Build
-        run: cmake --build build --config Release
+        run: cmake --build build/cmake --config Release
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
+        run: ctest --test-dir build/cmake -C Release --output-on-failure
+  msbuild:
+    # The Visual Studio solution (vs/selfspectre.sln), built with the pinned Visual Studio 2022 image; output in build/msbuild.
+    runs-on: windows-2022
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
+        arch: [x86, x64]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Build the solution
+        shell: cmd
+        run: |
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.arch }}
+          msbuild vs\selfspectre.sln /nologo /v:m /p:Configuration=${{ matrix.configuration }} /p:Platform=${{ matrix.arch }}
   linux:
     runs-on: ubuntu-24.04
     timeout-minutes: 60
@@ -46,14 +64,14 @@ jobs:
       - name: Configure
         run: |
           if [ "${{ matrix.arch }}" = x86 ]; then
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_C_FLAGS=-m32
+            cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc -DCMAKE_C_FLAGS=-m32
           else
-            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc
+            cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc
           fi
       - name: Build
-        run: cmake --build build
+        run: cmake --build build/cmake
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build/cmake --output-on-failure
   macos:
     runs-on: macos-15-intel
     timeout-minutes: 60
@@ -62,8 +80,8 @@ jobs:
         with:
           persist-credentials: false
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Release
       - name: Build
-        run: cmake --build build
+        run: cmake --build build/cmake
       - name: Test
-        run: ctest --test-dir build --output-on-failure
+        run: ctest --test-dir build/cmake --output-on-failure

@@ -25,20 +25,22 @@ Either technique can support strong white-box cryptography: in binary form, both
 ## Repository Structure
 
 ```
-selfspectre.sln          ← Visual Studio solution (all four projects)
-spectre.c                ← Original Spectre v1 PoC (spectrepoc project)
-spectreopt.c             ← Spectre victim/helper functions (shared)
-spectrecode.asm          ← MASM speculative-execution wrappers (x86/x64)
-spectreaes.c             ← AES-128 Spectre attack demo (selfspectre project)
-spectrersa.c             ← RSA modular-exponentiation Spectre demo (spectrersa project)
-writeexec.c              ← Write-execute framework test harness (writeexec project)
-writeexc.asm             ← MASM write-execute arithmetic/crypto primitives
-tables.asm               ← Stub assembly (placeholder)
-
-selfspectre/             ← VS project: AES Spectre demo
-spectrersa/              ← VS project: RSA Spectre demo
-writeexec/               ← VS project: write-execute framework
-spectrepoc/              ← VS project: original Spectre v1 PoC
+src/                     <- native sources
+    spectre.c            Original Spectre v1 PoC (spectrepoc)
+    spectreopt.c         Spectre victim/helper functions (shared)
+    spectrecode.asm      MASM speculative-execution wrappers (x86/x64)
+    spectreaes.c         AES-128 Spectre attack demo (selfspectre)
+    spectrersa.c         RSA modular-exponentiation Spectre demo (spectrersa)
+    writeexec.c          Write-execute framework test harness (writeexec)
+    writeexc.asm         MASM write-execute arithmetic/crypto primitives
+    tables.asm           Stub assembly (placeholder)
+    portable/            Small headers that make the sources build with GCC/Clang (Linux, macOS)
+CMakeLists.txt, cmake/   CMake build (Windows, Linux, macOS); MASM source assembled by ml/ml64 or by UASM
+vs/                      Visual Studio solution and projects (convenience; output goes to build/msbuild)
+build/                   all build output (CMake trees: build/cmake, Visual Studio: build/msbuild); not tracked
+lean/                    the Lean development
+validation/              checks, scripts and native test harnesses (evidence, not proof)
+output/pdf/              errata PDF
 ```
 
 ## Projects
@@ -59,20 +61,32 @@ Accepts optional command-line arguments: `[cache_hit_threshold] [address] [lengt
 
 ## Building
 
-### Requirements
-- Visual Studio 2017 or later (v141/v145 platform toolset)
-- MASM (`ml.exe` / `ml64.exe`) — included with Visual Studio C++ workload
-- Windows 10 SDK
-- x86 and x64 C++ build tools
+### CMake (Windows, Linux, macOS)
 
-### Steps
-1. Open `selfspectre.sln` in Visual Studio.
-2. Select **Build → Batch Build**, tick all configurations, and click **Build**.
-3. Alternatively use the Configuration Manager to select a specific project and platform.
+```
+cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Release
+cmake --build build/cmake
+ctest --test-dir build/cmake --output-on-failure
+```
 
-The PreLinkEvent in each project automatically invokes `ml.exe` (x86) or `ml64.exe /DX64` (x64) to assemble `writeexc.asm` and `spectrecode.asm` before linking.
+The Write-Execute procedures are x86/x86-64 machine code that rewrites itself, so the targets are Windows (MSVC, x86 and
+x64), Linux (x86 and x64) and macOS (x64). With MSVC the MASM sources are assembled by `ml`/`ml64`; on Linux and macOS
+by [UASM](https://github.com/Terraspace/UASM) (a MASM-compatible assembler), which CMake downloads and builds from a
+pinned revision (needs `git`, `make` and a C compiler; 32-bit Linux builds need `gcc-multilib`). The tests are the
+deterministic vector checks (`code_vectors`, `edge_vectors`) and the legacy randomized `writeexec` harness (several
+minutes). The Spectre programs are built but never run by the tests; `-DSELFSPECTRE_BUILD_SPECTRE=OFF` skips them.
+The workflow `.github/workflows/portable.yml` runs this grid, plus the Visual Studio solution, on GitHub Actions.
 
-### Configurations
+### Visual Studio
+
+Requirements: Visual Studio 2022 or later with the C++ workload (MASM `ml.exe`/`ml64.exe` included) and the Windows 10 SDK.
+
+1. Open `vs/selfspectre.sln`, select **Build -> Batch Build**, tick all configurations and **Build**
+   (or `msbuild vs\selfspectre.sln /p:Configuration=Release /p:Platform=x64`, `Platform` being `x86` or `x64`).
+2. Everything is written to `build/msbuild/<Win32|x64>/<Debug|Release>/` (see `vs/Directory.Build.props`).
+
+The PreLinkEvent in each project invokes `ml.exe` (x86) or `ml64.exe /DX64` (x64) to assemble `writeexc.asm` and
+`spectrecode.asm` before linking.
 
 | Configuration | Platform | Notes |
 |---------------|----------|-------|
@@ -97,7 +111,7 @@ procedure against FIPS-197) and Self-Spectre as a conditional result under an ab
 
 * `lean/PAPER_MAP.md` - every claim with its status; `lean/PALOMAR_SEMANTICS.md` - the selected statement and its model boundaries.
 * `lean/errata/selfspectre-2019-errata.tex` (PDF in `output/pdf/`) - corrections W01-W10 to the published text, quoted from the
-  published PDF; `lean/errata/minimal.diff` - code fixes L01-L05 (already applied to `writeexec.c`, `spectreopt.c`, `writeexc.asm`).
+  published PDF; `lean/errata/minimal.diff` - code fixes L01-L05 (already applied to `src/writeexec.c`, `src/spectreopt.c`, `src/writeexc.asm`).
 * Build: `cd lean && lake exe cache get && lake build WriteExecute Challenge Solution`. CI: `.github/workflows/proof.yml`
   (Linux proof job and Windows native acceptance); `.github/workflows/palomar-full.yml` is the Palomar mechanical preflight.
 * Development process and rules: `FORMALIZATION_PLAN.md`, `CLAUDE.md`, `lean/ROUNDS.md`. The formalization was produced with

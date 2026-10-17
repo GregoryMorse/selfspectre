@@ -91,7 +91,7 @@ shlret7:: jmp $+80000000h
 WriteExecSHL7 ENDP
 
 DEFINENOT macro Index, Lbl
-	&Lbl&_&Index&: mov byte ptr [Lbl+6], (not Index) and 0ffh
+	&Lbl&_&Index&: mov byte ptr [Lbl+6], not Index
 	jmp [Lbl] ;; preprocessor wrongly assumes 10 bytes for jump unfortunately not 2 or 5 bytes
 IF Index GT 0f7h ;; preprocessor also cannot look at distance to future labels
 	db 7 dup (090h)
@@ -4098,7 +4098,7 @@ mov dword ptr [modexp32arg1_2 + 2], modbase2+6
 mov dword ptr [modexp32arg1_3 + 2], modbase3+6
 mov dword ptr [modexp32arg1_4 + 2], modbase4+6
 endif
-mov byte ptr [baseloop + 1], (basehead2-baseloop-2) and 0ffh
+mov byte ptr [baseloop + 1], basehead2-baseloop-2
 jmp modexp32arg1_1
 basehead2: mov byte ptr [baseloop+1], basehead-baseloop-2
 ifdef X64

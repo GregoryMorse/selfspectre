@@ -13,7 +13,8 @@ ctest = " ".join(sys.argv[2:]) or "-R \"code_vectors|edge_vectors\""
 build = ROOT / "build" / f"msvc-{arch}"
 plat = {"x86": "Win32", "x64": "x64"}[arch]
 # The Visual Studio generator locates the toolset itself (no vcvarsall needed).
-cmd = (rf'cd /d "{ROOT}" && cmake -S . -B "{build}" -A {plat} && '
+sdk = Path(r"C:\Program Files (x86)\Windows Kitsin.0.26100.0d")  # rc.exe for the linker
+cmd = (rf'call "{vc}" {arch} >nul && set "PATH={sdk};%PATH%" && cd /d "{ROOT}" && cmake -S . -B "{build}" -A {plat} && '
        rf'cmake --build "{build}" --config Release && cd /d "{build}" && ctest -C Release --output-on-failure {ctest}')
 r = subprocess.run('cmd /s /c "' + cmd + '"', capture_output=True, text=True, errors="replace", stdin=subprocess.DEVNULL, timeout=3000)
 print(r.stdout[-6000:], r.stderr[-1500:])

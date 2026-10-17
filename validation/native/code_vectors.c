@@ -5,7 +5,7 @@
 #include <stdlib.h>
 unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * 512 * 16]; uint8_t tmp;
 #define main spectreopt_main_unused
-#include "../../spectreopt.c"
+#include "../../src/spectreopt.c"
 #undef main
 #include "vectors.h"
 int main(void) {

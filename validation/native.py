@@ -18,14 +18,14 @@ def main():
     for cfg in a.configs:
         conf, plat = cfg.split("|"); arch = "x86" if plat == "Win32" else "x64"
         ts = f" /p:PlatformToolset={a.toolset}" if a.toolset else ""
-        outdir = ROOT / a.project / (conf if plat == "Win32" else f"{plat}/{conf}")
-        cmd = f'call "{vcvars()}" {arch} >nul && msbuild {a.project}/{a.project}.vcxproj /nologo /v:m /p:Configuration={conf} /p:Platform={plat}{ts}'
+        outdir = ROOT / "build" / "msbuild" / plat / conf
+        cmd = f'call "{vcvars()}" {arch} >nul && msbuild vs/{a.project}/{a.project}.vcxproj /nologo /v:m /p:Configuration={conf} /p:Platform={plat}{ts}'
         start = time.time(); t = start; b = subprocess.run('cmd /s /c "' + cmd + '"', cwd=ROOT, capture_output=True, text=True, errors="replace")
         rec = {"build_ok": b.returncode == 0, "build_seconds": round(time.time() - t)}
         if b.returncode: rec["build_tail"] = (b.stdout + b.stderr)[-1500:]
         elif not a.no_run:
             exe = next(iter(sorted(outdir.glob(a.project + ".exe"))), None)
-            if exe is None or exe.stat().st_mtime < max((ROOT / f).stat().st_mtime for f in ('writeexc.asm', 'writeexec.c', 'spectreopt.c')):
+            if exe is None or exe.stat().st_mtime < max((ROOT / 'src' / f).stat().st_mtime for f in ('writeexc.asm', 'writeexec.c', 'spectreopt.c')):
                 rec.update(build_ok=False, build_tail="exe missing or stale: " + str(exe)); results[cfg] = rec; print(cfg, json.dumps(rec), flush=True); continue
             rec["exe"] = str(exe)
             t = time.time(); r = subprocess.run([str(exe)], cwd=outdir, capture_output=True, text=True, errors="replace", timeout=3000)

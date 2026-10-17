@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(selfspectre C)
 
 # Native sources of Gregory Morse, "Self-Spectre, Write-Execute and the Hidden State": the Write-Execute
-# procedures (writeexc.asm, MASM syntax), their test harnesses and the Spectre proof-of-concept programs.
+# procedures (src/writeexc.asm, MASM syntax), their test harnesses and the Spectre proof-of-concept programs.
 # Builds on Windows (MSVC, x86 and x64), Linux (x86 and x64) and macOS (x64). The MASM source is assembled by
 # ml/ml64 with MSVC and by UASM (a MASM-compatible assembler, built from a pinned source revision) elsewhere.
 # This is evidence for the Lean development, not part of it; see validation/README.md.
@@ -20,8 +20,8 @@ if(NOT CMAKE_SYSTEM_PROCESSOR MATCHES "([Xx]86|AMD64|amd64|i[3-6]86|x64)")
   message(FATAL_ERROR "The Write-Execute procedures are x86/x86-64 machine code (processor: ${CMAKE_SYSTEM_PROCESSOR})")
 endif()
 
-set(WE_ASM ${CMAKE_SOURCE_DIR}/writeexc.asm)
-set(RSA_ASM ${CMAKE_SOURCE_DIR}/spectrecode.asm)
+set(WE_ASM ${CMAKE_SOURCE_DIR}/src/writeexc.asm)
+set(RSA_ASM ${CMAKE_SOURCE_DIR}/src/spectrecode.asm)
 
 # ---- assembling ------------------------------------------------------------------------------------------
 if(MSVC)
@@ -43,7 +43,7 @@ endif()
 
 # ---- compiler and linker settings shared by every program -------------------------------------------------
 function(we_configure target)
-  target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR})
+  target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/src)
   if(MSVC)
     # The Write-Execute procedures rewrite their own code: the text section must be writable.
     target_link_options(${target} PRIVATE /SECTION:.text,ERW /INCREMENTAL:NO)
@@ -68,10 +68,10 @@ endfunction()
 add_executable(code_vectors validation/native/code_vectors.c) # includes spectreopt.c itself
 we_configure(code_vectors)
 
-add_executable(edge_vectors validation/native/edge_vectors.c spectreopt.c ${WE_OBJECTS})
+add_executable(edge_vectors validation/native/edge_vectors.c src/spectreopt.c ${WE_OBJECTS})
 we_configure(edge_vectors)
 
-add_executable(writeexec writeexec.c spectreopt.c ${WE_OBJECTS})
+add_executable(writeexec src/writeexec.c src/spectreopt.c ${WE_OBJECTS})
 we_configure(writeexec)
 
 # Pass criteria (validation/README.md): the exit code is 0 and no mismatch line "GOT[WANT]" is printed.
@@ -83,10 +83,10 @@ set_tests_properties(writeexec_harness PROPERTIES FAIL_REGULAR_EXPRESSION "[0-9A
 
 # ---- Spectre programs (built only) -------------------------------------------------------------------------
 if(SELFSPECTRE_BUILD_SPECTRE)
-  add_executable(spectrepoc spectre.c)
+  add_executable(spectrepoc src/spectre.c)
   we_configure(spectrepoc)
-  add_executable(selfspectre_aes spectreaes.c spectreopt.c)
+  add_executable(selfspectre_aes src/spectreaes.c src/spectreopt.c)
   we_configure(selfspectre_aes)
-  add_executable(selfspectre_rsa spectrersa.c spectreopt.c ${RSA_OBJECTS})
+  add_executable(selfspectre_rsa src/spectrersa.c src/spectreopt.c ${RSA_OBJECTS})
   we_configure(selfspectre_rsa)
 endif()
