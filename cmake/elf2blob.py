@@ -4,8 +4,9 @@ cannot express the relocations of this code (byte-sized and non-extern pc-relati
 
     python elf2blob.py <input.o> <output.bin> <output.s>
 
-Every relocation must target a symbol of the same .text section and be pc-relative (the code is x86-64 and addresses its
-own bytes RIP-relatively); anything else stops the conversion instead of producing a wrong blob."""
+Relocations against symbols of the same .text section are resolved here. A 32-bit pc-relative reference to a symbol defined
+elsewhere (a C global) is left to the system assembler as ".long (_symbol + addend) - .". Anything else stops the conversion
+instead of producing a wrong blob."""
 import struct, sys
 
 SHT_SYMTAB, SHT_RELA, SHT_REL = 2, 4, 9
@@ -42,6 +43,7 @@ def main(src, out_bin, out_s):
     blob = bytearray(data[secs[text]["off"]:secs[text]["off"] + secs[text]["size"]])
 
     count = 0
+    ext = []
     for s in secs:
         if s["type"] == SHT_REL:
             sys.exit("REL relocations are not supported")
@@ -50,6 +52,9 @@ def main(src, out_bin, out_s):
         for k in range(s["size"] // 24):
             offset, info, addend = struct.unpack_from("<QQq", data, s["off"] + k * 24)
             sym, typ = syms[info >> 32], info & 0xFFFFFFFF
+            if sym["shndx"] == 0 and typ in (R_PC32, R_PLT32):
+                ext.append((offset, sym["name"], addend))
+                continue
             if sym["shndx"] != text:
                 sys.exit(f"relocation against {sym['name']!r} outside .text (section {sym['shndx']})")
             value = sym["value"] + addend - offset
@@ -68,17 +73,27 @@ def main(src, out_bin, out_s):
 
     open(out_bin, "wb").write(blob)
     glob = sorted((x for x in syms if x["bind"] in (1, 2) and x["shndx"] == text and x["name"]), key=lambda x: x["value"])
-    lines = ["\t.text", "\t.p2align 4"]
+    events = [(x["value"], 0, x) for x in glob] + [(o, 1, (n, a)) for o, n, a in ext]
+    events.sort(key=lambda e: (e[0], e[1]))
+    lines = ["	.text", "	.p2align 4"]
     pos = 0
-    for x in glob:
-        if x["value"] > pos:
-            lines.append(f'\t.incbin "{out_bin}", {pos}, {x["value"] - pos}')
-            pos = x["value"]
-        lines += [f"\t.globl _{x['name']}", f"_{x['name']}:"]
-    if pos < len(blob):
-        lines.append(f'\t.incbin "{out_bin}", {pos}, {len(blob) - pos}')
+
+    def upto(p):
+        nonlocal pos
+        if p > pos:
+            lines.append(f'	.incbin "{out_bin}", {pos}, {p - pos}')
+            pos = p
+
+    for offset, kind, x in events:
+        upto(offset)
+        if kind == 0:
+            lines += [f"	.globl _{x['name']}", f"_{x['name']}:"]
+        else:
+            lines.append(f"	.long (_{x[0]} + {x[1]}) - .")
+            pos += 4
+    upto(len(blob))
     open(out_s, "w").write("\n".join(lines) + "\n")
-    print(f"{src}: {len(blob)} bytes, {count} relocations resolved, {len(glob)} global symbols")
+    print(f"{src}: {len(blob)} bytes, {count} relocations resolved, {len(glob)} global symbols, {len(ext)} external references")
 
 
 main(*sys.argv[1:4])

@@ -11,11 +11,7 @@
 #define WE_ABI
 #endif
 
-#if defined(__APPLE__)
-#define WE_SYM(n) __asm__(#n)
-#else
 #define WE_SYM(n)
-#endif
 
 #if defined(__linux__)
 #include <sys/mman.h>
