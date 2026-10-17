@@ -88,6 +88,10 @@ if(SELFSPECTRE_BUILD_SPECTRE)
   we_configure(spectrepoc)
   add_executable(selfspectre_aes src/spectreaes.c src/spectreopt.c)
   we_configure(selfspectre_aes)
-  add_executable(selfspectre_rsa src/spectrersa.c src/spectreopt.c ${RSA_OBJECTS})
-  we_configure(selfspectre_rsa)
+  # spectrecode.asm refers to C globals; the macOS ELF bridge (cmake/elf2blob.py) cannot express those references
+  # (Mach-O has no pc-relative relocation to an undefined symbol in an assembler expression), so this program is not built there.
+  if(NOT APPLE)
+    add_executable(selfspectre_rsa src/spectrersa.c src/spectreopt.c ${RSA_OBJECTS})
+    we_configure(selfspectre_rsa)
+  endif()
 endif()
