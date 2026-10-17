@@ -64,3 +64,6 @@ validation/native/*.obj
 
 # Private notes (never commit)
 /.private/
+
+# CMake build trees
+/build/

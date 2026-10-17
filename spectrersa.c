@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include "portable/we_portable.h"
 #ifdef _MSC_VER
 #include <windows.h>
 #include <intrin.h> /* for rdtsc, rdtscp, clflush */

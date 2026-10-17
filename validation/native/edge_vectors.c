@@ -5,32 +5,11 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#define _CRT_RAND_S
+#include "../../portable/we_portable.h"
+#include "../../portable/writeexec_api.h"
 unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * 512 * 16]; uint8_t tmp;
-extern uint16_t WriteExecSHL1_C(uint8_t);
-extern uint16_t WriteExecSHL_C(uint8_t, uint8_t);
-extern uint32_t WriteExecSHL32_C(uint32_t, uint8_t);
-extern uint64_t WriteExecSHL64_C(uint64_t, uint8_t);
-extern uint16_t WriteExecSHR_C(uint8_t, uint8_t);
-extern uint32_t WriteExecSHR32_C(uint32_t, uint8_t);
-extern uint64_t WriteExecSHR64_C(uint64_t, uint8_t);
-extern uint8_t WriteExecNZ_C(uint8_t);
-extern uint8_t WriteExecNOT_C(uint8_t);
-extern uint16_t WriteExecINC_C(uint8_t);
-extern uint16_t WriteExecDEC_C(uint8_t);
-extern uint8_t WriteExecXOR_C(uint8_t, uint8_t);
-extern uint32_t WriteExecXOR32_C(uint32_t, uint32_t);
-extern uint16_t WriteExecADD_C(uint8_t, uint8_t);
-extern uint32_t WriteExecADD32_C(uint32_t, uint32_t);
-extern uint64_t WriteExecADD64_C(uint64_t, uint64_t);
-extern uint16_t WriteExecSUB_C(uint8_t, uint8_t);
-extern uint32_t WriteExecSUB32_C(uint32_t, uint32_t);
-extern uint64_t WriteExecSUB64_C(uint64_t, uint64_t);
-extern uint64_t WriteExecMUL32_C(uint32_t, uint32_t);
-extern uint32_t WriteExecDIV32_C(uint64_t, uint32_t);
-extern uint32_t WriteExecMOD32_C(uint64_t, uint32_t);
-extern uint32_t WriteExecMODEXP32_C(uint32_t, uint32_t, uint32_t);
-extern void WriteExecAESLookup_C(uint8_t*, uint8_t*, uint8_t*);
-typedef struct { unsigned long rd_key[60]; int rounds; } AES_KEY_;
+typedef struct { uint32_t rd_key[60]; int rounds; } AES_KEY_;
 extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY_ *key);
 
 static int bad = 0, total = 0;
@@ -54,6 +33,7 @@ static uint64_t rs = 88172645463325252ull;
 static uint32_t rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return (uint32_t)(rs >> 16); }
 
 int main(int argc, char **argv) {
+	we_make_code_writable();
 	if (argc > 1) { /* stress: random vectors, `edge_vectors N seed` */
 		long n = atol(argv[1]); long every = argc > 3 ? atol(argv[3]) : 20; if (argc > 2) rs ^= (uint64_t)atol(argv[2]) * 0x9E3779B97F4A7C15ull;
 		for (long i = 0; i < n; i++) {

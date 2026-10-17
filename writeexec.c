@@ -2,50 +2,18 @@
 #include <stdint.h>
 #define _CRT_RAND_S
 #include <stdlib.h>
-#ifdef _MSC_VER
-#include <windows.h>
-#endif
+#include "portable/we_portable.h"
+#include "portable/writeexec_api.h"
 
-extern uint16_t WriteExecSHL1_C(uint8_t);
 //extern uint16_t WriteExecSHL4_C(uint8_t);
 //extern uint16_t WriteExecSHL5_C(uint8_t);
-extern uint16_t WriteExecSHL_C(uint8_t, uint8_t);
-extern uint32_t WriteExecSHL32_C(uint32_t, uint8_t);
-extern uint64_t WriteExecSHL64_C(uint64_t, uint8_t);
-extern uint16_t WriteExecSHR_C(uint8_t, uint8_t);
-extern uint32_t WriteExecSHR32_C(uint32_t, uint8_t);
-extern uint64_t WriteExecSHR64_C(uint64_t, uint8_t);
-extern uint8_t WriteExecNZ_C(uint8_t);
-extern uint8_t WriteExecNOT_C(uint8_t);
-extern uint16_t WriteExecINC_C(uint8_t);
-extern uint16_t WriteExecDEC_C(uint8_t);
-extern uint8_t WriteExecXOR_C(uint8_t, uint8_t);
-extern uint32_t WriteExecXOR32_C(uint32_t, uint32_t);
-extern uint8_t WriteExecOR_C(uint8_t, uint8_t);
 //extern uint32_t WriteExecOR32_C(uint32_t, uint32_t);
-extern uint8_t WriteExecAND_C(uint8_t, uint8_t);
 //extern uint32_t WriteExecAND32_C(uint32_t, uint32_t);
-extern uint16_t WriteExecADD_C(uint8_t, uint8_t);
-extern uint32_t WriteExecADD32_C(uint32_t, uint32_t);
-extern uint64_t WriteExecADD64_C(uint64_t, uint64_t);
-extern uint16_t WriteExecSUB_C(uint8_t, uint8_t);
-extern uint32_t WriteExecSUB32_C(uint32_t, uint32_t);
-extern uint64_t WriteExecSUB64_C(uint64_t, uint64_t);
-extern uint64_t WriteExecMUL32_C(uint32_t, uint32_t);
-extern uint32_t WriteExecDIV32_C(uint64_t, uint32_t);
-extern uint32_t WriteExecMOD32_C(uint64_t, uint32_t);
-extern uint32_t WriteExecMODEXP32_C(uint32_t, uint32_t, uint32_t);
-extern uint32_t WriteExecTe0_C(uint8_t);
-extern uint32_t WriteExecTe1_C(uint8_t);
-extern uint32_t WriteExecTe2_C(uint8_t);
-extern uint32_t WriteExecTe3_C(uint8_t);
-extern uint8_t WriteExecTe4_C(uint8_t);
-extern void WriteExecAESLookup_C(uint8_t*, uint8_t*, uint8_t*);
 
 unsigned int array1_size;
 uint8_t array1[160];
 uint8_t array2[256 * 512 * 16];
-extern uint8_t tmp = 0;
+uint8_t tmp = 0;
 
 
 /*
@@ -54,7 +22,7 @@ not an example of a challenge program.
 */
 
 struct aes_key_struct {
-	unsigned long rd_key[60];
+	uint32_t rd_key[60];
 	int rounds;
 };
 
@@ -67,7 +35,7 @@ typedef struct aes_key_struct AES_KEY;
 
 #define PUTU32(c, s) { (c)[3] = (u8)(s); (c)[2] = (u8)((s)>>8); (c)[1] = (u8)((s)>>16); (c)[0] = (u8)((s)>>24); }
 
-typedef unsigned long u32;
+typedef uint32_t u32;
 typedef unsigned short u16;
 typedef unsigned char u8;
 
@@ -483,7 +451,7 @@ unsigned int doDivision32(unsigned int x, unsigned int y, int ismod)
 	return ismod ? rem : quot;
 }
 
-isgte(unsigned long long a, unsigned long long b)
+int isgte(unsigned long long a, unsigned long long b)
 {
 	//a & !b ^ !(a ^ b) & !c
 	//!(a & !b ^ (a ^ b) | c)
@@ -518,7 +486,7 @@ unsigned int doDiv(unsigned int x, unsigned int y, int ismod)
 int doSignDivision(long long x, int y, int ismod)
 {
 	unsigned long long quot, t;
-	unsigned long rem;
+	uint32_t rem;
 	int bits_left;
 	int negative = (ismod ? (x & 0x8000000000000000) : (((x & 0x8000000000000000) >> 32) ^ (y & 0x80000000))) != 0;
 	if (x < 0) x = -x;
@@ -546,6 +514,7 @@ extern uint32_t fastmodexp(uint32_t base, uint32_t exp, uint32_t mod);
 
 int main(int argc,
 	const char * * argv) {
+	we_make_code_writable();
 	//extern call leads to an E9 xx xx xx xx relative jump, the next E9 xx 80 xx xx is the correct one
 	//uint8_t* FuncPtr = (uint8_t*)((uint8_t*)&WriteExecSHL1 + *((uint32_t*)(((uint8_t*)&WriteExecSHL1) + 1)) + 5);
 	uint8_t result;
@@ -562,8 +531,8 @@ int main(int argc,
 		if (doDivision(result64, num2, 0) != num1)
 			printf("%08X[%08X]", doDivision(result64, num2, 0), num1);
 		result64 = doSignMultiplication(num1, num2);
-		if ((int64_t)result64 != (long long)(long)num1 * (long long)(long)num2)
-			printf("%#016llX[%#016llX]", result64, (long long)(long)num1 * (long long)(long)num2);
+		if ((int64_t)result64 != (long long)(int32_t)num1 * (long long)(int32_t)num2)
+			printf("%#016llX[%#016llX]", result64, (long long)(int32_t)num1 * (long long)(int32_t)num2);
 		if (doSignDivision(result64, num2, 0) != num1)
 			printf("%08X[%08X]", doSignDivision(result64, num2, 0), num1);
 
@@ -580,8 +549,8 @@ int main(int argc,
 		if (result32 != ((uint64_t)num1 << 32 | num2) % num3)
 			printf("%08X[%08X]", result32, (uint32_t)(((uint64_t)num1 << 32 | num2) % num3));
 		result32 = doSignDivision((uint64_t)num1 << 32 | num2, num3, 1);
-		if (result32 != (long)((long long)((int64_t)num1 << 32 | num2) % (int32_t)num3))
-			printf("%08X[%08X]", result32, (long)((long long)((int64_t)num1 << 32 | num2) % (int32_t)num3));
+		if (result32 != (int32_t)((long long)((int64_t)num1 << 32 | num2) % (int32_t)num3))
+			printf("%08X[%08X]", result32, (int32_t)((long long)((int64_t)num1 << 32 | num2) % (int32_t)num3));
 
 		uint32_t num4;
 		rand_s(&num4);
@@ -712,12 +681,12 @@ int main(int argc,
 		rand_s((unsigned int*)&in[8]); rand_s((unsigned int*)&in[12]);
 		AES_128_encrypt(baseout, in);
 		WriteExecAESLookup_C(in, out, (uint8_t*)key.rd_key);
-		if (((unsigned long*)out)[0] != ((unsigned long*)baseout)[0] ||
-			((unsigned long*)out)[1] != ((unsigned long*)baseout)[1] ||
-			((unsigned long*)out)[2] != ((unsigned long*)baseout)[2] ||
-			((unsigned long*)out)[3] != ((unsigned long*)baseout)[3]) {
-			printf("%08X%08X%08X%08X[%08X%08X%08X%08X]", ((unsigned long*)out)[0], ((unsigned long*)out)[1], ((unsigned long*)out)[2], ((unsigned long*)out)[3],
-				((unsigned long*)baseout)[0], ((unsigned long*)baseout)[1], ((unsigned long*)baseout)[2], ((unsigned long*)baseout)[3]);
+		if (((uint32_t*)out)[0] != ((uint32_t*)baseout)[0] ||
+			((uint32_t*)out)[1] != ((uint32_t*)baseout)[1] ||
+			((uint32_t*)out)[2] != ((uint32_t*)baseout)[2] ||
+			((uint32_t*)out)[3] != ((uint32_t*)baseout)[3]) {
+			printf("%08X%08X%08X%08X[%08X%08X%08X%08X]", ((uint32_t*)out)[0], ((uint32_t*)out)[1], ((uint32_t*)out)[2], ((uint32_t*)out)[3],
+				((uint32_t*)baseout)[0], ((uint32_t*)baseout)[1], ((uint32_t*)baseout)[2], ((uint32_t*)baseout)[3]);
 		}
 	}
 
@@ -846,42 +815,35 @@ int main(int argc,
 	uint32_t num1, num2, num3;
 	char in[16];
 	char out[16], baseout[16];
-	LARGE_INTEGER start;
-	LARGE_INTEGER stop;
-	LARGE_INTEGER frequency;
-	QueryPerformanceFrequency(&frequency);
-	QueryPerformanceCounter(&start);
+	double start;
+	start = we_now();
 	for (int i = 0; i < 1000000; i++) {
 		rand_s((unsigned int*)&in[0]); rand_s((unsigned int*)&in[4]);
 		rand_s((unsigned int*)&in[8]); rand_s((unsigned int*)&in[12]);
 		AES_128_encrypt(baseout, in);
 	}
-	QueryPerformanceCounter(&stop);
-	printf("Time: %lf seconds\n", (double)(stop.QuadPart - start.QuadPart) / (double)frequency.QuadPart);
-	QueryPerformanceCounter(&start);
+	printf("Time: %lf seconds\n", we_now() - start);
+	start = we_now();
 	for (int i = 0; i < 1000; i++) {
 		rand_s((unsigned int*)&in[0]); rand_s((unsigned int*)&in[4]);
 		rand_s((unsigned int*)&in[8]); rand_s((unsigned int*)&in[12]);
 		WriteExecAESLookup_C(in, out, (uint8_t*)key.rd_key);
 	}
-	QueryPerformanceCounter(&stop);
-	printf("Time: %lf seconds\n", (double)(stop.QuadPart - start.QuadPart) / (double)frequency.QuadPart);
-	QueryPerformanceCounter(&start);
+	printf("Time: %lf seconds\n", we_now() - start);
+	start = we_now();
 	for (int i = 0; i < 1000000; i++) {
 		rand_s(&num1); rand_s(&num2);
 		do { rand_s(&num3); } while (num3 == 0);
 		result32 = fastmodexp(num1, num2, num3);
 	}
-	QueryPerformanceCounter(&stop);
-	printf("Time: %lf seconds\n", (double)(stop.QuadPart - start.QuadPart) / (double)frequency.QuadPart);
-	QueryPerformanceCounter(&start);
+	printf("Time: %lf seconds\n", we_now() - start);
+	start = we_now();
 	for (int i = 0; i < 100; i++) {
 		rand_s(&num1); rand_s(&num2);
 		do { rand_s(&num3); } while (num3 == 0);
 		result32 = WriteExecMODEXP32_C(num1, num2, num3);
 	}
-	QueryPerformanceCounter(&stop);
-	printf("Time: %lf seconds\n", (double)(stop.QuadPart - start.QuadPart) / (double)frequency.QuadPart);
+	printf("Time: %lf seconds\n", we_now() - start);
 
 	//implicit eip only:
 	//mov [disp32+disp8/16/32]

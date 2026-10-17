@@ -137,7 +137,7 @@ not an example of a challenge program.
 */
 
 struct aes_key_struct {
-	unsigned long rd_key[60];
+	uint32_t rd_key[60];
 	int rounds;
 };
 
@@ -150,7 +150,7 @@ typedef struct aes_key_struct AES_KEY;
 
 #define PUTU32(c, s) { (c)[3] = (u8)(s); (c)[2] = (u8)((s)>>8); (c)[1] = (u8)((s)>>16); (c)[0] = (u8)((s)>>24); }
 
-typedef unsigned long u32;
+typedef uint32_t u32;
 typedef unsigned short u16;
 typedef unsigned char u8;
 
