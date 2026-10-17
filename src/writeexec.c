@@ -4,6 +4,17 @@
 #include <stdlib.h>
 #include "portable/we_portable.h"
 #include "portable/writeexec_api.h"
+#include <stdarg.h>
+#include <string.h>
+/* Diagnostic: a mismatch line (format contains '[') is prefixed with the source line of its printf and the logical CPU,
+   so that an intermittent mismatch can be traced to the check that produced it. */
+static int we_pf(int line, const char *fmt, ...) {
+	va_list ap; int n = 0;
+	if (strchr(fmt, '[')) n += printf("L%d@cpu%d:", line, we_cpu());
+	va_start(ap, fmt); n += vprintf(fmt, ap); va_end(ap);
+	return n;
+}
+#define printf(...) we_pf(__LINE__, __VA_ARGS__)
 
 //extern uint16_t WriteExecSHL4_C(uint8_t);
 //extern uint16_t WriteExecSHL5_C(uint8_t);

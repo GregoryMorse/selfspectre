@@ -1,7 +1,6 @@
 name: Windows intermittent mismatch hunt
-# Diagnostic (manual): runs the same ctest tests as portable.yml on Windows runners, without retries, with and without pinning
-# the thread to one CPU (WE_PIN=1), and prints the runner CPU so that a mismatch can be correlated with the hardware.
-# A mismatch line from edge_vectors prints three repeat calls and the logical CPU before and after.
+# Diagnostic (manual): runs the legacy writeexec harness on many Windows runners without retries and prints the runner CPU. A
+# mismatch line is prefixed with the source line of its check and the logical CPU (see we_pf in src/writeexec.c).
 on:
   workflow_dispatch:
 permissions:
@@ -14,8 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         platform: [Win32, x64]
-        pin: ['0', '1']
-        replica: [1, 2, 3, 4, 5, 6, 7, 8]
+        replica: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
@@ -28,18 +26,13 @@ jobs:
           "OS: $((Get-CimInstance Win32_OperatingSystem).Version) | hypervisor present: $((Get-CimInstance Win32_ComputerSystem).HypervisorPresent)"
       - run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
       - run: cmake --build build/cmake --config Release
-      - name: Soak of the plain-C reference arithmetic
-        shell: bash
-        run: ./build/cmake/Release/ref_soak.exe 150000000 ${{ matrix.replica }}${{ matrix.pin }}
-      - name: Tests (no retry)
-        env:
-          WE_PIN: ${{ matrix.pin }}
-        run: ctest --test-dir build/cmake -C Release --output-on-failure
+      - name: Legacy harness (no retry)
+        run: ctest --test-dir build/cmake -C Release -R writeexec_harness --output-on-failure
       - name: Keep failing binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: hunt-${{ matrix.platform }}-pin${{ matrix.pin }}-${{ matrix.replica }}
+          name: hunt-${{ matrix.platform }}-${{ matrix.replica }}
           path: |
             build/cmake/Release/*.exe
             build/cmake/Testing
