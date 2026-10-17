@@ -22,11 +22,14 @@ ExternalProject_Add(uasm_build
   BUILD_BYPRODUCTS ${UASM_EXE})
 
 if(APPLE)
-  set(UASM_FORMAT -macho64)
+  # UASM's Mach-O writer cannot express the relocations of this code, so the ELF object is converted to a
+  # position-independent blob (cmake/elf2blob.py) that the system assembler places in __TEXT,__text.
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  set(UASM_FORMAT -elf64)
 elseif(WE_X64)
   set(UASM_FORMAT -elf64)
 else()
-  set(UASM_FORMAT -elf -6)
+  set(UASM_FORMAT -elf -6 -zcw) # -zcw: no leading underscore on C symbols, as GCC on ELF
 endif()
 if(WE_X64)
   set(UASM_DEFS -DX64)
@@ -38,11 +41,23 @@ endif()
 function(we_uasm_object var source name)
   set(obj ${CMAKE_BINARY_DIR}/${name}.o)
   set(patched ${CMAKE_BINARY_DIR}/${name}_uasm.asm)
-  add_custom_command(OUTPUT ${obj}
-    COMMAND ${CMAKE_COMMAND} -DIN=${source} -DOUT=${patched} -P ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
-    COMMAND ${UASM_EXE} ${UASM_FORMAT} ${UASM_DEFS} -Fo${obj} ${patched}
-    DEPENDS ${source} uasm_build ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
-    COMMENT "UASM ${source}"
-    VERBATIM)
+  if(APPLE)
+    set(elf ${CMAKE_BINARY_DIR}/${name}_elf.o)
+    add_custom_command(OUTPUT ${obj}
+      COMMAND ${CMAKE_COMMAND} -DIN=${source} -DOUT=${patched} -DWE_X64=${WE_X64} -P ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
+      COMMAND ${UASM_EXE} ${UASM_FORMAT} ${UASM_DEFS} -Fo${elf} ${patched}
+      COMMAND ${Python3_EXECUTABLE} ${CMAKE_SOURCE_DIR}/cmake/elf2blob.py ${elf} ${CMAKE_BINARY_DIR}/${name}.bin ${CMAKE_BINARY_DIR}/${name}_blob.s
+      COMMAND ${CMAKE_C_COMPILER} -c -x assembler ${CMAKE_BINARY_DIR}/${name}_blob.s -o ${obj}
+      DEPENDS ${source} uasm_build ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake ${CMAKE_SOURCE_DIR}/cmake/elf2blob.py
+      COMMENT "UASM ${source} (via ELF)"
+      VERBATIM)
+  else()
+    add_custom_command(OUTPUT ${obj}
+      COMMAND ${CMAKE_COMMAND} -DIN=${source} -DOUT=${patched} -DWE_X64=${WE_X64} -P ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
+      COMMAND ${UASM_EXE} ${UASM_FORMAT} ${UASM_DEFS} -Fo${obj} ${patched}
+      DEPENDS ${source} uasm_build ${CMAKE_SOURCE_DIR}/cmake/UasmPatch.cmake
+      COMMENT "UASM ${source}"
+      VERBATIM)
+  endif()
   set(${var} ${obj} PARENT_SCOPE)
 endfunction()
