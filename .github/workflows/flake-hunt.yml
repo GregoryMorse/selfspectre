@@ -28,6 +28,9 @@ jobs:
           "OS: $((Get-CimInstance Win32_OperatingSystem).Version) | hypervisor present: $((Get-CimInstance Win32_ComputerSystem).HypervisorPresent)"
       - run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
       - run: cmake --build build/cmake --config Release
+      - name: Soak of the plain-C reference arithmetic
+        shell: bash
+        run: ./build/cmake/Release/ref_soak.exe 150000000 ${{ matrix.replica }}${{ matrix.pin }}
       - name: Tests (no retry)
         env:
           WE_PIN: ${{ matrix.pin }}

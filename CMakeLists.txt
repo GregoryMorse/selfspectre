@@ -78,8 +78,12 @@ we_configure(edge_vectors)
 add_executable(writeexec src/writeexec.c src/spectreopt.c ${WE_OBJECTS})
 we_configure(writeexec)
 
+add_executable(ref_soak validation/native/ref_soak.c) # plain-C reference arithmetic only
+we_configure(ref_soak)
+
 # Pass criteria (validation/README.md): the exit code is 0 and no mismatch line "GOT[WANT]" is printed.
 add_test(NAME code_vectors COMMAND code_vectors)
+add_test(NAME ref_soak_quick COMMAND ref_soak 3000000 1)
 add_test(NAME edge_vectors COMMAND edge_vectors)
 set_tests_properties(edge_vectors PROPERTIES PASS_REGULAR_EXPRESSION "edge vectors ok")
 add_test(NAME writeexec_harness COMMAND writeexec)
