@@ -3,6 +3,8 @@
   <PropertyGroup>
     <WeBuildRoot>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\build\msbuild\'))</WeBuildRoot>
     <OutDir>$(WeBuildRoot)$(Platform)\$(Configuration)\</OutDir>
+    <!-- The Spectre programs need the plain runtime and no compiler Spectre mitigation (/Qspectre would insert lfence barriers). -->
+    <SpectreMitigation>false</SpectreMitigation>
     <IntDir>$(WeBuildRoot)obj\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>

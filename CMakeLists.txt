@@ -46,6 +46,8 @@ function(we_configure target)
   target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/src)
   if(MSVC)
     # The Write-Execute procedures rewrite their own code: the text section must be writable.
+    # /Qspectre- : no compiler Spectre mitigation (it would insert lfence barriers into the victim code).
+    target_compile_options(${target} PRIVATE /Qspectre-)
     target_link_options(${target} PRIVATE /SECTION:.text,ERW /INCREMENTAL:NO)
     if(NOT WE_X64)
       target_link_options(${target} PRIVATE /SAFESEH:NO)
