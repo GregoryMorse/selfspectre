@@ -13,6 +13,9 @@
 
 #if defined(__APPLE__)
 #define WE_SYM(n) __asm__(#n)
+#elif defined(__linux__) && defined(__i386__)
+/* UASM decorates C names with a leading underscore in 32-bit ELF output */
+#define WE_SYM(n) __asm__("_" #n)
 #else
 #define WE_SYM(n)
 #endif

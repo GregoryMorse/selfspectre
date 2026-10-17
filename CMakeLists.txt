@@ -51,8 +51,9 @@ function(we_configure target)
       target_link_options(${target} PRIVATE /SAFESEH:NO)
     endif()
   else()
-    # -fno-strict-aliasing: the legacy sources reinterpret integers through pointers.
-    target_compile_options(${target} PRIVATE -O2 -fno-strict-aliasing -maes -msse4.2 -w)
+    # -fno-strict-aliasing: the legacy sources reinterpret integers through pointers; -fcommon: they define
+    # some globals (e.g. key) in more than one file.
+    target_compile_options(${target} PRIVATE -O2 -fno-strict-aliasing -fcommon -maes -msse4.2 -w)
     if(APPLE)
       target_link_options(${target} PRIVATE -Wl,-segprot,__TEXT,rwx,rwx)
     else()
