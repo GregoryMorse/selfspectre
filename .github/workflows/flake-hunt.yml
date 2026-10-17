@@ -1,6 +1,7 @@
 name: Windows intermittent mismatch hunt
-# Diagnostic (manual): repeats the deterministic edge vectors on Windows runners, with and without pinning the thread to one
-# CPU (WE_PIN=1), to characterise the rare single-result mismatches seen there. A mismatch line also prints a repeat call.
+# Diagnostic (manual): runs the same ctest tests as portable.yml on Windows runners, without retries, with and without pinning
+# the thread to one CPU (WE_PIN=1), and prints the runner CPU so that a mismatch can be correlated with the hardware.
+# A mismatch line from edge_vectors prints three repeat calls and the logical CPU before and after.
 on:
   workflow_dispatch:
 permissions:
@@ -14,22 +15,29 @@ jobs:
       matrix:
         platform: [Win32, x64]
         pin: ['0', '1']
-        replica: [1, 2, 3, 4, 5]
+        replica: [1, 2, 3, 4, 5, 6, 7, 8]
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+      - name: Runner CPU
+        shell: pwsh
+        run: |
+          $c = Get-CimInstance Win32_Processor | Select-Object -First 1
+          "CPU: $($c.Name) | cores $($c.NumberOfCores) logical $($c.NumberOfLogicalProcessors) | revision $($c.Revision)"
+          "OS: $((Get-CimInstance Win32_OperatingSystem).Version) | hypervisor present: $((Get-CimInstance Win32_ComputerSystem).HypervisorPresent)"
       - run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
-      - run: cmake --build build/cmake --config Release --target edge_vectors
-      - name: Repeat the edge vectors
-        shell: bash
+      - run: cmake --build build/cmake --config Release
+      - name: Tests (no retry)
         env:
           WE_PIN: ${{ matrix.pin }}
-        run: |
-          bad=0
-          for i in 1 2 3 4; do
-            ./build/cmake/Release/edge_vectors.exe > out.txt || bad=$((bad+1))
-            grep -v "edge vectors ok" out.txt || true
-          done
-          echo "failing runs: $bad of 4 (platform ${{ matrix.platform }}, pin ${{ matrix.pin }})"
-          [ "$bad" = 0 ]
+        run: ctest --test-dir build/cmake -C Release --output-on-failure
+      - name: Keep failing binaries
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hunt-${{ matrix.platform }}-pin${{ matrix.pin }}-${{ matrix.replica }}
+          path: |
+            build/cmake/Release/*.exe
+            build/cmake/Testing
+          if-no-files-found: ignore

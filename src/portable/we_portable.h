@@ -47,6 +47,15 @@ static void we_make_code_writable(void) {
 #define we_make_code_writable() we_pin_if_requested()
 #endif
 
+/* Logical processor the calling thread is on (-1 if unknown); printed with a mismatch to show thread migration. */
+#if defined(_WIN32)
+#define we_cpu() ((int)GetCurrentProcessorNumber())
+#elif defined(__linux__)
+#define we_cpu() sched_getcpu()
+#else
+#define we_cpu() (-1)
+#endif
+
 #if defined(_MSC_VER)
 #include <windows.h>
 /* rand_s needs _CRT_RAND_S defined before <stdlib.h>; the sources define it first. */
