@@ -13,6 +13,24 @@
 
 #define WE_SYM(n)
 
+/* Diagnostic for the intermittent single-result mismatches seen on Windows runners: with the environment variable
+   WE_PIN=1 the thread stays on the CPU it started on (rules thread migration in or out of the picture). */
+#if defined(_WIN32)
+#include <windows.h>
+static void we_pin_if_requested(void) {
+	const char *p = getenv("WE_PIN");
+	if (p && *p == '1') SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR)1 << GetCurrentProcessorNumber());
+}
+#elif defined(__linux__)
+#include <sched.h>
+static void we_pin_if_requested(void) {
+	const char *p = getenv("WE_PIN");
+	if (p && *p == '1') { cpu_set_t m; CPU_ZERO(&m); CPU_SET(sched_getcpu(), &m); sched_setaffinity(0, sizeof m, &m); }
+}
+#else
+static void we_pin_if_requested(void) {}
+#endif
+
 #if defined(__linux__)
 #include <sys/mman.h>
 #include <unistd.h>
@@ -23,9 +41,10 @@ static void we_make_code_writable(void) {
 	uintptr_t pg = (uintptr_t)sysconf(_SC_PAGESIZE);
 	uintptr_t a = (uintptr_t)&__executable_start & ~(pg - 1), b = ((uintptr_t)&etext + pg - 1) & ~(pg - 1);
 	if (mprotect((void *)a, b - a, PROT_READ | PROT_WRITE | PROT_EXEC)) { perror("mprotect"); exit(2); }
+	we_pin_if_requested();
 }
 #else
-#define we_make_code_writable() ((void)0)
+#define we_make_code_writable() we_pin_if_requested()
 #endif
 
 #if defined(_MSC_VER)
