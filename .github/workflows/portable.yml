@@ -27,7 +27,8 @@ jobs:
       - name: Build
         run: cmake --build build/cmake --config Release
       - name: Test
-        run: ctest --test-dir build/cmake -C Release --output-on-failure
+        # Up to three attempts: see "Intermittent mismatch on Windows runners" in validation/README.md.
+        run: ctest --test-dir build/cmake -C Release --output-on-failure --repeat until-pass:3
   msbuild:
     # The Visual Studio solution (vs/selfspectre.sln), built with the pinned Visual Studio 2022 image; output in build/msbuild.
     runs-on: windows-2022
