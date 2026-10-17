@@ -26,8 +26,8 @@ jobs:
           "OS: $((Get-CimInstance Win32_OperatingSystem).Version) | hypervisor present: $((Get-CimInstance Win32_ComputerSystem).HypervisorPresent)"
       - run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
       - run: cmake --build build/cmake --config Release
-      - name: Legacy harness (no retry)
-        run: ctest --test-dir build/cmake -C Release -R writeexec_harness --output-on-failure
+      - name: All tests in sequence (no retry)
+        run: ctest --test-dir build/cmake -C Release --output-on-failure
       - name: Keep failing binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
