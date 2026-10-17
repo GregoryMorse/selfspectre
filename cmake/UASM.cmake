@@ -3,11 +3,7 @@
 include(ExternalProject)
 
 set(UASM_REVISION 97f643891c19ef257e45f1bf67cb47244ae72784) # v2.57r
-if(APPLE)
-  set(UASM_MAKEFILE ClangOSX64.mak)
-else()
-  set(UASM_MAKEFILE Makefile_Linux)
-endif()
+set(UASM_MAKEFILE Makefile-Linux-GCC-64.mak) # the GCC/Clang makefile also serves macOS
 set(UASM_PREFIX ${CMAKE_BINARY_DIR}/uasm)
 set(UASM_EXE ${UASM_PREFIX}/src/uasm_build/GccUnixR/uasm)
 
@@ -20,7 +16,7 @@ ExternalProject_Add(uasm_build
   GIT_TAG ${UASM_REVISION}
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE TRUE
-  BUILD_COMMAND ${UASM_MAKE} -f ${UASM_MAKEFILE} CC=${UASM_HOST_CC}
+  BUILD_COMMAND ${UASM_MAKE} -f ${UASM_MAKEFILE} CC=${UASM_HOST_CC} CFLAGS=-fcommon\ -w
   INSTALL_COMMAND ""
   BUILD_BYPRODUCTS ${UASM_EXE})
 
