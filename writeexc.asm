@@ -91,7 +91,7 @@ shlret7:: jmp $+80000000h
 WriteExecSHL7 ENDP
 
 DEFINENOT macro Index, Lbl
-	&Lbl&_&Index&: mov byte ptr [Lbl+6], not Index
+	&Lbl&_&Index&: mov byte ptr [Lbl+6], (not Index) and 0ffh
 	jmp [Lbl] ;; preprocessor wrongly assumes 10 bytes for jump unfortunately not 2 or 5 bytes
 IF Index GT 0f7h ;; preprocessor also cannot look at distance to future labels
 	db 7 dup (090h)

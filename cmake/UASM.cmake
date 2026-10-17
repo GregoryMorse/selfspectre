@@ -15,6 +15,7 @@ ExternalProject_Add(uasm_build
   GIT_REPOSITORY https://github.com/Terraspace/UASM.git
   GIT_TAG ${UASM_REVISION}
   CONFIGURE_COMMAND ""
+  PATCH_COMMAND sed -i.bak "s/-Wl,-Map,[^ ]*//" ${UASM_MAKEFILE}
   BUILD_IN_SOURCE TRUE
   BUILD_COMMAND ${UASM_MAKE} -k -f ${UASM_MAKEFILE} CC=${UASM_HOST_CC} "CFLAGS=-std=gnu89 -fcommon -w -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-implicit-function-declaration"
   INSTALL_COMMAND ""
@@ -25,7 +26,7 @@ if(APPLE)
 elseif(WE_X64)
   set(UASM_FORMAT -elf64)
 else()
-  set(UASM_FORMAT -elf)
+  set(UASM_FORMAT -elf -6)
 endif()
 if(WE_X64)
   set(UASM_DEFS -DX64)
