@@ -4098,7 +4098,7 @@ mov dword ptr [modexp32arg1_2 + 2], modbase2+6
 mov dword ptr [modexp32arg1_3 + 2], modbase3+6
 mov dword ptr [modexp32arg1_4 + 2], modbase4+6
 endif
-mov byte ptr [baseloop + 1], basehead2-baseloop-2
+mov byte ptr [baseloop + 1], (basehead2-baseloop-2) and 0ffh
 jmp modexp32arg1_1
 basehead2: mov byte ptr [baseloop+1], basehead-baseloop-2
 ifdef X64
