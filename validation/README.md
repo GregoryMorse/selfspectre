@@ -23,16 +23,33 @@
 - `native_edge.py` — assembles `src/writeexc.asm` (x86, x64) and runs `native/edge_vectors.c`: deterministic boundary vectors (232,081 checks: all 8-bit pairs, every shift count, carry/borrow boundaries, MUL32/DIV32/MOD32/MODEXP32, FIPS-197 C.1) against the assembled entry points. Evidence, not proof.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
 
-## Intermittent mismatch on Windows runners (open, not understood)
+## Rare transient mismatches of the native harnesses (open: reproduced, not explained)
 
-Twice in CI (GitHub `windows-2022`, native test step) a Write-Execute call returned a wrong result once, and passed on rerun:
-`edge_vectors` Win32 printed `DIV32 mismatch ... got 1fe want 1fe` (the old macro called the procedure again to print, so the
-first call was wrong and the repeat right: the result is not a function of the arguments alone), and the legacy `writeexec`
-harness on x64 printed seven wrong 32/64-bit results in one burst. Not reproduced in 26 local runs of `edge_vectors` (x86) or
-in 80 runs on `windows-2022` (`.github/workflows/flake-hunt.yml`, with and without `WE_PIN=1` CPU pinning, 40 each); Linux and
-macOS runs have shown none. The edge macro now prints a repeat call on mismatch to tell a transient result from a
-deterministic one. The cause is undetermined (candidates: self-modifying code interacting with the virtualized host; a compiler
-or runtime effect is not indicated, since the same binary gives the right result on the repeated call). The Windows ctest steps
-therefore allow up to three attempts (`--repeat until-pass:3`); a persistent failure still fails the job. This is native
-evidence only and does not enter any Lean statement.
+Four times in CI, on GitHub `windows-2022` runners, a Write-Execute call returned a wrong result once and the same call was right
+when repeated: `edge_vectors` Win32 (`DIV32`, "got 1fe want 1fe": the first call was wrong, the immediate repeat right) and the
+first block of the legacy `writeexec` harness on x64, three times (one wrong 32-bit value, or a burst of seven). Each time the
+next attempt, or the repeat call, passed.
 
+What was established:
+
+- The plain-C reference arithmetic is not the cause: `ref_soak` ran the same functions (copied verbatim from `writeexec.c`) for
+  150 million random iterations on each of 32 runners and found nothing; 100 million locally also found nothing.
+- Not input dependent: `edge_vectors` uses fixed tables; the failing call is right when repeated.
+- Not thread migration: it also occurred with the thread pinned (`WE_PIN=1`).
+- Not residual state in the self-modifying code: the repeat call, made immediately, is right.
+- Not reproduced in 26 local runs, 80 + 32 + 32 runner runs of the instrumented harnesses, or in 120 later runner runs (the later
+  runs also carry a changed `writeexec.c`, so the code layout differs). The rate is about one event per 10^8 calls, so layout or
+  platform effects cannot be separated statistically with a reasonable number of runs. Linux and macOS runners have been run
+  far fewer times (about 15 each), so the absence of events there is not evidence of a Windows-only effect.
+- No CPU model is implicated: the runners are a mix of AMD EPYC 7763/9V45/9V74 and Intel Xeon 8370C/8573C/6973P-C, and the failing
+  jobs whose CPU was recorded were EPYC 7763 (the most common model).
+
+The procedures store an operand into an instruction and jump to it within a few cycles. The architecture manuals promise coherent
+same-thread self-modifying code, but the manuals' portable recipe adds a serializing instruction, which the verified byte layout
+(`validation/layout`) does not contain, so the assembly is deliberately not changed. A rare stale-fetch event on a virtualized
+host is the leading hypothesis; it is not proven. The harnesses therefore classify instead of hiding: `edge_vectors` calls the
+procedure twice more on a mismatch, reports a result that is right on both repeats as `transient` (counted in the final
+`edge vectors ok N (K transient)` line, not a failure), and fails if it stays wrong; the Windows ctest steps allow up to three
+attempts for the legacy harness (`--repeat until-pass:3`); mismatch lines of the legacy harness carry their source line and CPU.
+`.github/workflows/flake-hunt.yml` (manual) repeats the tests on many runners. This is native evidence only and does not enter any
+Lean statement.

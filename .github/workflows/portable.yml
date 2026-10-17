@@ -36,7 +36,7 @@ jobs:
         run: cmake --build build/cmake --config Release
       - name: Test
         # Up to three attempts: see "Intermittent mismatch on Windows runners" in validation/README.md.
-        run: ctest --test-dir build/cmake -C Release --output-on-failure --repeat until-pass:3
+        run: ctest --test-dir build/cmake -C Release --output-on-failure -V --repeat until-pass:3
       - name: Keep test logs and binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -120,7 +120,7 @@ jobs:
         if: failure()
         run: nm build/cmake/we.o | head -40
       - name: Test
-        run: ctest --test-dir build/cmake --output-on-failure
+        run: ctest --test-dir build/cmake --output-on-failure -V
       - name: Keep test logs and binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
@@ -173,7 +173,7 @@ jobs:
         if: failure()
         run: nm build/cmake/we.o | head -40
       - name: Test
-        run: ctest --test-dir build/cmake --output-on-failure
+        run: ctest --test-dir build/cmake --output-on-failure -V
       - name: Keep test logs and binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
