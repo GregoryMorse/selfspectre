@@ -13,7 +13,9 @@ typedef struct { uint32_t rd_key[60]; int rounds; } AES_KEY_;
 extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY_ *key);
 
 static int bad = 0, total = 0;
-#define CHECK(name, got, want, ...) do { total++; if ((got) != (want)) { bad++; printf("%s mismatch: " #__VA_ARGS__ " got %llx want %llx\n", name, (unsigned long long)(got), (unsigned long long)(want)); } } while (0)
+/* Evaluated once for the comparison; on a mismatch the entry point is called once more, so that a transient result
+   (first call wrong, repeat right) can be told from a deterministic one. */
+#define CHECK(name, got, want, ...) do { unsigned long long g_ = (unsigned long long)(got), w_ = (unsigned long long)(want); total++; if (g_ != w_) { bad++; printf("%s mismatch: " #__VA_ARGS__ " got %llx want %llx (repeat call: %llx)\n", name, g_, w_, (unsigned long long)(got)); } } while (0)
 
 static const uint32_t E32[] = { 0, 1, 2, 3, 0x7f, 0x80, 0xff, 0x100, 0x101, 0x7fff, 0x8000, 0xffff, 0x10000, 0x10001,
 	0xff00ff, 0xffffff, 0x1000000, 0x7fffffff, 0x80000000, 0x80000001, 0xfffffffe, 0xffffffff,
