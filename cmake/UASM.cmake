@@ -16,7 +16,7 @@ ExternalProject_Add(uasm_build
   GIT_TAG ${UASM_REVISION}
   CONFIGURE_COMMAND ""
   BUILD_IN_SOURCE TRUE
-  BUILD_COMMAND ${UASM_MAKE} -f ${UASM_MAKEFILE} CC=${UASM_HOST_CC} CFLAGS=-std=gnu89\ -fcommon\ -w
+  BUILD_COMMAND ${UASM_MAKE} -k -f ${UASM_MAKEFILE} CC=${UASM_HOST_CC} "CFLAGS=-std=gnu89 -fcommon -w -Wno-int-conversion -Wno-incompatible-pointer-types -Wno-implicit-function-declaration"
   INSTALL_COMMAND ""
   BUILD_BYPRODUCTS ${UASM_EXE})
 
