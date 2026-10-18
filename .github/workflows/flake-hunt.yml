@@ -60,7 +60,7 @@ jobs:
         if: ${{ always() && steps.build.outcome == 'success' }}
         shell: pwsh
         run: |
-          & ./build/cmake/Release/edge_vectors.exe shr32 32000 0x91c5c554
+          & ./build/cmake/Release/edge_vectors.exe shr32 320000 0x91c5c554
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Exercise MUL32 and inspect its shared shift byte
         if: ${{ always() && steps.build.outcome == 'success' }}

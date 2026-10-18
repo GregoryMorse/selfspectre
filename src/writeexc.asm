@@ -4,6 +4,9 @@ endif
 option casemap :none
 
 .code
+ifdef X64
+PUBLIC shlarg1, shrarg2 ; read-only diagnostics for the SHR32 native harness
+endif
 
 DEFINESHL macro Index, Lbl, Ct
 	&Lbl&_&Index&: mov word ptr [Lbl+1+6], Index shl Ct
