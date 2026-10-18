@@ -17,6 +17,12 @@ static int we_pf(int line, const char *fmt, ...) {
 }
 #define printf(...) we_pf(__LINE__, __VA_ARGS__)
 
+#if defined(_WIN32)
+/* Diagnostic read after a failed call: the first SHR32 instruction holds the
+   shift byte at offset 6. This is outside the Write-Execute core. */
+extern void WriteExecSHR32(void);
+#endif
+
 //extern uint16_t WriteExecSHL4_C(uint8_t);
 //extern uint16_t WriteExecSHL5_C(uint8_t);
 //extern uint32_t WriteExecOR32_C(uint32_t, uint32_t);
@@ -602,8 +608,18 @@ int main(int argc,
 		rand_s(&num1);
 		for (int j = 0; j < 32; j++) {
 			result32 = WriteExecSHR32_C(num1, j);
-			if (result32 != num1 >> j)
-				printf("%08X[%08X]", result32, num1 >> j);
+			if (result32 != num1 >> j) {
+				int first_cpu = we_cpu();
+				int patched_shift = -1;
+#if defined(_WIN32)
+				patched_shift = ((volatile const unsigned char *)(uintptr_t)&WriteExecSHR32)[6];
+#endif
+				uint32_t repeat1 = WriteExecSHR32_C(num1, j);
+				uint32_t repeat2 = WriteExecSHR32_C(num1, j);
+				printf("%08X[%08X] SHR32 iteration %d input %08X shift %d prior %08X patched %d repeats %08X %08X cpu %d then %d\n",
+					result32, num1 >> j, i, num1, j, j ? num1 >> (j - 1) : 0, patched_shift,
+					repeat1, repeat2, first_cpu, we_cpu());
+			}
 		}
 	}
 	for (int i = 0; i < 1000; i++) {
