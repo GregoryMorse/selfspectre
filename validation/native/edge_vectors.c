@@ -57,6 +57,33 @@ static uint32_t rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; retur
 
 int main(int argc, char **argv) {
 	we_make_code_writable();
+	if (argc > 1 && strcmp(argv[1], "mul32") == 0) {
+		long n = argc > 2 ? atol(argv[2]) : 20000;
+		uint32_t seed;
+		if (argc > 3) seed = (uint32_t)strtoull(argv[3], 0, 0);
+		else if (rand_s(&seed)) { fputs("random seed unavailable\n", stderr); return 2; }
+		rs ^= (uint64_t)seed * 0x9E3779B97F4A7C15ull;
+		printf("MUL32 seed %08x, %ld calls\n", seed, n); fflush(stdout);
+		for (long i = 0; i < n; i++) {
+			uint32_t a = rnd(), b = rnd();
+			uint64_t want = (uint64_t)a * b;
+			uint64_t got = WriteExecMUL32_C(a, b);
+			if (got != want) {
+				int cpu = we_cpu(), patched_shift = -1;
+#if defined(_WIN32)
+				patched_shift = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
+#endif
+				uint64_t r1 = WriteExecMUL32_C(a, b);
+				uint64_t r2 = WriteExecMUL32_C(a, b);
+				printf("MUL32 mismatch iteration %ld inputs %08x %08x got %016llx want %016llx patched SHR32 %d repeats %016llx %016llx cpu %d then %d\n",
+					i, a, b, (unsigned long long)got, (unsigned long long)want, patched_shift,
+					(unsigned long long)r1, (unsigned long long)r2, cpu, we_cpu());
+				return 1;
+			}
+		}
+		printf("MUL32 stress ok %ld\n", n);
+		return 0;
+	}
 	if (argc > 1 && strcmp(argv[1], "shr32") == 0) {
 		long n = argc > 2 ? atol(argv[2]) : 32000;
 		uint32_t seed;

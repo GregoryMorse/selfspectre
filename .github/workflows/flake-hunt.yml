@@ -62,6 +62,12 @@ jobs:
         run: |
           & ./build/cmake/Release/edge_vectors.exe shr32 32000 0x91c5c554
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Exercise MUL32 and inspect its shared shift byte
+        if: ${{ always() && steps.build.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          & ./build/cmake/Release/edge_vectors.exe mul32 20000 0x5a7e18fd
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
       - name: Keep failing binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
