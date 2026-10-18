@@ -426,17 +426,16 @@ unsigned long long doMul(unsigned int x, unsigned int y)
 //no difference when 32 bit * 32 bit goes to 32 bit, only must deal with sign in 64 bit result
 long long doSignMultiplication(int x, int y)
 {
-	int negative = ((x & 0x80000000) ^ (y & 0x80000000)) != 0;
-	y = y < 0 ? -y : y;
-	long long result = 0, tx = x < 0 ? -x : x;
-	while (y != 0) {
-		if ((y & 1) != 0) {
-			result = result + tx;
-		}
-		tx = tx << 1;
-		y = (unsigned int)y >> 1;
+	int negative = (x < 0) != (y < 0);
+	uint32_t a = x < 0 ? 0u - (uint32_t)x : (uint32_t)x;
+	uint32_t b = y < 0 ? 0u - (uint32_t)y : (uint32_t)y;
+	uint64_t result = 0, tx = a;
+	while (b != 0) {
+		if (b & 1) result += tx;
+		tx <<= 1;
+		b >>= 1;
 	}
-	return negative ? -result : result;
+	return negative ? -(int64_t)result : (int64_t)result;
 }
 
 int doSignMul(int x, int y)
@@ -486,7 +485,7 @@ unsigned int doDivision(unsigned long long x, unsigned int y, int ismod)
 			quot++;
 		}
 	}
-	return ismod ? rem : *(unsigned int*)&quot;
+	return ismod ? rem : (uint32_t)quot;
 }
 
 unsigned int doDiv(unsigned int x, unsigned int y, int ismod)
@@ -496,30 +495,33 @@ unsigned int doDiv(unsigned int x, unsigned int y, int ismod)
 
 int doSignDivision(long long x, int y, int ismod)
 {
-	unsigned long long quot, t;
-	uint32_t rem;
-	int bits_left;
-	int negative = (ismod ? (x & 0x8000000000000000) : (((x & 0x8000000000000000) >> 32) ^ (y & 0x80000000))) != 0;
-	if (x < 0) x = -x;
-	if (y < 0) y = -y;
-	quot = *(unsigned long long*)&x;
-	rem = 0;
-	for (bits_left = 64; bits_left > 0; bits_left--) {
-		t = quot;
+	uint64_t quot = x < 0 ? 0ull - (uint64_t)x : (uint64_t)x;
+	uint32_t divisor = y < 0 ? 0u - (uint32_t)y : (uint32_t)y;
+	uint64_t rem = 0;
+	int negative = ismod ? (x < 0) : ((x < 0) != (y < 0));
+	for (int bits_left = 64; bits_left > 0; bits_left--) {
+		uint64_t high = quot >> 63;
 		quot <<= 1;
-		rem = (rem << 1) + (quot < t);
-		if (rem >= *(unsigned int*)&y) {
-			rem -= *(unsigned int*)&y;
+		rem = (rem << 1) | high;
+		if (rem >= divisor) {
+			rem -= divisor;
 			quot++;
 		}
 	}
-	return ismod ? (negative ? -*(int*)&rem : *(int*)&rem) : (negative ? -*(int*)&quot : *(int*)&quot);
+	uint32_t bits = (uint32_t)(ismod ? rem : quot);
+	if (negative) bits = 0u - bits;
+	int32_t signed_result;
+	memcpy(&signed_result, &bits, sizeof signed_result);
+	return signed_result;
 }
 
 int doSignDiv(int x, int y, int ismod)
 {
 	return ismod ? x % y : x / y;
 }
+
+static int64_t signed_bits64(uint64_t bits) { int64_t value; memcpy(&value, &bits, sizeof value); return value; }
+static int32_t signed_bits32(uint32_t bits) { int32_t value; memcpy(&value, &bits, sizeof value); return value; }
 
 extern uint32_t fastmodexp(uint32_t base, uint32_t exp, uint32_t mod);
 
@@ -535,17 +537,17 @@ int main(int argc,
 	for (int i = 0; i < 10000; i++) {
 		uint32_t num1, num2;
 		rand_s(&num1);
-		rand_s(&num2);
+		do { rand_s(&num2); } while (num2 == 0);
 		result64 = doMultiplication(num1, num2);
 		if (result64 != num1 * (unsigned long long)num2)
 			printf("%#016llX[%#016llX]", result64, num1 * (unsigned long long)num2);
 		if (doDivision(result64, num2, 0) != num1)
 			printf("%08X[%08X]", doDivision(result64, num2, 0), num1);
-		result64 = doSignMultiplication(num1, num2);
-		if ((int64_t)result64 != (long long)(int32_t)num1 * (long long)(int32_t)num2)
-			printf("%#016llX[%#016llX]", result64, (long long)(int32_t)num1 * (long long)(int32_t)num2);
-		if (doSignDivision(result64, num2, 0) != num1)
-			printf("%08X[%08X]", doSignDivision(result64, num2, 0), num1);
+		result64 = doSignMultiplication(signed_bits32(num1), signed_bits32(num2));
+		if (signed_bits64(result64) != (long long)signed_bits32(num1) * (long long)signed_bits32(num2))
+			printf("%#016llX[%#016llX]", result64, (long long)signed_bits32(num1) * (long long)signed_bits32(num2));
+		if (doSignDivision(signed_bits64(result64), signed_bits32(num2), 0) != num1)
+			printf("%08X[%08X]", doSignDivision(signed_bits64(result64), signed_bits32(num2), 0), num1);
 
 		result32 = doDivision32(num1, num2, 0);
 		if (result32 != num1 / num2)
@@ -555,13 +557,17 @@ int main(int argc,
 			printf("%08X[%08X]", result32, num1 % num2);
 
 		uint32_t num3;
-		rand_s(&num3);
+		do { rand_s(&num3); } while (num3 == 0);
 		result32 = doDivision((uint64_t)num1 << 32 | num2, num3, 1);
 		if (result32 != ((uint64_t)num1 << 32 | num2) % num3)
 			printf("%08X[%08X]", result32, (uint32_t)(((uint64_t)num1 << 32 | num2) % num3));
-		result32 = doSignDivision((uint64_t)num1 << 32 | num2, num3, 1);
-		if (result32 != (int32_t)((long long)((int64_t)num1 << 32 | num2) % (int32_t)num3))
-			printf("%08X[%08X]", result32, (int32_t)((long long)((int64_t)num1 << 32 | num2) % (int32_t)num3));
+		int64_t signed_numerator = signed_bits64((uint64_t)num1 << 32 | num2);
+		int32_t signed_divisor = signed_bits32(num3);
+		int32_t expected_remainder = (signed_numerator == INT64_MIN && signed_divisor == -1)
+			? 0 : (int32_t)(signed_numerator % signed_divisor);
+		result32 = doSignDivision(signed_numerator, signed_divisor, 1);
+		if (result32 != (uint32_t)expected_remainder)
+			printf("%08X[%08X]", result32, (uint32_t)expected_remainder);
 
 		uint32_t num4;
 		rand_s(&num4);
@@ -823,7 +829,7 @@ int main(int argc,
 				uint32_t repeat1 = WriteExecMODEXP32_C(num1, num2, num3);
 				uint32_t repeat2 = WriteExecMODEXP32_C(num1, num2, num3);
 				if (repeat1 == expected && repeat2 == expected)
-					printf("transient MODEXP32 got %08X want %08X inputs %08X %08X %08X repeats %08X %08X cpu %d\n",
+					printf("transient MODEXP32 got %08X[%08X] inputs %08X %08X %08X repeats %08X %08X cpu %d\n",
 						result32, expected, num1, num2, num3, repeat1, repeat2, we_cpu());
 				else
 					printf("%08X[%08X] MODEXP32 inputs %08X %08X %08X repeats %08X %08X\n",

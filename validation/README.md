@@ -23,6 +23,7 @@
   (`lean/formalization.yaml` against the pinned v0.4 schema and the registry taxonomies).
 - `ci/` — `linux.sh` (cold build, Challenge/Solution, `axioms.py`, generated-file and errata checks) used by `.github/workflows/proof.yml`.
 - `native_edge.py` — assembles `src/writeexc.asm` (x86, x64) and runs `native/edge_vectors.c`: deterministic boundary vectors (232,081 checks: all 8-bit pairs, every shift count, carry/borrow boundaries, MUL32/DIV32/MOD32/MODEXP32, FIPS-197 C.1) against the assembled entry points. Evidence, not proof.
+- `edge_vectors modexp N [seed]` — focused assembled `MODEXP32` versus an independent 64-bit C reference for `N` random triples; prints the seed and exact operands on the first failure and fails even if immediate repeats pass. The Windows CMake suite runs 100 fresh triples per job.
 - `patch_alignment.py <writeexc.obj> <edge_vectors.map>` — resolves simple byte/word/dword code-patch sites against the *linked* MSVC image and reports stores that span a 64-byte cache line. The Windows CMake harnesses emit linker maps and CI prints this diagnostic. Object-file offsets alone are insufficient because the linker shifts the assembly section relative to the cache-line grid.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
 
@@ -39,17 +40,18 @@ A fifth event occurred on 2026-10-18 in the `writeexec` Debug|Win32 `WriteExecMO
 `src/writeexec.c:822`: `0D2366D8` versus C reference `11E52FFA`. The old check recorded neither
 inputs nor same-input repeats. Passing other configurations with fresh random inputs does not show
 whether this was transient or input-specific. The check now records inputs and repeats the same
-assembled call twice on mismatch. Only two matching repeats are labelled `transient` and allowed
-by `validation/native.py`; a repeat that stays wrong still fails CI.
+assembled call twice on mismatch. Two matching repeats are labelled `transient`; every wrong first
+result now fails `validation/native.py` and CTest.
 
 What was established:
 
 - `ref_soak` found no mismatch in 150 million random iterations on each of 32 runners or 100 million locally. It copies the
   plain-C functions but uses nonzero odd divisors, its own random generator and a separate binary; this negative result does
   not rule out a first-block C, optimizer or input-dependent cause in `writeexec`.
-- The first block's expected signed remainder contains `((int64_t)num1 << 32 | num2)`: when the shift overflows signed
-  64-bit `int64_t` (for `num1 >= 0x80000000`), that C expression has undefined behavior. `ref_soak` copied it too.
-  This is a concrete harness defect to isolate, not evidence that it caused any of the observed transient results.
+- The first block's expected signed remainder formerly contained `((int64_t)num1 << 32 | num2)`:
+  for `num1 >= 0x80000000`, that C expression has undefined behavior. The signed multiplication
+  and division helpers also negated the minimum signed values. These reference defects are repaired
+  in both the legacy harness and `ref_soak`; none is proven to have caused an observed CI event.
 - The assembled `edge_vectors` case is not input dependent in the usual deterministic sense: it uses fixed tables and its
   repeat call was right. The three plain-C legacy events used random inputs.
 - At least one earlier event occurred with the thread pinned (`WE_PIN=1`), so migration alone cannot explain all events.
@@ -61,14 +63,18 @@ What was established:
 - No CPU model is implicated: the runners are a mix of AMD EPYC 7763/9V45/9V74 and Intel Xeon 8370C/8573C/6973P-C, and the failing
   jobs whose CPU was recorded were EPYC 7763 (the most common model).
 
-The assembled procedures store an operand into an instruction and jump to it within a few cycles. The architecture manuals promise coherent
-same-thread self-modifying code, but the manuals' portable recipe adds a serializing instruction, which the verified byte layout
-(`validation/layout`) does not contain, so the assembly is deliberately not changed. A rare stale-fetch event on a virtualized
-host is a hypothesis for the assembled `DIV32` and `MODEXP32` events only; it is not proven. The harnesses therefore classify instead of hiding: `edge_vectors` calls the
-procedure twice more on a mismatch, reports a result that is right on both repeats as `transient` (counted in the final
-`edge vectors ok N (K transient)` line, not a failure), and fails if it stays wrong; the Windows ctest steps allow up to three
-attempts for the legacy harness (`--repeat until-pass:3`); mismatch lines of the legacy harness carry their source line and CPU.
+The assembled procedures store an operand into an instruction and jump to it. Intel SDM Vol. 3A §8.1.3 lists a jump
+to the new code (or an intermediate location) **or** a serializing instruction as compliant same-thread sequences;
+AMD APM Vol. 2 §7.6.1 says no special action is needed for same-thread updates. Thus absence of `CPUID` alone does
+not explain these events. A stale fetch on a virtualized host remains an unproven hypothesis for the assembled `DIV32`
+and `MODEXP32` events. `edge_vectors` and the focused `edge_vectors modexp N seed` mode record the first wrong result,
+exact operands in the focused mode, and two same-input repeats. Any wrong first result now fails the run, even if the
+repeats pass; CI no longer retries the Windows CTest step. Mismatch lines in the legacy harness carry their source line
+and CPU. Intel: https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf ;
+AMD: https://docs.amd.com/v/u/en-US/24593_3.44_APM_Vol2 .
 `.github/workflows/flake-hunt.yml` (manual) repeats the tests on many runners. This is native evidence only and does not enter any
 Lean statement.
 
-Follow-up alignment audit (2026-10-18): the local linked `edge_vectors` images had 12 (x86) and 10 (x64) statically resolved 32-bit patch fields that span a 64-byte line. Some occur in helpers reached by division (for example x86 `shr32arg1_3+2`, x64 `xorret+1` and `divshl1loop+1`). The initially suspected `divres4+2` crossing in the x86 *object* did **not** cross in the linked vector binary. Relinked x86 and x64 vector binaries each passed 232,081 checks with zero transients. These facts establish a layout-dependent fetch-coherence risk, not the cause of the rare CI mismatch. The diagnostic intentionally does not turn a crossing into a test failure; eliminating one crossing would shift other code and could create another elsewhere. A fix requires a controlled linked-layout comparison with enough repeated calls to distinguish it from the observed low event rate.
+Follow-up alignment audit (2026-10-18): the local linked `edge_vectors` images had 12 (x86) and 10 (x64) statically resolved 32-bit patch fields that span a 64-byte line. Some occur in helpers reached by division (for example x86 `shr32arg1_3+2`, x64 `xorret+1` and `divshl1loop+1`). The initially suspected `divres4+2` crossing in the x86 *object* did **not** cross in the linked vector binary. Relinked x86 and x64 vector binaries each passed 232,081 checks with zero transients. A crossing is a measured layout fact, not evidence that it caused a mismatch. The diagnostic does not turn a crossing into a failure; eliminating one crossing would shift other code and could create another elsewhere. A fix requires a controlled linked-layout comparison with enough repeated calls to distinguish it from the observed low event rate.
+
+On the local Debug|Win32 MSBuild image, `cdb` with the matching PDB disassembled `WriteExecMODEXP32_C`: it loads three 32-bit stack arguments, writes all twelve operand bytes, patches four result destinations and the return jump, then jumps to `WriteExecMODEXP32`. Its `modexpres3+2` destination patch starts at cache-line offset 63. In the separate linked CMake Release|Win32 vector image, `patch_alignment.py` finds different hot crossings: `modexp32arg3_1+2` at offset 63, `divretval2+2` at 62, and `shr32arg1_3+2` at 62. The links differ, so padding one location does not remove the others or establish a cause. The wrapper disassembly cannot establish correctness of the internal `MODEXP32`/`DIV32` trace or diagnose the earlier CI value without its operands. A focused 1,000-call differential run on each local assembled architecture and a subsequent 100-call mixed-operation run on each passed with no mismatch; the Windows CMake focus test passed 100 fresh triples and the legacy Debug|Win32 harness passed once. These are negative samples, not closure of the rare event.

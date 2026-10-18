@@ -172,7 +172,7 @@ submit everything together; if the automated review dislikes it, the Self-Spectr
   touch-trace wording, PoC loop order in `Mistraining` (62e20ac). Challenge 851 lines / ~60 KB.
 - Closed 2026-10-14: registered as PALOMAR-2026-10-14-000007 v1 (commit `fe72073`, docs-only on `62e20ac`; trust level high).
   Submissions and registration were performed by the author.
-- Candidate version 2 preparation (2026-10-18): metadata title now includes "with errata" and `review.notes`
+- Candidate version 2 preparation (2026-10-18): the metadata title omits the errata qualifier; `review.notes`
   distinguish the registered version 1 gates from those required for a new source commit. The selected
   Lean statements and proofs remain unchanged; `PALOMAR_SEMANTICS.md` records the native demo's updated
   probe stride and reload order. Exact-commit verification and author submission remain pending.

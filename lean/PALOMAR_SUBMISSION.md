@@ -14,7 +14,7 @@ Notes: AI assistance (Claude) is disclosed in formalization.yaml. The model is i
 Closed since the first sheet: C18 (Fig. 6 byte-level proof, `X86/Fig6.lean`) and the WE-entry edge vectors (`validation/native_edge.py`).
 Unverified: renderer on the new pin, Comparator/NanoDa run records, author errata review, research-interest review of the Self-Spectre results (an earlier submission of abb8273 was reviewed with a separately selected Spectre index-arithmetic result and flagged; that result was dropped and the contract-level Self-Spectre results added in R9).
 Mathlib re-pinned 302343bb -> 5e043698 (same Lean v4.35.0-rc3) so that Plausible is fb13df7, the revision Verso pins; Mathlib 302343bb (Plausible afc2695) is rejected by the renderer's manifest merge (PalomarSubmission #166 / #131). Full preflight passed on the final commit.
-Known: the legacy Debug|Win32 harness (`writeexec.c`, random checks) failed once in CI on a rare random mismatch near the MODEXP32 check, passed on rerun, and could not be reproduced in ~1.2M local random checks; it is preserved unmodified (legacy code, not part of the proof).
+Known: the legacy Debug|Win32 harness (`writeexec.c`, random checks) failed once in CI at the MODEXP32 check without recording operands. The same-input repeat telemetry and a focused modular exponentiation differential runner were added; the original cause remains open. Legacy signed-reference undefined behavior was repaired separately (legacy code is outside the proof).
 Outcome: four submissions by the author (private records kept outside the repository). Automated reviews 1-3 requested
 changes, each addressed in the Lean statement or the prose: (1) the separately selected Spectre index arithmetic was dropped;
 (2) `VictimLeak` reload result stated from a cleared probe array; (3) the source note separates the unconditional Write-Execute
@@ -26,7 +26,7 @@ the touch-trace boundary, and `Mistraining` follows the PoC's descending loop. T
 The registered version 1 above remains pinned to `fe720739a11adeb1e9e2b2b13948cc6a7586920d`.
 For an ordinary version 2, submit the full SHA of the new, green commit on `master`, retain project
 path `lean` and comparator path `lean/comparator.json`, and enter the existing Palomar ID
-`PALOMAR-2026-10-14-000007`. The metadata title now includes "with errata". The Lean statements
+`PALOMAR-2026-10-14-000007`. The metadata title omits the errata qualifier. The Lean statements
 remain about the published PoC and an abstract speculation contract; the current calibrated native
 demos use a different physical probe stride and reload order, as described in
 `PALOMAR_SEMANTICS.md`. A new exact-commit Palomar preflight and review are required before the

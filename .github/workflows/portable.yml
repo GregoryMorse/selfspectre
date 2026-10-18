@@ -42,8 +42,7 @@ jobs:
           if ($obj -and $map) { python validation/patch_alignment.py $obj.FullName $map.FullName }
           else { throw "Write-Execute object or edge_vectors linker map is missing" }
       - name: Test
-        # Up to three attempts: see "Intermittent mismatch on Windows runners" in validation/README.md.
-        run: ctest --test-dir build/cmake -C Release --output-on-failure -V --repeat until-pass:3
+        run: ctest --test-dir build/cmake -C Release --output-on-failure -V
       - name: Keep test logs and binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2

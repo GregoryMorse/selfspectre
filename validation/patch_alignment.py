@@ -69,7 +69,7 @@ def analyze(obj, map_file):
     print(f"{obj.name}: {matched} statically resolved patch fields; {len(crossing)} cross a 64-byte line in this link")
     for expr, linked_offset, width in crossing:
         print(f"  {expr}: RVA 0x{linked_offset:08x}, {width} bytes, line offset {linked_offset % 64}")
-    print("Crossing is a possible fetch-coherence risk, not a diagnosis of a transient mismatch.")
+    print("Crossing is a linked-layout fact, not a diagnosis of a transient mismatch.")
 
 
 if __name__ == "__main__":

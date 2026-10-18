@@ -1,7 +1,7 @@
 /* Edge-case vectors for the assembled Write-Execute entry points (writeexc.asm, x86 and x64).
    Expected values come from the C operators (independent of the Lean development). Evidence, not proof.
    Prints one line per mismatch and exits 1 if any; prints "edge vectors ok <n>" otherwise. A result that is wrong once but right on
-   two immediate repeat calls is reported as "transient" (counted, printed, not a failure); one that stays wrong fails. */
+   two immediate repeat calls is classified as "transient", but still fails the run. */
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -17,7 +17,7 @@ extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES
 static int bad = 0, total = 0, transient = 0;
 /* Evaluated once for the comparison; on a mismatch the entry point is called once more, so that a transient result
    (first call wrong, repeat right) can be told from a deterministic one. */
-#define CHECK(name, got, want, ...) do { unsigned long long g_ = (unsigned long long)(got), w_ = (unsigned long long)(want); total++; if (g_ != w_) { int c0_ = we_cpu(); unsigned long long r1_ = (unsigned long long)(got), r2_ = (unsigned long long)(got); if (r1_ == w_ && r2_ == w_) transient++; else bad++; printf("%s %s: " #__VA_ARGS__ " got %llx want %llx (repeat calls: %llx %llx; cpu %d then %d)\n", (r1_ == w_ && r2_ == w_) ? "transient" : "mismatch", name, g_, w_, r1_, r2_, c0_, we_cpu()); } } while (0)
+#define CHECK(name, got, want, ...) do { unsigned long long g_ = (unsigned long long)(got), w_ = (unsigned long long)(want); total++; if (g_ != w_) { int c0_ = we_cpu(); unsigned long long r1_ = (unsigned long long)(got), r2_ = (unsigned long long)(got); bad++; if (r1_ == w_ && r2_ == w_) transient++; printf("%s %s: " #__VA_ARGS__ " got %llx want %llx (repeat calls: %llx %llx; cpu %d then %d)\n", (r1_ == w_ && r2_ == w_) ? "transient" : "mismatch", name, g_, w_, r1_, r2_, c0_, we_cpu()); } } while (0)
 
 static const uint32_t E32[] = { 0, 1, 2, 3, 0x7f, 0x80, 0xff, 0x100, 0x101, 0x7fff, 0x8000, 0xffff, 0x10000, 0x10001,
 	0xff00ff, 0xffffff, 0x1000000, 0x7fffffff, 0x80000000, 0x80000001, 0xfffffffe, 0xffffffff,
@@ -38,6 +38,43 @@ static uint32_t rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; retur
 
 int main(int argc, char **argv) {
 	we_make_code_writable();
+	if (argc > 1 && strcmp(argv[1], "modexp") == 0) {
+		/* Focused random differential run. Stop on the first bad call so the exact
+		   operands and whether two immediate repeats agree are preserved. */
+		long n = argc > 2 ? atol(argv[2]) : 10000;
+		uint32_t seed;
+		if (argc > 3) seed = (uint32_t)strtoull(argv[3], 0, 0);
+		else if (rand_s(&seed)) { fputs("random seed unavailable\n", stderr); return 2; }
+		rs ^= (uint64_t)seed * 0x9E3779B97F4A7C15ull;
+		printf("MODEXP32 seed %08x, %ld calls\n", seed, n); fflush(stdout);
+		for (long i = 0; i < n; i++) {
+			uint32_t b = rnd(), e = rnd(), m = rnd();
+			if (m < 2) m = 2;
+			/* Exercise the same shared MUL32/DIV32 patch sites through their C
+			   wrappers before MODEXP32, as the legacy harness does. */
+			uint64_t product = (uint64_t)b * m;
+			uint32_t expected_mod = b % m;
+			uint64_t prior_mul = WriteExecMUL32_C(b, m);
+			uint32_t prior_mod = WriteExecMOD32_C(product + expected_mod, m);
+			if (prior_mul != product || prior_mod != expected_mod) {
+				printf("MODEXP32 prelude mismatch iteration %ld inputs %08x %08x %08x mul %llx want %llx mod %08x want %08x\n",
+					i, b, e, m, (unsigned long long)prior_mul, (unsigned long long)product, prior_mod, expected_mod);
+				return 1;
+			}
+			uint32_t want = modexp_ref(b, e, m);
+			uint32_t got = WriteExecMODEXP32_C(b, e, m);
+			if (got != want) {
+				int cpu = we_cpu();
+				uint32_t r1 = WriteExecMODEXP32_C(b, e, m);
+				uint32_t r2 = WriteExecMODEXP32_C(b, e, m);
+				printf("MODEXP32 mismatch iteration %ld inputs %08x %08x %08x got %08x want %08x repeats %08x %08x cpu %d then %d\n",
+					i, b, e, m, got, want, r1, r2, cpu, we_cpu());
+				return 1;
+			}
+		}
+		printf("MODEXP32 stress ok %ld\n", n);
+		return 0;
+	}
 	if (argc > 1) { /* stress: random vectors, `edge_vectors N seed` */
 		long n = atol(argv[1]); long every = argc > 3 ? atol(argv[3]) : 20; if (argc > 2) rs ^= (uint64_t)atol(argv[2]) * 0x9E3779B97F4A7C15ull;
 		for (long i = 0; i < n; i++) {
@@ -49,7 +86,7 @@ int main(int argc, char **argv) {
 			if (c) { CHECK("DIV32", WriteExecDIV32_C(x, c), (uint32_t)(x / c), a b c); CHECK("MOD32", WriteExecMOD32_C(x, c), (uint32_t)(x % c), a b c); }
 			if (c >= 2 && i % every == 0) CHECK("MODEXP32", WriteExecMODEXP32_C(a, b, c), modexp_ref(a, b, c), a b c);
 		}
-		printf(bad ? "stress FAILED %d of %d\n" : "stress ok %d checks (%d transient)\n", bad ? bad : total, bad ? total : transient);
+		printf(bad ? "stress FAILED %d of %d (%d transient)\n" : "stress ok %d checks (%d transient)\n", bad ? bad : total, transient);
 		return bad != 0;
 	}
 	for (size_t i = 0; i < N32; i++) {

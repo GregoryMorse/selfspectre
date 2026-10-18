@@ -31,6 +31,6 @@
   },
   "registry_pipeline": "Renderer, Comparator and NanoDa ran in the Palomar pipeline for the registered entry (status registered, trust level high); their individual run records are not attached here",
   "follow_up": [
-    "Title wording ('... with errata') to be revised in a later registry version (author)"
+    "The candidate version 2 metadata title omits the errata qualifier; registration remains with the author"
   ]
 }
