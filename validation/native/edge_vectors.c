@@ -48,7 +48,10 @@ int main(int argc, char **argv) {
 		rs ^= (uint64_t)seed * 0x9E3779B97F4A7C15ull;
 		printf("MODEXP32 seed %08x, %ld calls\n", seed, n); fflush(stdout);
 		for (long i = 0; i < n; i++) {
-			uint32_t b = rnd(), e = rnd(), m = rnd();
+			/* Exact operands of the 2026-10-18 Debug|x64 CI transient. */
+			uint32_t b = i ? rnd() : 0x2997D078u;
+			uint32_t e = i ? rnd() : 0x4C815A47u;
+			uint32_t m = i ? rnd() : 0x2A94AE94u;
 			if (m < 2) m = 2;
 			/* Exercise the same shared MUL32/DIV32 patch sites through their C
 			   wrappers before MODEXP32, as the legacy harness does. */

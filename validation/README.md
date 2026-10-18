@@ -23,11 +23,12 @@
   (`lean/formalization.yaml` against the pinned v0.4 schema and the registry taxonomies).
 - `ci/` — `linux.sh` (cold build, Challenge/Solution, `axioms.py`, generated-file and errata checks) used by `.github/workflows/proof.yml`.
 - `native_edge.py` — assembles `src/writeexc.asm` (x86, x64) and runs `native/edge_vectors.c`: deterministic boundary vectors (232,081 checks: all 8-bit pairs, every shift count, carry/borrow boundaries, MUL32/DIV32/MOD32/MODEXP32, FIPS-197 C.1) against the assembled entry points. Evidence, not proof.
-- `edge_vectors modexp N [seed]` — focused assembled `MODEXP32` versus an independent 64-bit C reference for `N` random triples; prints the seed and exact operands on the first failure and fails even if immediate repeats pass. The Windows CMake suite runs 100 fresh triples per job.
+- `edge_vectors modexp N [seed]` — focused assembled `MODEXP32` versus an independent 64-bit C reference for the captured Debug|x64 CI triple followed by `N-1` random triples; prints the seed and exact operands on the first failure and fails even if immediate repeats pass. The Windows CMake suite runs 100 calls per job.
 - `patch_alignment.py <writeexc.obj> <edge_vectors.map>` — resolves simple byte/word/dword code-patch sites against the *linked* MSVC image and reports stores that span a 64-byte cache line. The Windows CMake harnesses emit linker maps and CI prints this diagnostic. Object-file offsets alone are insufficient because the linker shifts the assembly section relative to the cache-line grid.
+- `audit_smc_fallthrough.py` — checks that a straight-line assembly block does not store into a labeled instruction and then fall through to that label. This is a source check of one self-modifying-code sequencing rule, not a proof of runtime behavior.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
 
-## Rare native mismatches (open: reproduced, not explained)
+## Rare native mismatches (open: reproduced; Intel portability gap repaired)
 
 Four times in CI, on GitHub `windows-2022` runners, a native check returned a wrong result once and a repeat passed. One was
 an assembled Write-Execute call: `edge_vectors` Win32 `DIV32` ("got 1fe want 1fe": the first call was wrong, the immediate
@@ -42,6 +43,8 @@ inputs nor same-input repeats. Passing other configurations with fresh random in
 whether this was transient or input-specific. The check now records inputs and repeats the same
 assembled call twice on mismatch. Two matching repeats are labelled `transient`; every wrong first
 result now fails `validation/native.py` and CTest.
+
+A sixth event occurred on 2026-10-18 in the push-triggered [proof/native run #46](https://github.com/GregoryMorse/selfspectre/actions/runs/39151226301), `writeexec` Debug|x64 `WriteExecMODEXP32_C` at `src/writeexec.c:833`. For base `2997D078`, exponent `4C815A47`, modulus `2A94AE94`, the first call returned `122C3628` instead of `1D3A89A8`; two immediate same-input repeats returned `1D3A89A8` on CPU 0. The independent modular-exponentiation reference also returns `1D3A89A8`. This event occurred after the earlier alignment changes and disproves closure based on the prior negative stress runs.
 
 What was established:
 
@@ -63,11 +66,7 @@ What was established:
 - No CPU model is implicated: the runners are a mix of AMD EPYC 7763/9V45/9V74 and Intel Xeon 8370C/8573C/6973P-C, and the failing
   jobs whose CPU was recorded were EPYC 7763 (the most common model).
 
-The assembled procedures store an operand into an instruction and jump to it. Intel SDM Vol. 3A §8.1.3 lists a jump
-to the new code (or an intermediate location) **or** a serializing instruction as compliant same-thread sequences;
-AMD APM Vol. 2 §7.6.1 says no special action is needed for same-thread updates. Thus absence of `CPUID` alone does
-not explain these events. A stale fetch on a virtualized host remains an unproven hypothesis for the assembled `DIV32`
-and `MODEXP32` events. `edge_vectors` and the focused `edge_vectors modexp N seed` mode record the first wrong result,
+The source audit after that event found 29 straight-line paths in `src/writeexc.asm` where a store patched an instruction later executed by fallthrough. Intel SDM Vol. 3A §8.1.3 recommends a jump to the new or intermediate code, or a serializing instruction, for portable same-thread self-modifying code; the existing wrapper jumps did not cover these internal paths. Each path now branches to its first patched instruction, and `audit_smc_fallthrough.py` guards the source pattern in CI. This closes a documented Intel portability gap, but the one-off `DIV32` and `MODEXP32` events have not been causally traced to any specific path. AMD APM Vol. 2 §7.6.1 explicitly says its processors detect in-flight self-modification, flush and refetch, with no special software action. A hardware machine clear and the Intel source-level recommendation describe different layers, so observing a machine clear would not itself establish that every earlier modified fetch is covered. `native.py` now records the host CPU and Windows version for future correlations. `edge_vectors` and the focused `edge_vectors modexp N seed` mode record the first wrong result,
 exact operands in the focused mode, and two same-input repeats. Any wrong first result now fails the run, even if the
 repeats pass; CI no longer retries the Windows CTest step. Mismatch lines in the legacy harness carry their source line
 and CPU. Intel: https://www.intel.com/content/dam/www/public/us/en/documents/manuals/64-ia-32-architectures-software-developer-vol-3a-part-1-manual.pdf ;

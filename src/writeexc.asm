@@ -853,6 +853,7 @@ mov byte ptr [shl32arg1_2+6], 0
 mov byte ptr [shl32arg1_3+6], 0
 mov byte ptr [shl32arg1_4+6], 0
 
+jmp shl32arg1_1 ; branch after patching code before executing it
 shl32arg1_1:: mov byte ptr [shl32arg1_1copy+6], 0
 shl32arg1_2:: mov byte ptr [shl32arg1_2copy+6], 0
 shl32arg1_3:: mov byte ptr [shl32arg1_3copy+6], 0
@@ -886,6 +887,7 @@ mov dword ptr [shl32arg2small + 2], shl32arg2_2copy+6-shl32arg2small-2-4-1
 else
 mov dword ptr [shl32arg2small + 2], shl32arg2_2copy+6
 endif
+jmp shl32arg2small ; branch after patching code before executing it
 shl32arg2small:: mov byte ptr [shl32arg2_1copy+6], 0
 shlargloop: jmp shlarghead3
 
@@ -1164,6 +1166,7 @@ mov byte ptr [shl64arg1_6+6], 0
 mov byte ptr [shl64arg1_7+6], 0
 mov byte ptr [shl64arg1_8+6], 0
 
+jmp shl64arg1_1 ; branch after patching code before executing it
 shl64arg1_1:: mov byte ptr [shl64arg1_1copy+6], 0
 shl64arg1_2:: mov byte ptr [shl64arg1_2copy+6], 0
 shl64arg1_3:: mov byte ptr [shl64arg1_3copy+6], 0
@@ -1229,6 +1232,7 @@ mov dword ptr [shl64arg2small + 2], shl64arg2_2copy+6-shl64arg2small-2-4-1
 else
 mov dword ptr [shl64arg2small + 2], shl64arg2_2copy+6
 endif
+jmp shl64arg2small ; branch after patching code before executing it
 shl64arg2small:: mov byte ptr [shl64arg2_1copy+6], 0
 shlargloop: jmp shlarghead7
 
@@ -1569,6 +1573,7 @@ mov byte ptr [shr32arg1_1+6], 0
 mov byte ptr [shr32arg1_2+6], 0
 mov byte ptr [shr32arg1_3+6], 0
 
+jmp shr32arg1_1 ; branch after patching code before executing it
 shr32arg1_1:: mov byte ptr [shr32arg1_1copy+6], 0
 shr32arg1_2:: mov byte ptr [shr32arg1_2copy+6], 0
 shr32arg1_3:: mov byte ptr [shr32arg1_3copy+6], 0
@@ -1602,6 +1607,7 @@ mov dword ptr [shr32arg2small + 2], shr32arg2_2copy+6-shr32arg2small-2-4-1
 else
 mov dword ptr [shr32arg2small + 2], shr32arg2_2copy+6
 endif
+jmp shr32arg2small ; branch after patching code before executing it
 shr32arg2small:: mov byte ptr [shr32arg2_1copy+6], 0
 shrargloop: jmp shrarghead3
 
@@ -1880,6 +1886,7 @@ mov byte ptr [shr64arg1_5+6], 0
 mov byte ptr [shr64arg1_6+6], 0
 mov byte ptr [shr64arg1_7+6], 0
 
+jmp shr64arg1_1 ; branch after patching code before executing it
 shr64arg1_1:: mov byte ptr [shr64arg1_1copy+6], 0
 shr64arg1_2:: mov byte ptr [shr64arg1_2copy+6], 0
 shr64arg1_3:: mov byte ptr [shr64arg1_3copy+6], 0
@@ -1945,6 +1952,7 @@ mov dword ptr [shr64arg2small + 2], shr64arg2_2copy+6-shr64arg2small-2-4-1
 else
 mov dword ptr [shr64arg2small + 2], shr64arg2_2copy+6
 endif
+jmp shr64arg2small ; branch after patching code before executing it
 shr64arg2small:: mov byte ptr [shr64arg2_1copy+6], 0
 shrargloop: jmp shrarghead7
 
@@ -2923,6 +2931,7 @@ mov dword ptr [mul32arg1_6 + 2], shlx6+6
 mov dword ptr [mul32arg1_7 + 2], shlx7+6
 mov dword ptr [mul32arg1_8 + 2], shlx8+6
 endif
+jmp mul32arg1_1 ; branch after patching code before executing it
 mul32arg1_1:: mov byte ptr [mulx1+6], 0
 mul32arg1_2:: mov byte ptr [mulx2+6], 0
 mul32arg1_3:: mov byte ptr [mulx3+6], 0
@@ -2947,6 +2956,7 @@ mov dword ptr [mul32arg2_1 + 2], yand+6-mul32arg2_1-2-4-1
 else
 mov dword ptr [mul32arg2_1 + 2], yand+6
 endif
+jmp mul32arg2_1 ; branch after patching code before executing it
 mul32arg2_1:: mov byte ptr [mul32arg2_1copy+6], 0
 mulargyloop: jmp mulargyhead
 
@@ -2975,6 +2985,7 @@ mov dword ptr [mul32arg2_2 + 2], shry2+6
 mov dword ptr [mul32arg2_3 + 2], shry3+6
 mov dword ptr [mul32arg2_4 + 2], shry4+6
 endif
+jmp mul32arg2_1copy ; branch after patching code before executing it
 mul32arg2_1copy:: mov byte ptr [checky1+6], 0
 mul32arg2_2:: mov byte ptr [checky2+6], 0
 mul32arg2_3:: mov byte ptr [checky3+6], 0
@@ -3120,6 +3131,7 @@ mov dword ptr [addretval6 + 2], mulres6+6
 mov dword ptr [addretval7 + 2], mulres7+6
 mov dword ptr [addretval8 + 2], mulres8+6
 endif
+jmp addretval1 ; branch after patching code before executing it
 addretval1: mov byte ptr [mulrest1+6], 0
 addretval2: mov byte ptr [mulrest2+6], 0
 addretval3: mov byte ptr [mulrest3+6], 0
@@ -3273,6 +3285,7 @@ mov dword ptr [div32arg2_4 + 2], yxor2+6-div32arg2_4-2-4-1
 else
 mov dword ptr [div32arg2_4 + 2], yxor2+6
 endif
+jmp div32arg2_4 ; branch after patching code before executing it
 div32arg2_4:: mov byte ptr [div32arg2_4copy+6], 0
 ynotloop: jmp ynothead2
 
@@ -3304,6 +3317,7 @@ mov dword ptr [div32arg1_2 + 2], divres2+6
 mov dword ptr [div32arg1_3 + 2], divres3+6
 mov dword ptr [div32arg1_4 + 2], divres4+6
 endif
+jmp div32arg1_1 ; branch after patching code before executing it
 div32arg1_1:: mov byte ptr [div32arg1_1copy+6], 0
 div32arg1_2:: mov byte ptr [div32arg1_2copy+6], 0
 div32arg1_3:: mov byte ptr [div32arg1_3copy+6], 0
@@ -3351,6 +3365,7 @@ mov dword ptr [div32arg1_6 + 2], shlx6+6
 mov dword ptr [div32arg1_7 + 2], shlx7+6
 mov dword ptr [div32arg1_8 + 2], shlx8+6
 endif
+jmp div32arg1_1copy ; branch after patching code before executing it
 div32arg1_1copy: mov byte ptr [divx1+6], 0
 div32arg1_2copy: mov byte ptr [divx2+6], 0
 div32arg1_3copy: mov byte ptr [divx3+6], 0
@@ -3375,6 +3390,7 @@ mov dword ptr [ct + 2], ctrchk+6-ct-2-4-1
 else
 mov dword ptr [ct + 2], ctrchk+6
 endif
+jmp ct ; branch after patching code before executing it
 ct: mov byte ptr [decval+6], 0
 ctrloop: jmp ctrhead
 
@@ -3462,6 +3478,7 @@ mov dword ptr [div32shl1_1 + 2], quotxor+6-div32shl1_1-2-4-1
 else
 mov dword ptr [div32shl1_1 + 2], quotxor+6
 endif
+jmp div32shl1_1 ; branch after patching code before executing it
 div32shl1_1: mov byte ptr [div32shl1_1copy+6], 0
 divshlloop: jmp divshlhead
 
@@ -3506,6 +3523,7 @@ mov dword ptr [div32shl1_6 + 2], div32arg1_6+6
 mov dword ptr [div32shl1_7 + 2], div32arg1_7+6
 mov dword ptr [div32shl1_8 + 2], div32arg1_8+6
 endif
+jmp div32shl1_1copy ; branch after patching code before executing it
 div32shl1_1copy: mov byte ptr [divrest1+6], 0
 div32shl1_2: mov byte ptr [divrest2+6], 0
 div32shl1_3: mov byte ptr [divrest3+6], 0
@@ -3530,6 +3548,7 @@ mov dword ptr [shly4 + 2], shlof+6-shly4-2-4-1
 else
 mov dword ptr [shly4 + 2], shlof+6
 endif
+jmp shly4 ; branch after patching code before executing it
 shly4: mov byte ptr [shly4+6], 0
 shlyloop: jmp shlyhead
 
@@ -3579,6 +3598,7 @@ else
 mov dword ptr [divx8 + 2], lxor+6
 mov dword ptr [divrest8 + 2], lxor2+6
 endif
+jmp divx8 ; branch after patching code before executing it
 divx8: mov byte ptr [divx8copy+6], 0
 divrest8: mov byte ptr [divrest8copy+6], 0
 lxorloop: jmp lxorhead2
@@ -3721,6 +3741,7 @@ mov dword ptr [div32rem2_4 + 2], yxor+6-div32rem2_4-2-4-1
 else
 mov dword ptr [div32rem2_4 + 2], yxor+6
 endif
+jmp div32rem2_4 ; branch after patching code before executing it
 div32rem2_4: mov byte ptr [div32rem2_4copy+6], 0
 yxorloop: jmp yxorhead2
 
@@ -3749,6 +3770,7 @@ mov dword ptr [div32rem2_2 + 2], div32_2_2+6
 mov dword ptr [div32rem2_3 + 2], div32_2_3+6
 mov dword ptr [div32rem2_4copy + 2], div32_2_4+6
 endif
+jmp div32rem2_1final ; branch after patching code before executing it
 div32rem2_1final: mov byte ptr [div32rem2_1sub+6], 0
 div32rem2_2: mov byte ptr [div32rem2_2sub+6], 0
 div32rem2_3: mov byte ptr [div32rem2_3sub+6], 0
@@ -3791,6 +3813,7 @@ mov dword ptr [subremval4 + 2], subremval4chk+6-subremval4-2-4-1
 else
 mov dword ptr [subremval4 + 2], subremval4chk+6
 endif
+jmp subremval4 ; branch after patching code before executing it
 subremval4: mov byte ptr [subremval4copy+6], 0
 yxor2loop: jmp yxor2head
 
@@ -3935,6 +3958,7 @@ mov dword ptr [div32_2_2 + 2], divrem2+6
 mov dword ptr [div32_2_3 + 2], divrem3+6
 mov dword ptr [div32_2_4 + 2], divrem4+6
 endif
+jmp div32_2_1 ; branch after patching code before executing it
 div32_2_1: mov byte ptr [shly1+6], 0
 div32_2_2: mov byte ptr [shly2+6], 0
 div32_2_3: mov byte ptr [shly3+6], 0
@@ -4079,6 +4103,7 @@ mov dword ptr [modexp32arg3_2 + 2], divmod2copy+6
 mov dword ptr [modexp32arg3_3 + 2], divmod3copy+6
 mov dword ptr [modexp32arg3_4 + 2], divmod4copy+6
 endif
+jmp modexp32arg3_1 ; branch after patching code before executing it
 modexp32arg3_1:: mov byte ptr [divmod1+6], 0
 modexp32arg3_2:: mov byte ptr [divmod2+6], 0
 modexp32arg3_3:: mov byte ptr [divmod3+6], 0
@@ -4125,6 +4150,7 @@ mov dword ptr [modexp32arg1_2 + 2], modbase2copy2+6
 mov dword ptr [modexp32arg1_3 + 2], modbase3copy2+6
 mov dword ptr [modexp32arg1_4 + 2], modbase4copy2+6
 endif
+jmp modexp32arg1_1 ; branch after patching code before executing it
 modexp32arg1_1:: mov byte ptr [modbase1+6], 0
 modexp32arg1_2:: mov byte ptr [modbase2+6], 0
 modexp32arg1_3:: mov byte ptr [modbase3+6], 0
@@ -4144,6 +4170,7 @@ mov dword ptr [modexp32arg2_1 + 2], yand+6-modexp32arg2_1-2-4-1
 else
 mov dword ptr [modexp32arg2_1 + 2], yand+6
 endif
+jmp modexp32arg2_1 ; branch after patching code before executing it
 modexp32arg2_1:: mov byte ptr [modexp32arg2_1copy+6], 0
 exp1loop: jmp exp1head
 
@@ -4172,6 +4199,7 @@ mov dword ptr [modexp32arg2_2 + 2], checky2+6
 mov dword ptr [modexp32arg2_3 + 2], checky3+6
 mov dword ptr [modexp32arg2_4 + 2], checky4+6
 endif
+jmp modexp32arg2_1copy ; branch after patching code before executing it
 modexp32arg2_1copy: mov byte ptr [expshr1+6], 0
 modexp32arg2_2:: mov byte ptr [expshr2+6], 0
 modexp32arg2_3:: mov byte ptr [expshr3+6], 0
@@ -4319,6 +4347,7 @@ mov dword ptr [divretval2 + 2], modexprest2+6
 mov dword ptr [divretval3 + 2], modexprest3+6
 mov dword ptr [divretval4 + 2], modexprest4+6
 endif
+jmp divretval1 ; branch after patching code before executing it
 divretval1: mov byte ptr [modexpres1+2+4], 0
 divretval2: mov byte ptr [modexpres2+2+4], 0
 divretval3: mov byte ptr [modexpres3+2+4], 0

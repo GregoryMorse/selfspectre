@@ -16,6 +16,7 @@ python3 validation/make_challenge.py --check
 python3 validation/audit_errata.py
 python3 validation/audit_errata.py --pdf
 python3 validation/audit_errata.py --refs
+python3 validation/audit_smc_fallthrough.py
 (cd lean && lake env lean ErrataRefs.lean)
 python3 validation/gen_aes_tables.py
 echo "linux-proof: OK"

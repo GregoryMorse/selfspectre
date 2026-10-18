@@ -2,7 +2,7 @@
 Pass = build succeeds and the exe prints no mismatch line. Two correct same-input
 MODEXP32 repeats after a wrong first result are reported as transients and fail the run.
 Usage: python validation/native.py [--toolset v143] [--configs Debug|x64 ...] [--no-run]"""
-import argparse, json, subprocess, sys, time
+import argparse, json, os, platform, subprocess, sys, time
 from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 VS = Path(r"C:\Program Files\Microsoft Visual Studio\18\Enterprise")
@@ -16,6 +16,8 @@ def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--toolset"); ap.add_argument("--no-run", action="store_true")
     ap.add_argument("--project", default="writeexec"); ap.add_argument("--configs", nargs="*", default=["Debug|Win32", "Release|Win32", "Debug|x64", "Release|x64"])
     a = ap.parse_args(); results = {}
+    print("host", json.dumps({"cpu": os.environ.get("PROCESSOR_IDENTIFIER", "unknown"),
+                              "windows": platform.platform(), "pin": os.environ.get("WE_PIN", "unset")}), flush=True)
     for cfg in a.configs:
         conf, plat = cfg.split("|"); arch = "x86" if plat == "Win32" else "x64"
         ts = f" /p:PlatformToolset={a.toolset}" if a.toolset else ""

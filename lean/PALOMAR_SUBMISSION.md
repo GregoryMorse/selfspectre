@@ -32,3 +32,9 @@ remain about the published PoC and an abstract speculation contract; the current
 demos use a different physical probe stride and reload order, as described in
 `PALOMAR_SEMANTICS.md`. A new exact-commit Palomar preflight and review are required before the
 author registers version 2. The author reviews the errata PDF separately.
+
+The native Write-Execute assembly now branches after internal code patches at the 29 direct
+fallthrough sites identified in `validation/README.md`. These are still Write-Execute jumps. The
+selected Lean statement does not assert a CPU's store-to-fetch behavior, and its specifications and
+proofs have not changed. This source-level Intel portability correction is not a new paper claim
+or a demonstrated explanation of the rare native mismatches.
