@@ -2,6 +2,7 @@
 #include <stdint.h>
 #define _CRT_RAND_S
 #include <stdlib.h>
+#define WE_PREPRIVATE_DIAGNOSTIC 1
 #include "portable/we_portable.h"
 #include "portable/writeexec_api.h"
 #include <stdarg.h>

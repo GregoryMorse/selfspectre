@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 #define _CRT_RAND_S
+#define WE_PREPRIVATE_DIAGNOSTIC 1
 #include "../../src/portable/we_portable.h"
 #include "../../src/portable/we_cache_probe.h"
 #include "../../src/portable/writeexec_api.h"

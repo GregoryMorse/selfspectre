@@ -24,6 +24,48 @@ static void we_pin_if_requested(void) {
 		exit(2);
 	}
 }
+#if defined(WE_PREPRIVATE_DIAGNOSTIC)
+/* Diagnostic only: remove the Windows image-page COW transition from the
+   assembled code's timed calls. The Write-Execute procedures themselves are
+   unchanged. */
+extern void WriteExecSHL1(void);
+extern void WriteExecAESLookup_C(uint8_t *, uint8_t *, uint8_t *);
+static void we_preprivate_asm_if_requested(void) {
+	const char *setting = getenv("WE_PREPRIVATE");
+	if (!setting || *setting != '1') return;
+	SYSTEM_INFO system_info;
+	GetSystemInfo(&system_info);
+	uintptr_t page_size = system_info.dwPageSize;
+	uintptr_t first = (uintptr_t)&WriteExecSHL1 & ~(page_size - 1);
+	uintptr_t last = ((uintptr_t)&WriteExecAESLookup_C + page_size - 1) & ~(page_size - 1);
+	MEMORY_BASIC_INFORMATION first_region, last_region;
+	if (last <= first ||
+		!VirtualQuery((const void *)first, &first_region, sizeof(first_region)) ||
+		!VirtualQuery((const void *)last, &last_region, sizeof(last_region)) ||
+		first_region.AllocationBase != last_region.AllocationBase) {
+		fputs("WE_PREPRIVATE invalid assembly extent\n", stderr); exit(2);
+	}
+	size_t cow_pages = 0;
+	for (uintptr_t address = first; address <= last; address += page_size) {
+		MEMORY_BASIC_INFORMATION region;
+		if (!VirtualQuery((const void *)address, &region, sizeof(region)) ||
+			region.Type != MEM_IMAGE ||
+			((region.Protect & 0xff) != PAGE_EXECUTE_WRITECOPY &&
+			 (region.Protect & 0xff) != PAGE_EXECUTE_READWRITE)) {
+			fprintf(stderr, "WE_PREPRIVATE unexpected page at %p\n", (void *)address); exit(2);
+		}
+		if ((region.Protect & 0xff) == PAGE_EXECUTE_WRITECOPY) cow_pages++;
+		volatile unsigned char *byte = (volatile unsigned char *)address;
+		*byte = *byte;
+		if (!VirtualQuery((const void *)address, &region, sizeof(region)) ||
+			(region.Protect & 0xff) != PAGE_EXECUTE_READWRITE) {
+			fprintf(stderr, "WE_PREPRIVATE COW remained at %p\n", (void *)address); exit(2);
+		}
+	}
+	fprintf(stderr, "WE_PREPRIVATE checked %zu assembled-code pages (%zu copy-on-write pages materialized)\n",
+		(size_t)((last - first) / page_size + 1), cow_pages);
+}
+#endif
 #elif defined(__linux__)
 #include <sched.h>
 static void we_pin_if_requested(void) {
@@ -47,7 +89,11 @@ static void we_make_code_writable(void) {
 	we_pin_if_requested();
 }
 #else
+#if defined(_WIN32) && defined(WE_PREPRIVATE_DIAGNOSTIC)
+#define we_make_code_writable() do { we_pin_if_requested(); we_preprivate_asm_if_requested(); } while (0)
+#else
 #define we_make_code_writable() we_pin_if_requested()
+#endif
 #endif
 
 /* Logical processor the calling thread is on (-1 if unknown); printed with a mismatch to show thread migration. */

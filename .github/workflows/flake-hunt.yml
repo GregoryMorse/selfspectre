@@ -8,6 +8,10 @@ on:
         description: Pin each test thread to its starting logical CPU
         type: boolean
         default: false
+      preprivate:
+        description: Materialize executable copy-on-write pages before testing
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
@@ -16,6 +20,7 @@ jobs:
     timeout-minutes: 60
     env:
       WE_PIN: ${{ inputs.pin && '1' || '0' }}
+      WE_PREPRIVATE: ${{ inputs.preprivate && '1' || '0' }}
     strategy:
       fail-fast: false
       matrix:
@@ -58,5 +63,8 @@ jobs:
           name: hunt-${{ matrix.platform }}-${{ matrix.replica }}
           path: |
             build/cmake/Release/*.exe
+            build/cmake/Release/*.pdb
+            build/cmake/Release/*.map
+            build/cmake/**/writeexc.obj
             build/cmake/Testing
           if-no-files-found: ignore
