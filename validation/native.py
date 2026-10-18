@@ -38,6 +38,8 @@ def main():
             rec.update(exit=r.returncode, run_seconds=round(time.time() - t),
                        transient_output=transients[:5], mismatch_output=mism[:5],
                        pass_=(r.returncode == 0 and not mism and not transients))
+            if r.returncode and r.stderr:
+                rec["stderr_tail"] = r.stderr[-1500:]
         results[cfg] = rec; print(cfg, json.dumps(rec), flush=True)
     sys.exit(0 if all(v.get("pass_", v["build_ok"] and a.no_run) for v in results.values()) else 1)
 main()

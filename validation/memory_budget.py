@@ -58,7 +58,8 @@ class Budget:
   if locked not in [0,0x80]:raise RuntimeError('Another verification command is active; run checks serially.')
   self.job=checked(self.k.CreateJobObjectW(None,JOB_NAME))
   info=Limits();info.Basic.Flags=0x8|0x200|0x2000
-  info.Basic.ActiveProcessLimit=8;info.JobMemoryLimit=limit
+  # MSVC's linker may launch LTCG and resource/compiler helpers concurrently.
+  info.Basic.ActiveProcessLimit=16;info.JobMemoryLimit=limit
   checked(self.k.SetInformationJobObject(self.job,9,ctypes.byref(info),ctypes.sizeof(info)))
   checked(self.k.AssignProcessToJobObject(self.job,self.k.GetCurrentProcess()))
   os.environ['SMCTURING_MEMORY_BUDGET']=str(limit)

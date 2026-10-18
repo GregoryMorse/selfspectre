@@ -21,6 +21,24 @@ static int we_pf(int line, const char *fmt, ...) {
 /* Diagnostic read after a failed call: the first SHR32 instruction holds the
    shift byte at offset 6. This is outside the Write-Execute core. */
 extern void WriteExecSHR32(void);
+
+/* Preserve the faulting address on a rare native crash in hosted CI. */
+static LONG WINAPI we_unhandled_exception(EXCEPTION_POINTERS *failure) {
+	const EXCEPTION_RECORD *record = failure->ExceptionRecord;
+	MEMORY_BASIC_INFORMATION instruction_page = { 0 }, target_page = { 0 };
+	SIZE_T instruction_ok = VirtualQuery(record->ExceptionAddress, &instruction_page, sizeof instruction_page);
+	void *target = record->NumberParameters > 1 ? (void *)(uintptr_t)record->ExceptionInformation[1] : NULL;
+	SIZE_T target_ok = target ? VirtualQuery(target, &target_page, sizeof target_page) : 0;
+	unsigned long long rva = instruction_ok ? (unsigned long long)((uintptr_t)record->ExceptionAddress -
+		(uintptr_t)instruction_page.AllocationBase) : 0;
+	fprintf(stderr, "WE_EXCEPTION code=%08lx ip=%p image_rva=%llx access=%llu target=%p target_protect=%08lx target_state=%08lx cpu=%lu\n",
+		(unsigned long)record->ExceptionCode, record->ExceptionAddress, rva,
+		record->NumberParameters ? (unsigned long long)record->ExceptionInformation[0] : 0,
+		target, target_ok ? (unsigned long)target_page.Protect : 0,
+		target_ok ? (unsigned long)target_page.State : 0, (unsigned long)GetCurrentProcessorNumber());
+	fflush(stderr);
+	return EXCEPTION_CONTINUE_SEARCH;
+}
 #endif
 
 //extern uint16_t WriteExecSHL4_C(uint8_t);
@@ -534,6 +552,9 @@ extern uint32_t fastmodexp(uint32_t base, uint32_t exp, uint32_t mod);
 
 int main(int argc,
 	const char * * argv) {
+#if defined(_WIN32)
+	SetUnhandledExceptionFilter(we_unhandled_exception);
+#endif
 	we_make_code_writable();
 	//extern call leads to an E9 xx xx xx xx relative jump, the next E9 xx 80 xx xx is the correct one
 	//uint8_t* FuncPtr = (uint8_t*)((uint8_t*)&WriteExecSHL1 + *((uint32_t*)(((uint8_t*)&WriteExecSHL1) + 1)) + 5);
@@ -614,6 +635,9 @@ int main(int argc,
 #if defined(_WIN32)
 				patched_shift = ((volatile const unsigned char *)(uintptr_t)&WriteExecSHR32)[6];
 #endif
+				fprintf(stderr, "WE_SHR32_FIRST iteration=%d input=%08X shift=%d actual=%08X expected=%08X patched=%d cpu=%d\n",
+					i, num1, j, result32, num1 >> j, patched_shift, first_cpu);
+				fflush(stderr);
 				uint32_t repeat1 = WriteExecSHR32_C(num1, j);
 				uint32_t repeat2 = WriteExecSHR32_C(num1, j);
 				printf("%08X[%08X] SHR32 iteration %d input %08X shift %d prior %08X patched %d repeats %08X %08X cpu %d then %d\n",
