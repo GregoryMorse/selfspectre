@@ -18,10 +18,9 @@ extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES
 /* The first SHR32 instruction contains the count immediate at byte 6. Read it
    only after a mismatch, outside the Write-Execute computation. */
 extern void WriteExecSHR32(void);
-#if defined(_WIN64)
 extern void shlarg1(void);
+extern void shlarg6(void);
 extern void shrarg2(void);
-#endif
 #endif
 
 static int bad = 0, total = 0, transient = 0;
@@ -102,18 +101,17 @@ int main(int argc, char **argv) {
 			uint32_t want = input >> shift;
 			uint32_t got = WriteExecSHR32_C(input, (uint8_t)shift);
 			if (got != want) {
-				int cpu = we_cpu(), patched = -1, split_input = -1, lane_shift = -1;
+				int cpu = we_cpu(), patched = -1, split_input = -1, lane_shift = -1, lane_index = -1;
 #if defined(_WIN32)
 				patched = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
-#if defined(_WIN64)
 				split_input = ((volatile const uint8_t *)(uintptr_t)&shlarg1)[6];
 				lane_shift = ((volatile const uint8_t *)(uintptr_t)&shrarg2)[6];
-#endif
+				lane_index = ((volatile const uint8_t *)(uintptr_t)&shlarg6)[2];
 #endif
 				uint32_t r1 = WriteExecSHR32_C(input, (uint8_t)shift);
 				uint32_t r2 = WriteExecSHR32_C(input, (uint8_t)shift);
-				printf("SHR32 mismatch iteration %ld input %08x shift %u got %08x want %08x prior %08x patched %d split %d lane %d repeats %08x %08x cpu %d then %d\n",
-					i, input, shift, got, want, shift ? input >> (shift - 1) : 0, patched, split_input, lane_shift, r1, r2, cpu, we_cpu());
+				printf("SHR32 mismatch iteration %ld input %08x shift %u got %08x want %08x prior %08x patched %d split %d lane %d index %d repeats %08x %08x cpu %d then %d\n",
+					i, input, shift, got, want, shift ? input >> (shift - 1) : 0, patched, split_input, lane_shift, lane_index, r1, r2, cpu, we_cpu());
 				return 1;
 			}
 		}
