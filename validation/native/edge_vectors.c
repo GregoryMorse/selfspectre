@@ -14,6 +14,11 @@
 unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * WE_PROBE_STRIDE * 16]; uint8_t tmp;
 typedef struct { uint32_t rd_key[60]; int rounds; } AES_KEY_;
 extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY_ *key);
+#if defined(_WIN32)
+/* The first SHR32 instruction contains the count immediate at byte 6. Read it
+   only after a mismatch, outside the Write-Execute computation. */
+extern void WriteExecSHR32(void);
+#endif
 
 static int bad = 0, total = 0, transient = 0;
 /* Evaluated once for the comparison; on a mismatch the entry point is called once more, so that a transient result
@@ -52,6 +57,34 @@ static uint32_t rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; retur
 
 int main(int argc, char **argv) {
 	we_make_code_writable();
+	if (argc > 1 && strcmp(argv[1], "shr32") == 0) {
+		long n = argc > 2 ? atol(argv[2]) : 32000;
+		uint32_t seed;
+		if (argc > 3) seed = (uint32_t)strtoull(argv[3], 0, 0);
+		else if (rand_s(&seed)) { fputs("random seed unavailable\n", stderr); return 2; }
+		rs ^= (uint64_t)seed * 0x9E3779B97F4A7C15ull;
+		printf("SHR32 seed %08x, %ld calls\n", seed, n); fflush(stdout);
+		uint32_t input = 0;
+		for (long i = 0; i < n; i++) {
+			unsigned shift = (unsigned)i % 32;
+			if (!shift) input = rnd();
+			uint32_t want = input >> shift;
+			uint32_t got = WriteExecSHR32_C(input, (uint8_t)shift);
+			if (got != want) {
+				int cpu = we_cpu(), patched = -1;
+#if defined(_WIN32)
+				patched = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
+#endif
+				uint32_t r1 = WriteExecSHR32_C(input, (uint8_t)shift);
+				uint32_t r2 = WriteExecSHR32_C(input, (uint8_t)shift);
+				printf("SHR32 mismatch iteration %ld input %08x shift %u got %08x want %08x prior %08x patched %d repeats %08x %08x cpu %d then %d\n",
+					i, input, shift, got, want, shift ? input >> (shift - 1) : 0, patched, r1, r2, cpu, we_cpu());
+				return 1;
+			}
+		}
+		printf("SHR32 stress ok %ld\n", n);
+		return 0;
+	}
 	if (argc > 1 && strcmp(argv[1], "modexp") == 0) {
 		/* Focused random differential run. Stop on the first bad call so the exact
 		   operands and whether two immediate repeats agree are preserved. */
