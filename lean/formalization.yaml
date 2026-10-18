@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/99c678e569c7c4c0772db297c5ddd5e4c9b6322e/schema/v0.4.schema.json
 version: "v0.4"
 project:
-  name: "Write-Execute computation: a Lean formalization of Self-Spectre"
+  name: "Write-Execute computation: a Lean formalization of Self-Spectre with errata"
   description: >-
     Formalizes Gregory Morse's 2019 paper "Self-Spectre, Write-Execute and the Hidden State":
     the Write-Execute half unconditionally, the Self-Spectre half as conditional theorems over an
@@ -44,8 +44,11 @@ sources:
       persistence are assumptions; the observable leak claims assume a cleared probe array. Not modeled
       and not claimed: any processor's pipeline, branch predictor, cache, timing or handling of
       self-modifying code, whether any CPU satisfies the contract, and the measured Tables 1-2 and Fig. 4
-      (native evidence only). The original paper remains a separately licensed cited source, not a new
-      mathematical result.
+      (native evidence only). The selected leak theorem uses the published PoC's 512-byte probe stride
+      and fixed mix-order reload. The current native AES/RSA demos use a 4096-byte stride, calibrated
+      timing threshold and shuffled reload order; their measurements are evidence, not an instantiation
+      of that exact theorem.
+      The original paper remains a separately licensed cited source, not a new mathematical result.
   - title: "Advanced Encryption Standard (AES), FIPS PUB 197"
     authors: ["National Institute of Standards and Technology"]
     type: "other"
@@ -122,11 +125,22 @@ automation:
         Human-directed complete formalization of the author's own paper, with a written plan, nine
         numbered rounds, exact minimal corrections quoted from the published PDF, no sorry or custom
         axiom outside the Challenge theorem hole, and standard axioms only.
+    - method: "agent"
+      models: ["GPT-6"]
+      framework: "OpenAI Codex"
+      tool_setup: >-
+        Guarded native builds and measurements, cache-timing calibration, portable C changes,
+        linked-code alignment diagnostics, documentation and metadata review. The Lean selected
+        statements and proofs were not changed in this follow-up.
+      prompting_notes: >-
+        The author requested restoration of the published Self-Spectre native experiments,
+        portability improvements and investigation of rare Write-Execute CI mismatches.
   spend_usd: "subscription-based; exact cost not tracked"
   notes: >-
     Gregory Morse supplied the paper, the original C and MASM sources, the intended claims and the
-    project direction. Claude produced the formalization, validation code and documents. Lean kernel
-    and axiom audits and native tests are mechanical evidence, not independent human peer review.
+    project direction. Claude produced the formalization and original validation package; Codex
+    produced the follow-up native repairs, diagnostics and documentation. Lean kernel and axiom
+    audits and native tests are mechanical evidence, not independent human peer review.
 fidelity:
   divergences: >-
     Corrections to the published text are W01-W10: the unbounded-image caveat of the universality claim
@@ -148,9 +162,9 @@ review:
   notes: >-
     The agent checked source alignment of the selected definitions, the errata against the published PDF,
     and standard-axiom closure of every WriteExecute declaration. This is not independent human
-    mathematical review. The author review of the errata PDF is requested separately. Protected
-    Comparator, NanoDa and the Palomar full preflight are pending gates until their run records are
-    attached to lean/FINAL_ACCEPTANCE.json.
+    mathematical review. The author review of the errata PDF is requested separately. The registered
+    version 1 passed the Palomar pipeline at its recorded source commit; any new source commit requires
+    its own mechanical verification and review before registration.
 acknowledgements: >-
   The Lean and Mathlib contributors for the proof assistant and library, and the smcTuring development
   for the vendored word-level base definitions.

@@ -54,3 +54,9 @@ each result definition from the development's individual theorems. All proofs us
   size of `W` on any CPU and the measured tables are not formalized and no theorem says that a given CPU
   satisfies the contract. The measured results (Tables 1-2, Fig. 4) and the compiled instruction counts are
   native evidence only.
+
+The selected `VictimLeak` statement follows the published PoC's 512-byte probe stride and fixed
+`mixIdx` reload order. The current native AES/RSA demos use a 4096-byte stride, a calibrated timing
+threshold and a shuffled reload order to control false hits on newer hardware. These changes do not alter the Lean
+statement or proof. The current demos are fresh hardware evidence; their exact reload procedure is
+not a formal instance of the selected `VictimLeak` statement.

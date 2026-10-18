@@ -78,6 +78,11 @@ we_configure(edge_vectors)
 
 add_executable(writeexec src/writeexec.c src/spectreopt.c ${WE_OBJECTS})
 we_configure(writeexec)
+if(MSVC)
+  # Keep the final linked layout for intermittent self-modifying-code diagnostics.
+  target_link_options(edge_vectors PRIVATE /MAP)
+  target_link_options(writeexec PRIVATE /MAP)
+endif()
 
 add_executable(ref_soak validation/native/ref_soak.c) # plain-C reference arithmetic only
 we_configure(ref_soak)

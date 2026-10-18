@@ -20,4 +20,14 @@ changes, each addressed in the Lean statement or the prose: (1) the separately s
 (2) `VictimLeak` reload result stated from a cleared probe array; (3) the source note separates the unconditional Write-Execute
 results from the conditional Self-Spectre results, `WindowDepth` states the observable leak from a cleared probe array and names
 the touch-trace boundary, and `Mistraining` follows the PoC's descending loop. The fourth submission was registered as PALOMAR-2026-10-14-000007 v1.
-Follow-up for a later version (author): revise the title wording ("... with errata").
+
+## Candidate update after the native repairs
+
+The registered version 1 above remains pinned to `fe720739a11adeb1e9e2b2b13948cc6a7586920d`.
+For an ordinary version 2, submit the full SHA of the new, green commit on `master`, retain project
+path `lean` and comparator path `lean/comparator.json`, and enter the existing Palomar ID
+`PALOMAR-2026-10-14-000007`. The metadata title now includes "with errata". The Lean statements
+remain about the published PoC and an abstract speculation contract; the current calibrated native
+demos use a different physical probe stride and reload order, as described in
+`PALOMAR_SEMANTICS.md`. A new exact-commit Palomar preflight and review are required before the
+author registers version 2. The author reviews the errata PDF separately.

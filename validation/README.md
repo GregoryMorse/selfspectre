@@ -23,6 +23,7 @@
   (`lean/formalization.yaml` against the pinned v0.4 schema and the registry taxonomies).
 - `ci/` — `linux.sh` (cold build, Challenge/Solution, `axioms.py`, generated-file and errata checks) used by `.github/workflows/proof.yml`.
 - `native_edge.py` — assembles `src/writeexc.asm` (x86, x64) and runs `native/edge_vectors.c`: deterministic boundary vectors (232,081 checks: all 8-bit pairs, every shift count, carry/borrow boundaries, MUL32/DIV32/MOD32/MODEXP32, FIPS-197 C.1) against the assembled entry points. Evidence, not proof.
+- `patch_alignment.py <writeexc.obj> <edge_vectors.map>` — resolves simple byte/word/dword code-patch sites against the *linked* MSVC image and reports stores that span a 64-byte cache line. The Windows CMake harnesses emit linker maps and CI prints this diagnostic. Object-file offsets alone are insufficient because the linker shifts the assembly section relative to the cache-line grid.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
 
 ## Rare transient mismatches of the native harnesses (open: reproduced, not explained)
@@ -55,3 +56,5 @@ procedure twice more on a mismatch, reports a result that is right on both repea
 attempts for the legacy harness (`--repeat until-pass:3`); mismatch lines of the legacy harness carry their source line and CPU.
 `.github/workflows/flake-hunt.yml` (manual) repeats the tests on many runners. This is native evidence only and does not enter any
 Lean statement.
+
+Follow-up alignment audit (2026-10-18): the local linked `edge_vectors` images had 12 (x86) and 10 (x64) statically resolved 32-bit patch fields that span a 64-byte line. Some occur in helpers reached by division (for example x86 `shr32arg1_3+2`, x64 `xorret+1` and `divshl1loop+1`). The initially suspected `divres4+2` crossing in the x86 *object* did **not** cross in the linked vector binary. Relinked x86 and x64 vector binaries each passed 232,081 checks with zero transients. These facts establish a layout-dependent fetch-coherence risk, not the cause of the rare CI mismatch. The diagnostic intentionally does not turn a crossing into a test failure; eliminating one crossing would shift other code and could create another elsewhere. A fix requires a controlled linked-layout comparison with enough repeated calls to distinguish it from the observed low event rate.

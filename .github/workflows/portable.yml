@@ -34,6 +34,13 @@ jobs:
         run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
       - name: Build
         run: cmake --build build/cmake --config Release
+      - name: Report linked code-patch alignment
+        shell: pwsh
+        run: |
+          $obj = Get-ChildItem build/cmake -Recurse -Filter writeexc.obj | Where-Object { $_.FullName -match 'we_asm' } | Select-Object -First 1
+          $map = Get-ChildItem build/cmake -Recurse -Filter edge_vectors.map | Select-Object -First 1
+          if ($obj -and $map) { python validation/patch_alignment.py $obj.FullName $map.FullName }
+          else { throw "Write-Execute object or edge_vectors linker map is missing" }
       - name: Test
         # Up to three attempts: see "Intermittent mismatch on Windows runners" in validation/README.md.
         run: ctest --test-dir build/cmake -C Release --output-on-failure -V --repeat until-pass:3
@@ -48,6 +55,7 @@ jobs:
             build/cmake/writeexec*
             build/cmake/Release/*.exe
             build/cmake/Release/*.pdb
+            build/cmake/Release/*.map
           if-no-files-found: ignore
   msbuild:
     # The Visual Studio solution (vs/selfspectre.sln), built with the pinned Visual Studio 2022 image; output in build/msbuild.
