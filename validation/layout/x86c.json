@@ -1,6 +1,6 @@
 {
 "arch": "x86",
-"text_size": 15479425,
+"text_size": 15479483,
 "labels": {
 "notarg": 327818,
 "notargshl": 327850,
@@ -29,14 +29,14 @@
 "xorj": 344507,
 "xorres": 2441664,
 "xorret": 2441671,
-"carry1": 15365218,
-"carry1retval": 15365302,
-"nocry1": 15365307,
-"hascarry1": 15365309,
-"carry2": 15365400,
-"carry2retval": 15365525,
-"nocry2": 15365530,
-"hascarry2": 15365532
+"carry1": 15365234,
+"carry1retval": 15365318,
+"nocry1": 15365323,
+"hascarry1": 15365325,
+"carry2": 15365416,
+"carry2retval": 15365541,
+"nocry2": 15365546,
+"hascarry2": 15365548
 },
 "tables": {
 "notres": {

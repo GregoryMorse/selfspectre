@@ -36,5 +36,7 @@ author registers version 2. The author reviews the errata PDF separately.
 The native Write-Execute assembly now branches after internal code patches at the 29 direct
 fallthrough sites identified in `validation/README.md`. These are still Write-Execute jumps. The
 selected Lean statement does not assert a CPU's store-to-fetch behavior, and its specifications and
-proofs have not changed. This source-level Intel portability correction is not a new paper claim
-or a demonstrated explanation of the rare native mismatches.
+proofs have not changed. The supporting `X86/LayoutData.lean` offsets for Fig. 7 were regenerated
+from the new assembled objects and the affected modules were rebuilt. This source-level Intel
+portability correction is not a new paper claim or a demonstrated explanation of the rare native
+mismatches.

@@ -298,17 +298,17 @@ theorem x64_shlres5_offsets : ∀ j, j < 256 → x64_shlres5_tab.getD j 0 = x64_
 
 @[expose] def x86c_shlret : Nat := 65550
 
-@[expose] def x86c_carry1retval : Nat := 15365302
+@[expose] def x86c_carry1retval : Nat := 15365318
 
-@[expose] def x86c_nocry1 : Nat := 15365307
+@[expose] def x86c_nocry1 : Nat := 15365323
 
-@[expose] def x86c_hascarry1 : Nat := 15365309
+@[expose] def x86c_hascarry1 : Nat := 15365325
 
-@[expose] def x86c_carry2retval : Nat := 15365525
+@[expose] def x86c_carry2retval : Nat := 15365541
 
-@[expose] def x86c_nocry2 : Nat := 15365530
+@[expose] def x86c_nocry2 : Nat := 15365546
 
-@[expose] def x86c_hascarry2 : Nat := 15365532
+@[expose] def x86c_hascarry2 : Nat := 15365548
 
 @[expose] def x86c_shlarg5 : Nat := 131153
 
@@ -421,17 +421,17 @@ theorem x86c_shlres5_offsets : ∀ j, j < 256 → x86c_shlres5_tab.getD j 0 = x8
 
 @[expose] def x64c_shlret : Nat := 65550
 
-@[expose] def x64c_carry1retval : Nat := 15306726
+@[expose] def x64c_carry1retval : Nat := 15306742
 
-@[expose] def x64c_nocry1 : Nat := 15306731
+@[expose] def x64c_nocry1 : Nat := 15306747
 
-@[expose] def x64c_hascarry1 : Nat := 15306733
+@[expose] def x64c_hascarry1 : Nat := 15306749
 
-@[expose] def x64c_carry2retval : Nat := 15306949
+@[expose] def x64c_carry2retval : Nat := 15306965
 
-@[expose] def x64c_nocry2 : Nat := 15306954
+@[expose] def x64c_nocry2 : Nat := 15306970
 
-@[expose] def x64c_hascarry2 : Nat := 15306956
+@[expose] def x64c_hascarry2 : Nat := 15306972
 
 @[expose] def x64c_shlarg5 : Nat := 131146
 
