@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/99c678e569c7c4c0772db297c5ddd5e4c9b6322e/schema/v0.4.schema.json
 version: "v0.4"
 project:
-  name: "Write-Execute computation: a Lean formalization of Self-Spectre"
+  name: "Write-Execute Computation and Self-Spectre"
   description: >-
     Formalizes Gregory Morse's 2019 paper "Self-Spectre, Write-Execute and the Hidden State":
     the Write-Execute half unconditionally, the Self-Spectre half as conditional theorems over an

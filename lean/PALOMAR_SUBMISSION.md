@@ -26,7 +26,8 @@ the touch-trace boundary, and `Mistraining` follows the PoC's descending loop. T
 The registered version 1 above remains pinned to `fe720739a11adeb1e9e2b2b13948cc6a7586920d`.
 For an ordinary version 2, submit the full SHA of the new, green commit on `master`, retain project
 path `lean` and comparator path `lean/comparator.json`, and enter the existing Palomar ID
-`PALOMAR-2026-10-14-000007`. The metadata title omits the errata qualifier. The Lean statements
+`PALOMAR-2026-10-14-000007`. The metadata title is "Write-Execute Computation and Self-Spectre".
+The Lean statements
 remain about the published PoC and an abstract speculation contract; the current calibrated native
 demos use a different physical probe stride and reload order, as described in
 `PALOMAR_SEMANTICS.md`. A new exact-commit Palomar preflight and review are required before the
