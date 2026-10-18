@@ -37,6 +37,8 @@ The native Write-Execute assembly now branches after internal code patches at th
 fallthrough sites identified in `validation/README.md`. These are still Write-Execute jumps. The
 selected Lean statement does not assert a CPU's store-to-fetch behavior, and its specifications and
 proofs have not changed. The supporting `X86/LayoutData.lean` offsets for Fig. 7 were regenerated
-from the new assembled objects and the affected modules were rebuilt. This source-level Intel
-portability correction is not a new paper claim or a demonstrated explanation of the rare native
+from the new assembled objects and the affected modules were rebuilt. This source-level response to Intel's
+sequencing recommendation is not a new paper claim or a demonstrated explanation of the rare native
 mismatches.
+
+The exact-commit [full mechanical preflight for `8f08771`](https://github.com/GregoryMorse/selfspectre/actions/runs/39156987622) passed. The subsequent [60-job Windows hunt](https://github.com/GregoryMorse/selfspectre/actions/runs/39156169406) found five transient MODEXP32 failures on virtualized AMD EPYC 7763 runners in both Win32 and x64. Native reliability is therefore still open; the passing formal preflight does not resolve it. The author should defer the v2 registration decision until this native investigation is addressed or explicitly disclosed.

@@ -33,6 +33,19 @@ static uint32_t modexp_ref(uint32_t b, uint32_t e, uint32_t m) {
 	return (uint32_t)r;
 }
 
+static void check_modexp(uint32_t b, uint32_t e, uint32_t m) {
+	uint32_t want = modexp_ref(b, e, m), got = WriteExecMODEXP32_C(b, e, m);
+	total++;
+	if (got != want) {
+		int cpu = we_cpu();
+		uint32_t r1 = WriteExecMODEXP32_C(b, e, m), r2 = WriteExecMODEXP32_C(b, e, m);
+		bad++;
+		if (r1 == want && r2 == want) transient++;
+		printf("%s MODEXP32 inputs %08x %08x %08x got %08x want %08x (repeat calls: %08x %08x; cpu %d then %d)\n",
+			(r1 == want && r2 == want) ? "transient" : "mismatch", b, e, m, got, want, r1, r2, cpu, we_cpu());
+	}
+}
+
 static uint64_t rs = 88172645463325252ull;
 static uint32_t rnd(void) { rs ^= rs << 13; rs ^= rs >> 7; rs ^= rs << 17; return (uint32_t)(rs >> 16); }
 
@@ -48,7 +61,7 @@ int main(int argc, char **argv) {
 		rs ^= (uint64_t)seed * 0x9E3779B97F4A7C15ull;
 		printf("MODEXP32 seed %08x, %ld calls\n", seed, n); fflush(stdout);
 		for (long i = 0; i < n; i++) {
-			/* Exact operands of the 2026-10-18 Debug|x64 CI transient. */
+			/* Preserve the seed-to-sequence mapping for hosted failure replay. */
 			uint32_t b = i ? rnd() : 0x2997D078u;
 			uint32_t e = i ? rnd() : 0x4C815A47u;
 			uint32_t m = i ? rnd() : 0x2A94AE94u;
@@ -87,7 +100,7 @@ int main(int argc, char **argv) {
 			CHECK("ADD64", WriteExecADD64_C(x, ((uint64_t)c << 32) | d), x + (((uint64_t)c << 32) | d), a b c d);
 			CHECK("SUB64", WriteExecSUB64_C(x, ((uint64_t)c << 32) | d), x - (((uint64_t)c << 32) | d), a b c d);
 			if (c) { CHECK("DIV32", WriteExecDIV32_C(x, c), (uint32_t)(x / c), a b c); CHECK("MOD32", WriteExecMOD32_C(x, c), (uint32_t)(x % c), a b c); }
-			if (c >= 2 && i % every == 0) CHECK("MODEXP32", WriteExecMODEXP32_C(a, b, c), modexp_ref(a, b, c), a b c);
+			if (c >= 2 && i % every == 0) check_modexp(a, b, c);
 		}
 		printf(bad ? "stress FAILED %d of %d (%d transient)\n" : "stress ok %d checks (%d transient)\n", bad ? bad : total, transient);
 		return bad != 0;
@@ -146,7 +159,12 @@ int main(int argc, char **argv) {
 	{ static const uint32_t B[] = { 0, 1, 2, 3, 0xffff, 0x10000, 0x7fffffff, 0xffffffff };
 	  static const uint32_t M[] = { 2, 3, 0xffff, 0x10000, 0x10001, 0x7fffffff, 0x80000000, 0xfffffffe, 0xffffffff };
 	  for (size_t i = 0; i < sizeof(B) / 4; i++) for (size_t j = 0; j < sizeof(B) / 4; j++) for (size_t k = 0; k < sizeof(M) / 4; k++)
-		CHECK("MODEXP32", WriteExecMODEXP32_C(B[i], B[j], M[k]), modexp_ref(B[i], B[j], M[k]), B[i] B[j] M[k]); }
+		check_modexp(B[i], B[j], M[k]); }
+	/* Recheck exact operands from four CI transients in every ordinary edge run. */
+	check_modexp(0x2997D078u, 0x4C815A47u, 0x2A94AE94u);
+	check_modexp(0xA9EEB105u, 0xC209D12Du, 0xEB5D2736u);
+	check_modexp(0x42A8399Eu, 0xFF9BD8CDu, 0x218628ACu);
+	check_modexp(0x0FF37687u, 0x7785A53Au, 0x751DAE10u);
 	{ /* FIPS-197 Appendix C.1 */
 	  static const uint8_t K[16] = { 0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 };
 	  static const uint8_t P[16] = { 0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff };

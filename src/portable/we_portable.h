@@ -19,13 +19,16 @@
 #include <windows.h>
 static void we_pin_if_requested(void) {
 	const char *p = getenv("WE_PIN");
-	if (p && *p == '1') SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR)1 << GetCurrentProcessorNumber());
+	if (p && *p == '1' && !SetThreadAffinityMask(GetCurrentThread(), (DWORD_PTR)1 << GetCurrentProcessorNumber())) {
+		fprintf(stderr, "WE_PIN affinity failed: %lu\n", (unsigned long)GetLastError());
+		exit(2);
+	}
 }
 #elif defined(__linux__)
 #include <sched.h>
 static void we_pin_if_requested(void) {
 	const char *p = getenv("WE_PIN");
-	if (p && *p == '1') { cpu_set_t m; CPU_ZERO(&m); CPU_SET(sched_getcpu(), &m); sched_setaffinity(0, sizeof m, &m); }
+	if (p && *p == '1') { cpu_set_t m; CPU_ZERO(&m); CPU_SET(sched_getcpu(), &m); if (sched_setaffinity(0, sizeof m, &m)) { perror("WE_PIN affinity failed"); exit(2); } }
 }
 #else
 static void we_pin_if_requested(void) {}

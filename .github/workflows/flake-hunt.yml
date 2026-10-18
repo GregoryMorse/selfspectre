@@ -3,12 +3,19 @@ name: Windows intermittent mismatch hunt
 # mismatch line is prefixed with the source line of its check and the logical CPU (see we_pf in src/writeexec.c).
 on:
   workflow_dispatch:
+    inputs:
+      pin:
+        description: Pin each test thread to its starting logical CPU
+        type: boolean
+        default: false
 permissions:
   contents: read
 jobs:
   hunt:
     runs-on: windows-2022
     timeout-minutes: 60
+    env:
+      WE_PIN: ${{ inputs.pin && '1' || '0' }}
     strategy:
       fail-fast: false
       matrix:
@@ -25,9 +32,25 @@ jobs:
           "CPU: $($c.Name) | cores $($c.NumberOfCores) logical $($c.NumberOfLogicalProcessors) | revision $($c.Revision)"
           "OS: $((Get-CimInstance Win32_OperatingSystem).Version) | hypervisor present: $((Get-CimInstance Win32_ComputerSystem).HypervisorPresent)"
       - run: cmake -S . -B build/cmake -A ${{ matrix.platform }}
-      - run: cmake --build build/cmake --config Release
+      - id: build
+        run: cmake --build build/cmake --config Release
+      - name: Report linked code-patch alignment
+        shell: pwsh
+        run: |
+          $obj = Get-ChildItem build/cmake -Recurse -Filter writeexc.obj | Where-Object { $_.FullName -match 'we_asm' } | Select-Object -First 1
+          $map = Get-ChildItem build/cmake -Recurse -Filter edge_vectors.map | Select-Object -First 1
+          if ($obj -and $map) { python validation/patch_alignment.py $obj.FullName $map.FullName }
+          else { throw "Write-Execute object or edge_vectors linker map is missing" }
       - name: All tests in sequence (no retry)
         run: ctest --test-dir build/cmake -C Release --output-on-failure
+      - name: Replay two captured MODEXP32 seeds
+        if: ${{ always() && steps.build.outcome == 'success' }}
+        shell: pwsh
+        run: |
+          foreach ($seed in @('0x03271bd0', '0xf4e530c5')) {
+            & ./build/cmake/Release/edge_vectors.exe modexp 100 $seed
+            if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          }
       - name: Keep failing binaries
         if: failure()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
