@@ -1,5 +1,6 @@
 """Build and run the legacy writeexec harness in Debug/Release x Win32/x64.
-Pass = build succeeds and the exe prints no mismatch line (it prints only on mismatch, then timings).
+Pass = build succeeds and the exe prints no persistent mismatch line. Two correct same-input
+MODEXP32 repeats after a wrong first result are reported as transients, separately from failures.
 Usage: python validation/native.py [--toolset v143] [--configs Debug|x64 ...] [--no-run]"""
 import argparse, json, subprocess, sys, time
 from pathlib import Path
@@ -30,8 +31,11 @@ def main():
             rec["exe"] = str(exe)
             t = time.time(); r = subprocess.run([str(exe)], cwd=outdir, capture_output=True, text=True, errors="replace", timeout=3000)
             lines = [l for l in r.stdout.splitlines() if l.strip()]
-            mism = [l for l in lines if not l.startswith("Time:")]
-            rec.update(exit=r.returncode, run_seconds=round(time.time() - t), mismatch_output=mism[:5], pass_=(r.returncode == 0 and not mism))
+            transients = [l for l in lines if l.startswith("transient MODEXP32 ")]
+            mism = [l for l in lines if not l.startswith("Time:") and not l.startswith("transient MODEXP32 ")]
+            rec.update(exit=r.returncode, run_seconds=round(time.time() - t),
+                       transient_output=transients[:5], mismatch_output=mism[:5],
+                       pass_=(r.returncode == 0 and not mism))
         results[cfg] = rec; print(cfg, json.dumps(rec), flush=True)
     sys.exit(0 if all(v.get("pass_", v["build_ok"] and a.no_run) for v in results.values()) else 1)
 main()

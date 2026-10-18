@@ -818,8 +818,17 @@ int main(int argc,
 		rand_s(&num3);
 		if (num3 >= 2) { // WriteExecMODEXP32_C requires mod >= 2 (erratum L05)
 			result32 = WriteExecMODEXP32_C(num1, num2, num3);
-			if (result32 != fastmodexp(num1, num2, num3))
-				printf("%08X[%08X]", result32, fastmodexp(num1, num2, num3));
+			uint32_t expected = fastmodexp(num1, num2, num3);
+			if (result32 != expected) {
+				uint32_t repeat1 = WriteExecMODEXP32_C(num1, num2, num3);
+				uint32_t repeat2 = WriteExecMODEXP32_C(num1, num2, num3);
+				if (repeat1 == expected && repeat2 == expected)
+					printf("transient MODEXP32 got %08X want %08X inputs %08X %08X %08X repeats %08X %08X cpu %d\n",
+						result32, expected, num1, num2, num3, repeat1, repeat2, we_cpu());
+				else
+					printf("%08X[%08X] MODEXP32 inputs %08X %08X %08X repeats %08X %08X\n",
+						result32, expected, num1, num2, num3, repeat1, repeat2);
+			}
 		}
 	}
 

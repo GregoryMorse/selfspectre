@@ -26,7 +26,7 @@
 - `patch_alignment.py <writeexc.obj> <edge_vectors.map>` — resolves simple byte/word/dword code-patch sites against the *linked* MSVC image and reports stores that span a 64-byte cache line. The Windows CMake harnesses emit linker maps and CI prints this diagnostic. Object-file offsets alone are insufficient because the linker shifts the assembly section relative to the cache-line grid.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
 
-## Rare transient mismatches of the native harnesses (open: reproduced, not explained)
+## Rare native mismatches (open: reproduced, not explained)
 
 Four times in CI, on GitHub `windows-2022` runners, a native check returned a wrong result once and a repeat passed. One was
 an assembled Write-Execute call: `edge_vectors` Win32 `DIV32` ("got 1fe want 1fe": the first call was wrong, the immediate
@@ -34,6 +34,13 @@ repeat right). The other three were in the **plain-C first block** of the legacy
 value, or a burst of seven). That block ends before the first `WriteExec*` call in `src/writeexec.c`, so those three events
 cannot be attributed to a stale fetch inside the Write-Execute assembly during the failing check. Each subsequent attempt
 passed. The two classes of event may have different causes.
+
+A fifth event occurred on 2026-10-18 in the `writeexec` Debug|Win32 `WriteExecMODEXP32_C` check at
+`src/writeexec.c:822`: `0D2366D8` versus C reference `11E52FFA`. The old check recorded neither
+inputs nor same-input repeats. Passing other configurations with fresh random inputs does not show
+whether this was transient or input-specific. The check now records inputs and repeats the same
+assembled call twice on mismatch. Only two matching repeats are labelled `transient` and allowed
+by `validation/native.py`; a repeat that stays wrong still fails CI.
 
 What was established:
 
@@ -45,10 +52,10 @@ What was established:
   This is a concrete harness defect to isolate, not evidence that it caused any of the observed transient results.
 - The assembled `edge_vectors` case is not input dependent in the usual deterministic sense: it uses fixed tables and its
   repeat call was right. The three plain-C legacy events used random inputs.
-- Not thread migration: it also occurred with the thread pinned (`WE_PIN=1`).
+- At least one earlier event occurred with the thread pinned (`WE_PIN=1`), so migration alone cannot explain all events.
 - For the one assembled `DIV32` event, an immediate repeat call was right, but that does not isolate which code patch or fetch failed.
-- Not reproduced in 26 local runs, 80 + 32 + 32 runner runs of the instrumented harnesses, or in 120 later runner runs (the later
-  runs also carry a changed `writeexec.c`, so the code layout differs). The rate is about one event per 10^8 calls, so layout or
+- The first four events were not reproduced in 26 local runs, 80 + 32 + 32 runner runs of the instrumented harnesses, or in 120 later runner runs (the later
+  runs also carry a changed `writeexec.c`, so the code layout differs). They were sparse enough that layout or
   platform effects cannot be separated statistically with a reasonable number of runs. Linux and macOS runners have been run
   far fewer times (about 15 each), so the absence of events there is not evidence of a Windows-only effect.
 - No CPU model is implicated: the runners are a mix of AMD EPYC 7763/9V45/9V74 and Intel Xeon 8370C/8573C/6973P-C, and the failing
@@ -57,7 +64,7 @@ What was established:
 The assembled procedures store an operand into an instruction and jump to it within a few cycles. The architecture manuals promise coherent
 same-thread self-modifying code, but the manuals' portable recipe adds a serializing instruction, which the verified byte layout
 (`validation/layout`) does not contain, so the assembly is deliberately not changed. A rare stale-fetch event on a virtualized
-host is a hypothesis for the `DIV32` event only; it is not proven. The harnesses therefore classify instead of hiding: `edge_vectors` calls the
+host is a hypothesis for the assembled `DIV32` and `MODEXP32` events only; it is not proven. The harnesses therefore classify instead of hiding: `edge_vectors` calls the
 procedure twice more on a mismatch, reports a result that is right on both repeats as `transient` (counted in the final
 `edge vectors ok N (K transient)` line, not a failure), and fails if it stays wrong; the Windows ctest steps allow up to three
 attempts for the legacy harness (`--repeat until-pass:3`); mismatch lines of the legacy harness carry their source line and CPU.
