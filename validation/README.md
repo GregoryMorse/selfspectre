@@ -28,18 +28,25 @@
 
 ## Rare transient mismatches of the native harnesses (open: reproduced, not explained)
 
-Four times in CI, on GitHub `windows-2022` runners, a Write-Execute call returned a wrong result once and the same call was right
-when repeated: `edge_vectors` Win32 (`DIV32`, "got 1fe want 1fe": the first call was wrong, the immediate repeat right) and the
-first block of the legacy `writeexec` harness on x64, three times (one wrong 32-bit value, or a burst of seven). Each time the
-next attempt, or the repeat call, passed.
+Four times in CI, on GitHub `windows-2022` runners, a native check returned a wrong result once and a repeat passed. One was
+an assembled Write-Execute call: `edge_vectors` Win32 `DIV32` ("got 1fe want 1fe": the first call was wrong, the immediate
+repeat right). The other three were in the **plain-C first block** of the legacy `writeexec` harness on x64 (one wrong 32-bit
+value, or a burst of seven). That block ends before the first `WriteExec*` call in `src/writeexec.c`, so those three events
+cannot be attributed to a stale fetch inside the Write-Execute assembly during the failing check. Each subsequent attempt
+passed. The two classes of event may have different causes.
 
 What was established:
 
-- The plain-C reference arithmetic is not the cause: `ref_soak` ran the same functions (copied verbatim from `writeexec.c`) for
-  150 million random iterations on each of 32 runners and found nothing; 100 million locally also found nothing.
-- Not input dependent: `edge_vectors` uses fixed tables; the failing call is right when repeated.
+- `ref_soak` found no mismatch in 150 million random iterations on each of 32 runners or 100 million locally. It copies the
+  plain-C functions but uses nonzero odd divisors, its own random generator and a separate binary; this negative result does
+  not rule out a first-block C, optimizer or input-dependent cause in `writeexec`.
+- The first block's expected signed remainder contains `((int64_t)num1 << 32 | num2)`: when the shift overflows signed
+  64-bit `int64_t` (for `num1 >= 0x80000000`), that C expression has undefined behavior. `ref_soak` copied it too.
+  This is a concrete harness defect to isolate, not evidence that it caused any of the observed transient results.
+- The assembled `edge_vectors` case is not input dependent in the usual deterministic sense: it uses fixed tables and its
+  repeat call was right. The three plain-C legacy events used random inputs.
 - Not thread migration: it also occurred with the thread pinned (`WE_PIN=1`).
-- Not residual state in the self-modifying code: the repeat call, made immediately, is right.
+- For the one assembled `DIV32` event, an immediate repeat call was right, but that does not isolate which code patch or fetch failed.
 - Not reproduced in 26 local runs, 80 + 32 + 32 runner runs of the instrumented harnesses, or in 120 later runner runs (the later
   runs also carry a changed `writeexec.c`, so the code layout differs). The rate is about one event per 10^8 calls, so layout or
   platform effects cannot be separated statistically with a reasonable number of runs. Linux and macOS runners have been run
@@ -47,10 +54,10 @@ What was established:
 - No CPU model is implicated: the runners are a mix of AMD EPYC 7763/9V45/9V74 and Intel Xeon 8370C/8573C/6973P-C, and the failing
   jobs whose CPU was recorded were EPYC 7763 (the most common model).
 
-The procedures store an operand into an instruction and jump to it within a few cycles. The architecture manuals promise coherent
+The assembled procedures store an operand into an instruction and jump to it within a few cycles. The architecture manuals promise coherent
 same-thread self-modifying code, but the manuals' portable recipe adds a serializing instruction, which the verified byte layout
 (`validation/layout`) does not contain, so the assembly is deliberately not changed. A rare stale-fetch event on a virtualized
-host is the leading hypothesis; it is not proven. The harnesses therefore classify instead of hiding: `edge_vectors` calls the
+host is a hypothesis for the `DIV32` event only; it is not proven. The harnesses therefore classify instead of hiding: `edge_vectors` calls the
 procedure twice more on a mismatch, reports a result that is right on both repeats as `transient` (counted in the final
 `edge vectors ok N (K transient)` line, not a failure), and fails if it stays wrong; the Windows ctest steps allow up to three
 attempts for the legacy harness (`--repeat until-pass:3`); mismatch lines of the legacy harness carry their source line and CPU.
