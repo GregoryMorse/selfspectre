@@ -76,6 +76,10 @@ we_configure(code_vectors)
 add_executable(edge_vectors validation/native/edge_vectors.c src/spectreopt.c ${WE_OBJECTS})
 we_configure(edge_vectors)
 
+# Manual long-run diagnostic for layout-sensitive native XOR failures.
+add_executable(we_xor_branchless EXCLUDE_FROM_ALL validation/native/we_xor_branchless.c ${WE_OBJECTS})
+we_configure(we_xor_branchless)
+
 add_executable(writeexec src/writeexec.c src/spectreopt.c ${WE_OBJECTS})
 we_configure(writeexec)
 if(MSVC)
