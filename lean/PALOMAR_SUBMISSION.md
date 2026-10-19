@@ -43,4 +43,20 @@ mismatches.
 
 The exact-commit full mechanical preflights for [`8f08771`](https://github.com/GregoryMorse/selfspectre/actions/runs/39156987622) and the later [`9451e72`](https://github.com/GregoryMorse/selfspectre/actions/runs/39159265367) passed. The [60-job Windows hunt #7](https://github.com/GregoryMorse/selfspectre/actions/runs/39156169406) found five transient MODEXP32 failures on virtualized AMD EPYC 7763 runners in both Win32 and x64. A pinned [control hunt #9](https://github.com/GregoryMorse/selfspectre/actions/runs/39160281020) failed in 4/60 jobs, and an exact-commit pinned [page-materialization hunt #10](https://github.com/GregoryMorse/selfspectre/actions/runs/39160318195) failed in 6/60 jobs, all on the EPYC 7763 runners. The latter included a `SHR32` mismatch after code-page copy-on-write had been removed from the measured calls. A subsequent [telemetry hunt #11](https://github.com/GregoryMorse/selfspectre/actions/runs/39161931493) failed in 11/60 jobs, again all on EPYC 7763 guests, with first-result errors in `MUL32`, `DIV32`, and `MODEXP32`. The [direct `SHR32` hunt #12](https://github.com/GregoryMorse/selfspectre/actions/runs/39162890255) captured an x64 shift-zero call returning exactly the current input shifted by seven, matching the preceding call's low three shift bits, although its entry patch byte read back as zero. The [extended hunt #13](https://github.com/GregoryMorse/selfspectre/actions/runs/39164051241) captured a Win32 shift-15 call returning exactly the input shifted by eight, with the entry patch byte at 15. The [four-field hunt #14](https://github.com/GregoryMorse/selfspectre/actions/runs/39164845425) failed in 7/60 jobs and captured a Win32 low-byte handoff missing after a shift-30 entry and an x64 wrong shift-11 output despite correct post-call count fields.
 
-A separate deterministic Debug|x64 MSBuild crash was traced with `cdb` to an incremental-link jump thunk: a code patch targeting `WriteExecSHL6+2` was relocated to its ILT thunk, while execution entered the function body. Disabling incremental linking redirected the patch to the body, and the full local pinned Debug|x64 harness passed. This changes native build configuration, not a Lean statement or the Write-Execute model. The CMake Release links already disabled incremental linking, so the virtualized EPYC first-result errors remain unexplained. Native reliability is still open; passing formal preflight does not resolve it. The author should defer the v2 registration decision until this native investigation is addressed or explicitly disclosed. A final exact-commit preflight will be needed for whichever commit is submitted.
+A separate deterministic Debug|x64 MSBuild crash was traced with `cdb` to an incremental-link jump thunk: a code patch targeting `WriteExecSHL6+2` was relocated to its ILT thunk, while execution entered the function body. Disabling incremental linking redirected the patch to the body, and the full local pinned Debug|x64 harness passed. This changes native build configuration, not a Lean statement or the Write-Execute model. The CMake Release links already disabled incremental linking.
+
+The [bare-metal EPYC investigation](../validation/EPYC_7513.md) then found a
+separate Linux ELF64 UASM relocation fault, repaired in CMake by normalizing
+PC32 fields before linking. This object transformation does not change the
+assembled algorithm or a selected Lean theorem. The same EPYC host reproduced
+the rare first-result `SHR32` error while pinned to one CPU; the final result
+used the preceding call's low shift bits. A one-site serialization experiment
+and equal-length jump/NOP controls all failed, so no speculative SMC fix was
+retained. A later final-image CTest run failed four native vectors across
+MUL32, DIV32, and MODEXP32, while the same suite had passed twice earlier.
+The calibrated AES/RSA demos did reproduce the paper's successful
+cases on both sockets, with direct RSA depth eight also successful. Native
+Write-Execute reliability on Zen 3 remains open; passing formal preflight
+does not resolve it. The author should defer v2 registration until this
+limitation is resolved or explicitly disclosed. A final exact-commit
+preflight will be needed for whichever commit is submitted.

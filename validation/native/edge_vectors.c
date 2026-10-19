@@ -14,14 +14,16 @@
 unsigned int array1_size; uint8_t array1[160]; uint8_t array2[256 * WE_PROBE_STRIDE * 16]; uint8_t tmp;
 typedef struct { uint32_t rd_key[60]; int rounds; } AES_KEY_;
 extern int AES_set_encrypt_key(const unsigned char *userKey, const int bits, AES_KEY_ *key);
-#if defined(_WIN32)
 /* The first SHR32 instruction contains the count immediate at byte 6. Read it
    only after a mismatch, outside the Write-Execute computation. */
 extern void WriteExecSHR32(void);
 extern void shlarg1(void);
 extern void shlarg6(void);
 extern void shrarg2(void);
-#endif
+extern void shr32arg1_1(void), shr32arg1_2(void), shr32arg1_3(void), shr32arg1_4(void);
+extern void shr32arg1_1copy(void), shr32arg1_2copy(void), shr32arg1_3copy(void), shr32arg1_4copy(void);
+extern void shr32res1(void), shr32res2(void), shr32res3(void), shr32res4(void);
+extern void shr32small(void), shr32rounds(void), shr32arg2small(void), shr32arg2_1copy(void);
 
 static int bad = 0, total = 0, transient = 0;
 /* Evaluated once for the comparison; on a mismatch the entry point is called once more, so that a transient result
@@ -72,10 +74,8 @@ int main(int argc, char **argv) {
 			uint64_t want = (uint64_t)a * b;
 			uint64_t got = WriteExecMUL32_C(a, b);
 			if (got != want) {
-				int cpu = we_cpu(), patched_shift = -1;
-#if defined(_WIN32)
-				patched_shift = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
-#endif
+				int cpu = we_cpu();
+				int patched_shift = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
 				uint64_t r1 = WriteExecMUL32_C(a, b);
 				uint64_t r2 = WriteExecMUL32_C(a, b);
 				printf("MUL32 mismatch iteration %ld inputs %08x %08x got %016llx want %016llx patched SHR32 %d repeats %016llx %016llx cpu %d then %d\n",
@@ -87,33 +87,72 @@ int main(int argc, char **argv) {
 		printf("MUL32 stress ok %ld\n", n);
 		return 0;
 	}
-	if (argc > 1 && strcmp(argv[1], "shr32") == 0) {
+	if (argc > 1 && (strcmp(argv[1], "shr32") == 0 || strcmp(argv[1], "shr32pair") == 0)) {
+		int pair = strcmp(argv[1], "shr32pair") == 0;
 		long n = argc > 2 ? atol(argv[2]) : 32000;
 		uint32_t seed;
 		if (argc > 3) seed = (uint32_t)strtoull(argv[3], 0, 0);
 		else if (rand_s(&seed)) { fputs("random seed unavailable\n", stderr); return 2; }
 		rs ^= (uint64_t)seed * 0x9E3779B97F4A7C15ull;
-		printf("SHR32 seed %08x, %ld calls\n", seed, n); fflush(stdout);
+		printf("SHR32%s seed %08x, %ld inputs\n", pair ? " pair" : "", seed, n); fflush(stdout);
 		uint32_t input = 0;
+		long first_bad = 0;
 		for (long i = 0; i < n; i++) {
 			unsigned shift = (unsigned)i % 32;
 			if (!shift) input = rnd();
 			uint32_t want = input >> shift;
 			uint32_t got = WriteExecSHR32_C(input, (uint8_t)shift);
+			if (pair) {
+				uint32_t second = WriteExecSHR32_C(input, (uint8_t)shift);
+				if (got != want) first_bad++;
+				if (second != want) {
+					printf("SHR32 pair mismatch iteration %ld input %08x shift %u first %08x second %08x want %08x cpu %d\n",
+						i, input, shift, got, second, want, we_cpu());
+					return 1;
+				}
+				continue;
+			}
 			if (got != want) {
-				int cpu = we_cpu(), patched = -1, split_input = -1, lane_shift = -1, lane_index = -1;
-#if defined(_WIN32)
-				patched = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
-				split_input = ((volatile const uint8_t *)(uintptr_t)&shlarg1)[6];
-				lane_shift = ((volatile const uint8_t *)(uintptr_t)&shrarg2)[6];
-				lane_index = ((volatile const uint8_t *)(uintptr_t)&shlarg6)[2];
-#endif
+				int cpu = we_cpu();
+				int patched = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
+				int split_input = ((volatile const uint8_t *)(uintptr_t)&shlarg1)[6];
+				int lane_shift = ((volatile const uint8_t *)(uintptr_t)&shrarg2)[6];
+				int lane_index = ((volatile const uint8_t *)(uintptr_t)&shlarg6)[2];
+				uint8_t input_bytes[4] = {
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_1)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_2)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_3)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_4)[6] };
+				uint8_t handoff_bytes[4] = {
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_1copy)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_2copy)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_3copy)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32arg1_4copy)[6] };
+				uint8_t result_bytes[4] = {
+					((volatile const uint8_t *)(uintptr_t)&shr32res1)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32res2)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32res3)[6],
+					((volatile const uint8_t *)(uintptr_t)&shr32res4)[6] };
+				uint8_t stage_entry = ((volatile const uint8_t *)(uintptr_t)&WriteExecSHR32)[6];
+				uint8_t stage_small = ((volatile const uint8_t *)(uintptr_t)&shr32small)[6];
+				uint8_t stage_rounds = ((volatile const uint8_t *)(uintptr_t)&shr32rounds)[6];
+				uint8_t stage_low_source = ((volatile const uint8_t *)(uintptr_t)&shr32arg2small)[6];
+				uint8_t stage_low_handoff = ((volatile const uint8_t *)(uintptr_t)&shr32arg2_1copy)[6];
 				uint32_t r1 = WriteExecSHR32_C(input, (uint8_t)shift);
 				uint32_t r2 = WriteExecSHR32_C(input, (uint8_t)shift);
 				printf("SHR32 mismatch iteration %ld input %08x shift %u got %08x want %08x prior %08x patched %d split %d lane %d index %d repeats %08x %08x cpu %d then %d\n",
 					i, input, shift, got, want, shift ? input >> (shift - 1) : 0, patched, split_input, lane_shift, lane_index, r1, r2, cpu, we_cpu());
+				printf("SHR32 code bytes input %02x %02x %02x %02x handoff %02x %02x %02x %02x result %02x %02x %02x %02x\n",
+					input_bytes[0], input_bytes[1], input_bytes[2], input_bytes[3],
+					handoff_bytes[0], handoff_bytes[1], handoff_bytes[2], handoff_bytes[3],
+					result_bytes[0], result_bytes[1], result_bytes[2], result_bytes[3]);
+				printf("SHR32 stages entry %u after-five %u after-three %u low-source %u low-handoff %u\n", stage_entry, stage_small, stage_rounds, stage_low_source, stage_low_handoff);
 				return 1;
 			}
+		}
+		if (pair) {
+			printf("SHR32 pair completed %ld inputs, %ld wrong first results, no wrong second results\n", n, first_bad);
+			return first_bad ? 1 : 0;
 		}
 		printf("SHR32 stress ok %ld\n", n);
 		return 0;

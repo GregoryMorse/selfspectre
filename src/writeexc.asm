@@ -5,6 +5,10 @@ option casemap :none
 
 .code
 PUBLIC shlarg1, shlarg6, shrarg2 ; read-only diagnostics for the SHR32 native harness
+PUBLIC shr32arg1_1, shr32arg1_2, shr32arg1_3, shr32arg1_4
+PUBLIC shr32arg1_1copy, shr32arg1_2copy, shr32arg1_3copy, shr32arg1_4copy
+PUBLIC shr32res1, shr32res2, shr32res3, shr32res4
+PUBLIC shr32small, shr32rounds, shr32arg2small, shr32arg2_1copy
 
 DEFINESHL macro Index, Lbl, Ct
 	&Lbl&_&Index&: mov word ptr [Lbl+1+6], Index shl Ct
@@ -1442,8 +1446,8 @@ ret
 WriteExecSHR_C ENDP
 
 SHRBYTE macro Idx, NxtIdx, PrevIdx, Sz
-shr&Sz&arg1_&Idx&copy: mov byte ptr [shrarg1+6], 0
-shr&Sz&arg2_&Idx&copy: mov byte ptr [shrarg2+6], 0
+shr&Sz&arg1_&Idx&copy:: mov byte ptr [shrarg1+6], 0
+shr&Sz&arg2_&Idx&copy:: mov byte ptr [shrarg2+6], 0
 ifdef X64
 mov dword ptr [shrbres+2], carry&PrevIdx& + 2+4 - shrbres2
 IF NxtIdx EQ 0
@@ -1488,27 +1492,27 @@ WriteExecSHR32 PROC
 shr32arg2_1:: mov byte ptr [shlarg1+6], 0
 mov byte ptr [shlarg2+2+4], 5
 ifdef X64
-mov dword ptr [shlbres+2], shrsmall + 2+4 - shlbres2
-mov dword ptr [shlbres2+2], shrrounds + 2+4 - shlbret
+mov dword ptr [shlbres+2], shr32small + 2+4 - shlbres2
+mov dword ptr [shlbres2+2], shr32rounds + 2+4 - shlbret
 else
-mov dword ptr [shlbres+2], shrsmall + 2+4
-mov dword ptr [shlbres2+2], shrrounds + 2+4
+mov dword ptr [shlbres+2], shr32small + 2+4
+mov dword ptr [shlbres2+2], shr32rounds + 2+4
 endif
-mov dword ptr [shlbret+1], shrsmall - shlbret - 5
+mov dword ptr [shlbret+1], shr32small - shlbret - 5
 jmp WriteExecSHL
-shrsmall: mov byte ptr [shlarg1+6], 0
+shr32small:: mov byte ptr [shlarg1+6], 0
 mov byte ptr [shlarg2+2+4], 3
 ifdef X64
-mov dword ptr [shlbres+2], shrsmall + 2+4 - shlbres2
+mov dword ptr [shlbres+2], shr32small + 2+4 - shlbres2
 mov dword ptr [shlbres2+2], shr32arg2small + 2+4 - shlbret
 else
-mov dword ptr [shlbres+2], shrsmall + 2+4
+mov dword ptr [shlbres+2], shr32small + 2+4
 mov dword ptr [shlbres2+2], shr32arg2small + 2+4
 endif
-mov dword ptr [shlbret+1], shrrounds - shlbret - 5
+mov dword ptr [shlbret+1], shr32rounds - shlbret - 5
 jmp WriteExecSHL
 
-shrrounds: mov byte ptr [shlarg6+2], 0
+shr32rounds:: mov byte ptr [shlarg6+2], 0
 ifdef X64
 mov dword ptr [shlres6+1+2], shlretval6 + 1 - shlret6
 else

@@ -109,3 +109,16 @@ The Debug|x64 MSBuild access violation had a separate, reproducible linker cause
 [AMD's Milan revision guide](https://www.amd.com/content/dam/amd/en/documents/processor-tech-docs/revision-guides/56683.pdf) lists erratum 1193, which can miss SMC detection after a specific page-frame remapping *without* the required invalidation. Ordinary Windows copy-on-write must still perform the required translation synchronization; the local probe does not establish that the erratum's invalidation condition occurs, and the failures after pre-materialization do not require that transition. The guide's other instruction-cache errata describe hangs rather than wrong return values.
 
 On the local Debug|Win32 MSBuild image, `cdb` with the matching PDB disassembled `WriteExecMODEXP32_C`: it loads three 32-bit stack arguments, writes all twelve operand bytes, patches four result destinations and the return jump, then jumps to `WriteExecMODEXP32`. Its `modexpres3+2` destination patch starts at cache-line offset 63. In the separate linked CMake Release|Win32 vector image, `patch_alignment.py` finds different hot crossings: `modexp32arg3_1+2` at offset 63, `divretval2+2` at 62, and `shr32arg1_3+2` at 62. The links differ, so padding one location does not remove the others or establish a cause. The wrapper disassembly cannot establish correctness of the internal `MODEXP32`/`DIV32` trace or diagnose the earlier CI value without its operands. A focused 1,000-call differential run on each local assembled architecture and a subsequent 100-call mixed-operation run on each passed with no mismatch; the Windows CMake focus test passed 100 fresh triples and the legacy Debug|Win32 harness passed once. These are negative samples, not closure of the rare event.
+
+The [bare-metal EPYC 7513 replication](EPYC_7513.md) reproduced the rare
+first-result `SHR32` error on Linux x64 while pinned to one logical CPU.
+Repeated failures used low shift bits from the preceding call, and the
+post-call code bytes show the wrong value already patched into the result.
+This excludes a Windows-only or virtualization-only explanation and a mere
+cache-decoder artifact. Matched-length fence, jump, and NOP variants all
+failed; the one-site fence trial was removed. A later unpinned CTest run
+also failed in MUL32, DIV32, and MODEXP32; four immediate retries were all
+correct. The exact fetch or handoff
+mechanism remains open. The same investigation repaired a separate Linux
+ELF64 UASM relocation failure and confirmed the speculative AES/RSA cases
+on both EPYC sockets.

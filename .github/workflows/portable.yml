@@ -102,7 +102,7 @@ jobs:
           path: |
             build/cmake/we.o
             build/cmake/rsa.o
-          key: asm-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('src/writeexc.asm', 'src/spectrecode.asm', 'cmake/UASM.cmake', 'cmake/UasmPatch.cmake', 'cmake/elf2blob.py') }}
+          key: asm-${{ runner.os }}-${{ matrix.arch }}-${{ hashFiles('src/writeexc.asm', 'src/spectrecode.asm', 'cmake/UASM.cmake', 'cmake/UasmPatch.cmake', 'cmake/normalize_uasm_elf64.py', 'cmake/elf2blob.py') }}
       - name: Configure
         run: |
           if [ "${{ matrix.arch }}" = x86 ]; then
@@ -160,7 +160,7 @@ jobs:
           path: |
             build/cmake/we.o
             build/cmake/rsa.o
-          key: asm-${{ runner.os }}-x64-${{ hashFiles('src/writeexc.asm', 'src/spectrecode.asm', 'cmake/UASM.cmake', 'cmake/UasmPatch.cmake', 'cmake/elf2blob.py') }}
+          key: asm-${{ runner.os }}-x64-${{ hashFiles('src/writeexc.asm', 'src/spectrecode.asm', 'cmake/UASM.cmake', 'cmake/UasmPatch.cmake', 'cmake/normalize_uasm_elf64.py', 'cmake/elf2blob.py') }}
       - name: Configure
         run: cmake -S . -B build/cmake -DCMAKE_BUILD_TYPE=Release
       - name: Mark restored objects as up to date

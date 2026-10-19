@@ -335,7 +335,7 @@ int main(int argc,
 		LARGE_INTEGER tot = { 0 };
 		for (int i = 0; i < 10; i++) {
 			for (int k = 0; k < 16; k++) c[k] = sec[k];
-			malicious_x = (size_t)(c - (char *)array1);
+			malicious_x = (uintptr_t)c - (uintptr_t)array1;
 			QueryPerformanceCounter(&start);
 			//for (int k = 0; k < 10; k++) {
 				readMemory128(cache_hit_threshold, malicious_x, values, scores, j);

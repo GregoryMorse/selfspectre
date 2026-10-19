@@ -437,23 +437,34 @@ int main(int argc,
 
 	printf("Reading %d bytes:\n", len);
 	if (argc >= 2 && strcmp(argv[1], "--depth-sweep") == 0) {
-		static const int modes[] = { 1, 2, 6, 8, 9 };
-		static const int depths[] = { 2, 4, 4, 5, 5 };
-		static const char *names[] = { "2 C", "4 C", "4 asm", "5 C", "5 asm" };
+		static const int modes[] = { 0, 4, 1, 2, 6, 8, 9, 10, 11, 3, 7 };
+		static const int depths[] = { 1, 1, 2, 4, 4, 5, 5, 6, 6, 8, 8 };
+		static const char *names[] = {
+			"1 C", "1 asm", "2 C", "4 C", "4 asm", "5 C", "5 asm",
+			"6 C", "6 asm", "8 C", "8 asm" };
 		uint32_t base = ((uint32_t *)sec)[3];
+		int trace = getenv("WE_DEPTH_TRACE") != NULL;
 		int mode;
-		for (mode = 0; mode < 5; ++mode) {
+		for (mode = 0; mode < (int)(sizeof modes / sizeof modes[0]); ++mode) {
 			int trial, correct = 0, confident = 0;
 			uint32_t expected = modexp(base, depths[mode], _n);
 			for (trial = 0; trial < 10; ++trial) {
-				uint32_t input = 1;
-				size_t target = (size_t)((char *)&input - (char *)array1);
+				volatile uint32_t input = 1;
+				size_t target = (uintptr_t)&input - (uintptr_t)array1;
 				uint8_t value[8];
 				int score[8];
 				uint32_t result;
 				readMemoryDword(cache_hit_threshold, target, value, score, base, modes[mode]);
+				if (input != 1) {
+					fputs("RSA depth input changed during measurement.\n", stderr);
+					return 2;
+				}
 				result = value[0] | ((uint32_t)value[2] << 8) |
 					((uint32_t)value[4] << 16) | ((uint32_t)value[6] << 24);
+				if (trace && trial == 0)
+					printf("Depth %s first guess 0x%08X scores %d/%d %d/%d %d/%d %d/%d\n",
+						names[mode], result, score[0], score[1], score[2], score[3],
+						score[4], score[5], score[6], score[7]);
 				if (result == expected) {
 					++correct;
 					if (score[0] >= 2 * score[1] && score[2] >= 2 * score[3] &&
@@ -500,36 +511,36 @@ int main(int argc,
 			int succ = 0, conf = 0;
 			LARGE_INTEGER tot = { 0 };
 			for (int k = 0; k < 10; k++) {
-				c = 1;
-				malicious_x = (size_t)((char*)(&c) - (char *)array1);
+				volatile uint32_t input = 1;
+				malicious_x = (uintptr_t)&input - (uintptr_t)array1;
 				QueryPerformanceCounter(&start);
 				if (j >= 8) {
 					for (i = j == 8 || j == 9 ? 5 : 6; i <= (int)_exp;
 						i += j == 8 || j == 9 ? 5 : 6) {
 						readMemoryDword(cache_hit_threshold, malicious_x, values, scores, ((uint32_t*)sec)[3 - len], j);
-						c = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
+						input = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
 					}
 					if (j == 8 || j == 9) {
 						readMemoryDword(cache_hit_threshold, malicious_x, values, scores, ((uint32_t*)sec)[3 - len], (j - 8) * 4 + 1);
-						c = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
+						input = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
 					}
 					else {
 						readMemoryDword(cache_hit_threshold, malicious_x, values, scores, ((uint32_t*)sec)[3 - len], (j - 10) * 4 + 2);
-						c = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
+						input = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
 						readMemoryDword(cache_hit_threshold, malicious_x, values, scores, ((uint32_t*)sec)[3 - len], (j - 10) * 4);
-						c = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
+						input = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
 					}
 				}
 				else {
 					for (i = j == 0 || j == 4 ? 1 : (j == 1 || j == 5 ? 2 : (j == 2 || j == 6 ? 4 : 8)); i <= (int)_exp;
 						i += j == 0 || j == 4 ? 1 : (j == 1 || j == 5 ? 2 : (j == 2 || j == 6 ? 4 : 8))) {
 						readMemoryDword(cache_hit_threshold, malicious_x, values, scores, ((uint32_t*)sec)[3 - len], j);
-						c = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
+						input = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
 					}
 
 					if (j != 0 && j != 4) {
 						readMemoryDword(cache_hit_threshold, malicious_x, values, scores, ((uint32_t*)sec)[3 - len], j & 4);
-						c = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
+						input = values[0] | (values[2] << 8) | (values[4] << 16) | (values[6] << 24);
 					}
 				}
 				QueryPerformanceCounter(&stop);
@@ -538,11 +549,11 @@ int main(int argc,
 				int IsSucc = (scores[0] >= 2 * scores[1] && scores[2] >= 2 * scores[3] &&
 					scores[4] >= 2 * scores[5] && scores[6] >= 2 * scores[7]) ? 1 : 0;
 				printf("%s: ", IsSucc ? "Success" : "Unclear");
-				int IsEq = val == c;
+				int IsEq = val == input;
 				printf("%s ", IsEq ? "Correct" : "Incorrect");
 				if (IsEq) succ++;
 				if (IsSucc && IsEq) conf++;
-				printf("0x%08X score=%d %d %d %d ", c, scores[0], scores[2], scores[4], scores[6]);
+				printf("0x%08X score=%d %d %d %d ", (uint32_t)input, scores[0], scores[2], scores[4], scores[6]);
 
 				if (scores[1] > 0 || scores[3] > 0 || scores[5] > 0 || scores[7] > 0) {
 					printf("(second best: 0x%02X%02X%02X%02X score=%d %d %d %d)", values[1], values[3], values[5], values[7], scores[1], scores[3], scores[5], scores[7]);

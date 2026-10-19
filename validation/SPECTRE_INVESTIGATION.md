@@ -74,4 +74,18 @@ The non-MSVC CMake build now uses an SSE2 baseline and a compiler target attribu
 
 That restraint is empirical: a refactor of RSA timing changed the `readMemoryDword` position in the x64 image from RVA `0x1AC0` to `0x1AB0`; its depth results varied or failed on the same pinned CPU. Rebuilding with the exact earlier timing header returned all five short-depth cases to 10/10 correct and confident. This is evidence that generated code layout matters here, not a proof that this particular 16-byte shift is the sole mechanism. A cache threshold cannot calibrate the branch predictor or available speculation window. No Intel/AMD model whitelist can be inferred from the CPUID feature bits alone.
 
-In new guarded default-timer runs pinned to logical CPU 0, x64 and x86 AES each returned 10/10 correct and confident for ten-round AES-NI and both one-round modes; the ten-round C mode remained 0/10. The RSA short-depth sweep returned 10/10 correct and confident in all five cases in both builds. One complete chained RSA run returned 158/160 correct groups on x64 and 159/160 on x86, illustrating run variation even on this machine; later runs with the startup sweep returned 160/160 in each width. Forced RDTSC builds passed the same five RSA depth cases and the three successful AES modes on x64 and x86. The first 32-bit fallback version failed because MSVC moved a C load outside the RDTSC pair; one x86 assembly block for both timestamps and the load restored the hot/cold split (28 versus 169 cycles in one run). These fallback tests were forced on an RDTSCP-capable i9-14900HX; a CPU that actually lacks RDTSCP and an AMD processor have not been measured here. Raw outputs are in ignored `validation/.build/{final-*,rsa-preflight-*,rsa-rdtsc-asm-x86,aes-rdtsc-asm-x86,rsa-rdtsc-fallback-x64,aes-rdtsc-fallback-x64}.txt`.
+In new guarded default-timer runs pinned to logical CPU 0, x64 and x86 AES each returned 10/10 correct and confident for ten-round AES-NI and both one-round modes; the ten-round C mode remained 0/10. The RSA short-depth sweep returned 10/10 correct and confident in all five cases in both builds. One complete chained RSA run returned 158/160 correct groups on x64 and 159/160 on x86, illustrating run variation even on this machine; later runs with the startup sweep returned 160/160 in each width. Forced RDTSC builds passed the same five RSA depth cases and the three successful AES modes on x64 and x86. The first 32-bit fallback version failed because MSVC moved a C load outside the RDTSC pair; one x86 assembly block for both timestamps and the load restored the hot/cold split (28 versus 169 cycles in one run). These fallback tests were forced on an RDTSCP-capable i9-14900HX; a CPU that actually lacks RDTSCP had not been measured as of this follow-up. Raw outputs are in ignored `validation/.build/{final-*,rsa-preflight-*,rsa-rdtsc-asm-x86,aes-rdtsc-asm-x86,rsa-rdtsc-fallback-x64,aes-rdtsc-fallback-x64}.txt`.
+
+## Bare-metal AMD EPYC 7513 follow-up (2026-10-19)
+
+The [EPYC replication report](EPYC_7513.md) records calibrated, CPU-pinned
+Linux x64 runs on both sockets. Ten-round and one-round AES-NI each returned
+10/10 correct and confident on each socket; the C cases returned 0/10. The
+complete chained RSA workload returned 160/160 correct and confident groups
+on each socket. Every directly measured RSA depth through eight modular
+multiplications returned 10/10 correct and confident in C and assembly where
+available. A follow-up local i9-14900HX run with the extended sweep returned
+10/10 correct and confident in all eleven modes through eight steps on both
+x64 and x86. These finite samples establish the paper's successful cases on
+this AMD host and show depth eight is reachable; they do not determine a
+universal maximum speculative depth.
