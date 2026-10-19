@@ -81,6 +81,12 @@ before linking. On EPYC 7513, the native vector suite passes some runs and
 fails others with rare wrong first results in MUL32, DIV32, MOD32, MODEXP32, and
 focused SHR32 checks; see the [bare-metal investigation](validation/EPYC_7513.md).
 Native Write-Execute reliability on that processor remains unresolved.
+The [Gigabyte EPYC 7542 cross-host check](validation/EPYC_7542.md) passed the
+full native suite and 160 million focused XOR calls, so the failure has not
+been reproduced on every AMD generation.
+For a focused manual check, build the `we_xor_branchless` target and run it
+repeatedly; it reports the number of wrong XOR bytes and exits nonzero when it
+finds one. See [the diagnostic instructions](validation/README.md#focused-write-execute-diagnostic).
 
 ### Status of the speculative demos
 

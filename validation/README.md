@@ -7,6 +7,7 @@
 - `cmake_local.py [x86|x64]` — local MSVC build and ctest of the CMake targets (`build/msvc-<arch>`); `msbuild_local.py [Config|Platform ...]` — builds `vs/selfspectre.sln` (output in `build/msbuild`). The portable grid (Windows, Linux x86/x64, macOS x64) runs in `.github/workflows/portable.yml`.
 - `build_native_demos.py [x64|x86]` — focused MSVC Release build of the AES and RSA demos plus deterministic C vectors in `build/native/<arch>/Release`; it does not build `spectrepoc`. It selects RDTSCP or the RDTSC+LFENCE fallback from CPUID (`WE_FORCE_RDTSC=1` exercises the latter). Run it through `limited_run.py`. `build_cache_timing.py` builds the isolated 512/4096-byte timing diagnostic into `validation/.build`.
 - `SPECTRE_INVESTIGATION.md` — current-machine diagnosis, repair, and guarded AES/RSA results. The speculative demos are hardware measurements and are not part of CTest.
+- `EPYC_7513.md`, `EPYC_7542.md` — bare-metal Zen 3 failure and separate Rome cross-host check; neither establishes a firmware root cause.
 - Listings (needed by `extract_layout.py`/`purity_scan.py`): copy `src/writeexc.asm` and `asm_listings.bat` into
   `validation/.build/lst/`, run `asm_listings.bat` there (x86 + x64 listings, ~170 MB each, never committed),
   then `python validation/extract_layout.py` and `python validation/purity_scan.py`.
@@ -31,6 +32,26 @@
 - `listing_patch_alignment.py <writeexc.lst> <writeexc.obj> <edge_vectors.map>` — audits the macro-expanded MASM listing, checks that its `DIV32_C` address matches the object, and resolves every matched byte/word/dword `mov` store target against the linked image. Generate listings with `run_listings.py` under `limited_run.py`. This is a deeper local diagnostic; the large listings are not committed.
 - `audit_smc_fallthrough.py` — checks that a straight-line assembly block does not store into a labeled instruction and then fall through to that label. This is a source check of one self-modifying-code sequencing rule, not a proof of runtime behavior.
 - `native_vectors.py` — exact Python-generated vectors for the corrected C `mulmod`/`fastmodexp`/`modexp` (L02, L03).
+
+## Focused Write-Execute diagnostic
+
+`native/we_xor_branchless.c` is a small, deterministic checker for the assembled
+`WriteExecXOR_C` path. It compares each returned byte with C XOR, prints the
+number of mismatches and both checksums, and exits nonzero if any byte is wrong.
+The target is excluded from the default build because it is a long-run manual
+probe. On Linux x64, after the normal CMake configure:
+
+```sh
+systemd-run --user --scope -p MemoryMax=1500M cmake --build build/cmake --target we_xor_branchless --parallel 1
+systemd-run --user --scope -p MemoryMax=1500M taskset -c 0 build/cmake/we_xor_branchless 40000000
+```
+
+Record the commit, CPU model and microcode, board and BIOS revision, kernel,
+binary hash, core affinity, call count, and mismatch count. Repeat on the same
+binary before comparing another build or machine: linked code placement changes
+the observed failure rate. A zero count is only a negative sample; this XOR
+probe does not exercise every arithmetic path. On Windows, run the CMake build
+and executable through `python validation/limited_run.py -- ...`.
 
 ## Rare native mismatches (open: reproduced)
 

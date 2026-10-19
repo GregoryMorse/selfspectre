@@ -56,6 +56,10 @@ retained. A later final-image CTest run failed four native vectors across
 MUL32, DIV32, and MODEXP32, while the same suite had passed twice earlier.
 The calibrated AES/RSA demos did reproduce the paper's successful
 cases on both sockets, with direct RSA depth eight also successful. Native
+testing on a separate [EPYC 7542 Gigabyte host](../validation/EPYC_7542.md)
+passed the full suite and 160 million full-image XOR calls, while its AES-NI
+and RSA depth demonstrations also succeeded. This negative Rome sample does
+not establish a Zen 3 fix or a firmware cause.
 Write-Execute reliability on Zen 3 remains open; passing formal preflight
 does not resolve it. The author should defer v2 registration until this
 limitation is resolved or explicitly disclosed. A final exact-commit
